@@ -1,45 +1,46 @@
-import { PropsWithChildren, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from "react";
+import { Pressable, Text, View } from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+type Props = {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+};
 
-export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const theme = useColorScheme() ?? 'light';
+export default function Collapsible({ title, children, defaultOpen = false }: Props) {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <ThemedView>
-      <TouchableOpacity
-        style={styles.heading}
-        onPress={() => setIsOpen((value) => !value)}
-        activeOpacity={0.8}>
-        <IconSymbol
-          name="chevron.right"
-          size={18}
-          weight="medium"
-          color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-          style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}
-        />
+    <View style={{ borderRadius: 14, overflow: "hidden" }}>
+      <Pressable
+        onPress={() => setOpen((v) => !v)}
+        style={{
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          backgroundColor: "rgba(255,255,255,0.06)",
+          borderWidth: 1,
+          borderColor: "rgba(255,255,255,0.10)",
+        }}
+      >
+        <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: "800" }}>
+          {title} {open ? "▾" : "▸"}
+        </Text>
+      </Pressable>
 
-        <ThemedText type="defaultSemiBold">{title}</ThemedText>
-      </TouchableOpacity>
-      {isOpen && <ThemedView style={styles.content}>{children}</ThemedView>}
-    </ThemedView>
+      {open ? (
+        <View
+          style={{
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+            backgroundColor: "rgba(255,255,255,0.04)",
+            borderWidth: 1,
+            borderTopWidth: 0,
+            borderColor: "rgba(255,255,255,0.10)",
+          }}
+        >
+          {children}
+        </View>
+      ) : null}
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  heading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  content: {
-    marginTop: 6,
-    marginLeft: 24,
-  },
-});
