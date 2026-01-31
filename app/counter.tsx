@@ -40,7 +40,7 @@ function yearsMonthsDays(from: Date, to: Date) {
   return { years, months, days };
 }
 
-export default function CounterScreen() {
+export { default } from "./(tabs)/licznik";
   const [startDate, setStartDate] = useState<Date>(new Date(1997, 2, 10));
   const [pickerOpen, setPickerOpen] = useState(false);
   const [draftDate, setDraftDate] = useState<Date>(new Date(1997, 2, 10));

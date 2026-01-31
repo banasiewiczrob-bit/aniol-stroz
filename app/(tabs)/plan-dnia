@@ -1,0 +1,10 @@
+import { View, Text } from "react-native";
+
+export default function PlanDnia() {
+  return (
+    <View style={{ padding: 16 }}>
+      <Text style={{ fontSize: 18, fontWeight: "700" }}>Plan dnia</Text>
+      <Text style={{ marginTop: 8, opacity: 0.7 }}>W przygotowaniu</Text>
+    </View>
+  );
+}

@@ -26,7 +26,7 @@ type Entry = {
   note: string;
 };
 
-export default function DziennikUczuc() {
+export { default } from "./(tabs)/dzienniki/uczucia";
   const [feeling, setFeeling] = useState<string>(FEELINGS[0]);
   const [note, setNote] = useState("");
 

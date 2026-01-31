@@ -13,7 +13,7 @@ type Entry = {
   note: string;
 };
 
-export default function HistoriaUczuc() {
+export { default } from "./(tabs)/dzienniki/uczucia";
   const [items, setItems] = useState<Entry[]>([]);
 
   const load = async () => {

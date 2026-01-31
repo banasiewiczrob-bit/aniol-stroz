@@ -1,48 +1,35 @@
 import { router } from "expo-router";
-import { Pressable, ScrollView, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, Text, View } from "react-native";
 
-const BG = "#0B1B2B";
+function Item({ title, href }: { title: string; href: string }) {
+  return (
+    <Pressable
+      onPress={() => router.push(href)}
+      style={{
+        padding: 16,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "rgba(120,120,140,0.35)",
+        backgroundColor: "rgba(255,255,255,0.06)",
+        marginTop: 12,
+      }}
+    >
+      <Text style={{ fontSize: 16, fontWeight: "700" }}>{title}</Text>
+    </Pressable>
+  );
+}
 
 export default function Dzienniki() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      <ScrollView contentContainerStyle={{ padding: 18 }}>
-        <Text style={{ color: "rgba(255,255,255,0.55)", letterSpacing: 2, fontSize: 12 }}>
-          DZIENNIKI
-        </Text>
+    <View style={{ padding: 16 }}>
+      <Text style={{ fontSize: 22, fontWeight: "800" }}>Dzienniki</Text>
+      <Text style={{ marginTop: 6, opacity: 0.75 }}>
+        Wybierz dziennik. Historia jest w środku.
+      </Text>
 
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.96)",
-            fontSize: 28,
-            fontWeight: "900",
-            marginTop: 10,
-            marginBottom: 24,
-          }}
-        >
-          Od czego chcesz dziś zacząć?
-        </Text>
-
-        <Pressable
-          onPress={() => router.push("/(tabs)/dziennik-uczuc")}
-          style={{
-            padding: 18,
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: "rgba(47,164,255,0.45)",
-            backgroundColor: "rgba(47,164,255,0.12)",
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: "white", fontSize: 18, fontWeight: "800" }}>
-            Dziennik uczuć
-          </Text>
-          <Text style={{ color: "rgba(255,255,255,0.65)", marginTop: 6 }}>
-            Zapisz, co jest w Tobie dzisiaj.
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+      <Item title="Dziennik uczuć" href="/(tabs)/dzienniki/uczucia" />
+      <Item title="Dziennik głodu / kryzysu" href="/(tabs)/dzienniki/glod-kryzys" />
+      <Item title="Dziennik wdzięczności" href="/(tabs)/dzienniki/wdziecznosc" />
+    </View>
   );
 }
