@@ -2,9 +2,10 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 const BG = "#071826";
-const TILE_BG = "rgba(255,255,255,0.06)";
-const TILE_BORDER = "rgba(120,200,255,0.25)";
-const SUB = "rgba(255,255,255,0.6)";
+const TILE_BG = "rgba(255,255,255,0.05)";
+const TILE_BORDER = "rgba(120,200,255,0.22)";
+const SUB = "rgba(255,255,255,0.65)";
+const SECTION = "rgba(255,255,255,0.85)";
 
 function Tile({
   title,
@@ -23,24 +24,29 @@ function Tile({
         if (!disabled && to) router.push(to);
       }}
       style={{
-        borderRadius: 22,
-        padding: 20,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         backgroundColor: TILE_BG,
         borderWidth: 1,
         borderColor: TILE_BORDER,
-        marginBottom: 16,
-        opacity: disabled ? 0.55 : 1,
+        marginBottom: 12,
+        opacity: disabled ? 0.5 : 1,
       }}
     >
-      <Text style={{ color: "white", fontSize: 32, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: "white", fontSize: 20, fontWeight: "700" }}>
+        {title}
+      </Text>
 
       {!!subtitle && (
-        <Text style={{ marginTop: 8, color: SUB, fontSize: 16, lineHeight: 20 }}>{subtitle}</Text>
+        <Text style={{ marginTop: 6, color: SUB, fontSize: 14, lineHeight: 18 }}>
+          {subtitle}
+        </Text>
       )}
 
       {disabled && (
-        <Text style={{ marginTop: 10, color: SUB, fontSize: 14, letterSpacing: 1 }}>
-          W przygotowaniu (wersja płatna)
+        <Text style={{ marginTop: 6, color: SUB, fontSize: 13 }}>
+          W przygotowaniu
         </Text>
       )}
     </Pressable>
@@ -49,23 +55,47 @@ function Tile({
 
 export default function Dom() {
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: BG }} contentContainerStyle={{ padding: 18, paddingTop: 56 }}>
-      <Text style={{ color: "white", fontSize: 54, fontWeight: "900", marginBottom: 18 }}>Dom</Text>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: BG }}
+      contentContainerStyle={{ padding: 18, paddingTop: 48 }}
+    >
+      {/* NAGŁÓWEK */}
+      <Text
+        style={{
+          color: "white",
+          fontSize: 36,
+          fontWeight: "800",
+          marginBottom: 20,
+        }}
+      >
+        Dom
+      </Text>
 
+      {/* PODSTAWY */}
       <Tile title="Kontrakt" subtitle="Umowa z samym sobą" to="/kontrakt" />
-      <Tile title="Licznik" subtitle="Start zdrowienia + rocznice" to="/licznik" />
-      <Tile title="Plan dnia" subtitle="Jedna rzecz na raz" to="/plan-dnia" />
+      <Tile title="Licznik" subtitle="Start zdrowienia i rocznice" to="/licznik" />
+      <Tile title="Plan dnia" subtitle="Jedna rzecz na teraz" to="/plan-dnia" />
 
-      <Tile
-        title="Dzienniki"
-        subtitle="Uczucia · Głód/Kryzys · Wdzięczność"
-        to="/dzienniki"
-        disabled={true}
-      />
+      {/* DZIAŁ: WSPARCIE */}
+      <View style={{ marginTop: 28, marginBottom: 12 }}>
+        <Text
+          style={{
+            color: SECTION,
+            fontSize: 22,
+            fontWeight: "700",
+            marginBottom: 12,
+          }}
+        >
+          Wsparcie
+        </Text>
 
-      <Tile title="Wsparcie" subtitle="Teksty + kontakt + siatka" to="/wsparcie" />
+        
+        <Tile title="Teksty" subtitle="HALT · Modlitwa · Desiderata" to="/wsparcie" />
+        <Tile title="Siatka wsparcia" subtitle="Ludzie i kontakty" to="/wsparcie-siatka" />
+        <Tile title="Kontakt" subtitle="Gdy potrzebujesz pomocy" to="/wsparcie-kontakt" />
+      </View>
 
-      <View style={{ height: 16 }} />
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
