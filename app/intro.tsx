@@ -4,7 +4,7 @@ import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Poprawione ścieżki (zakładając, że assets są w folderze app)
-const Logo = require("./assets/images/logo-aniol-stroz.png");
+const Logo = require("./assets/images/icon-stroz.png");
 const Watermark = require("./assets/images/maly_aniol.png");
 
 export default function Intro() {

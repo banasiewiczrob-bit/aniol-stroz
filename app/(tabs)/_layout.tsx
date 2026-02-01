@@ -19,6 +19,7 @@ export default function TabLayout() {
         },
       }}
     >
+      {/* 1. GŁÓWNE IKONY */}
       <Tabs.Screen
         name="index"
         options={{
@@ -40,6 +41,18 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="heart-outline" size={26} color={color} />,
         }}
       />
+
+      {/* 2. BLOKADA TRÓJKĄCIKÓW - DOKŁADNE NAZWY Z TWOJEGO VS CODE */}
+      <Tabs.Screen name="kontrakt" options={{ href: null }} />
+      <Tabs.Screen name="plan-dnia" options={{ href: null }} />
+      
+      {/* Pliki wsparcia (z przedrostkiem wsparcie- jak na Twoim screenie) */}
+      <Tabs.Screen name="wsparcie-24" options={{ href: null }} />
+      <Tabs.Screen name="wsparcie-desiderata" options={{ href: null }} />
+      <Tabs.Screen name="wsparcie-halt" options={{ href: null }} />
+      <Tabs.Screen name="wsparcie-kontakt" options={{ href: null }} />
+      <Tabs.Screen name="wsparcie-modlitwa" options={{ href: null }} />
+      <Tabs.Screen name="wsparcie-siatka" options={{ href: null }} />
     </Tabs>
   );
 }

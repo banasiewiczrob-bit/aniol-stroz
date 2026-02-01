@@ -1,71 +1,100 @@
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import React, { useEffect, useState } from "react";
-import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const BG = "#071826";
-const ACCENT = "#78C8FF";
-
-// Ścieżka zakłada, że folder assets jest w folderze app
-const Watermark = require("../assets/images/maly_aniol.png");
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useEffect, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LicznikScreen() {
-  const [startDate, setStartDate] = useState(new Date());
-  const [days, setDays] = useState(0);
-  const [showPicker, setShowPicker] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
+  const [daysPassed, setDaysPassed] = useState(0);
 
-  const calculateDays = (selectedDate: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(selectedDate);
-    start.setHours(0, 0, 0, 0);
-    const difference = today.getTime() - start.getTime();
-    const totalDays = Math.floor(difference / (1000 * 3600 * 24));
-    setDays(totalDays >= 0 ? totalDays : 0);
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const savedDate = await AsyncStorage.getItem('startDate');
+      if (savedDate) {
+        const d = new Date(savedDate);
+        setDate(d);
+        calculateDays(d);
+      }
+    } catch (e) { console.error('Błąd ładowania:', e); }
   };
 
-  useEffect(() => { calculateDays(startDate); }, [startDate]);
+  const calculateDays = (startDate: Date) => {
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - startDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    setDaysPassed(diffDays);
+  };
 
-  const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === 'android') setShowPicker(false);
-    if (selectedDate) setStartDate(selectedDate);
+  const onChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+    setShow(Platform.OS === 'ios');
+    setDate(currentDate);
+    calculateDays(currentDate);
+    saveData(currentDate);
+  };
+
+  const saveData = async (d: Date) => {
+    try { await AsyncStorage.setItem('startDate', d.toISOString()); } 
+    catch (e) { console.error('Błąd zapisu:', e); }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Image source={Watermark} style={styles.watermark} />
-      <View style={styles.content}>
-        <Text style={styles.label}>Trwasz w zdrowieniu już</Text>
-        <View style={styles.counterCircle}>
-          <Text style={styles.daysNumber}>{days}</Text>
-          <Text style={styles.daysText}>{days === 1 ? "DZIEŃ" : "DNI"}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Twój Licznik zdrowienia</Text>
+        
+        <View style={styles.counterBox}>
+          {/* Zmniejszona czcionka do 48, by pasowała do dużych liczb */}
+          <Text style={styles.number}>{daysPassed}</Text>
+          <Text style={styles.label}>dni pod opieką Anioła Stróża</Text>
         </View>
-        <View style={styles.infoBox}>
-          <Text style={styles.dateLabel}>Data rozpoczęcia:</Text>
-          <Text style={styles.dateValue}>{startDate.toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" })}</Text>
-          <Pressable onPress={() => setShowPicker(true)} style={styles.editButton}>
-            <Text style={styles.editButtonText}>Zmień datę startu</Text>
-          </Pressable>
-        </View>
-        {showPicker && (
-          <DateTimePicker value={startDate} mode="date" display={Platform.OS === 'ios' ? 'spinner' : 'default'} onChange={onChange} maximumDate={new Date()} themeVariant="dark" />
+
+        <Pressable style={styles.button} onPress={() => setShow(true)}>
+          <Text style={styles.buttonText}>Ustaw datę początkową</Text>
+        </Pressable>
+
+        {show && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="spinner"
+            onChange={onChange}
+          />
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
-  watermark: { position: "absolute", right: -20, top: 40, width: 250, height: 250, opacity: 0.03, resizeMode: "contain" },
-  content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30 },
-  label: { color: "rgba(255,255,255,0.6)", fontSize: 18, marginBottom: 30 },
-  counterCircle: { width: 240, height: 240, borderRadius: 120, borderWidth: 2, borderColor: "rgba(120,200,255,0.3)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.03)" },
-  daysNumber: { color: "#fff", fontSize: 80, fontWeight: "800" },
-  daysText: { color: ACCENT, fontSize: 18, fontWeight: "600", letterSpacing: 4 },
-  infoBox: { marginTop: 40, alignItems: "center" },
-  dateLabel: { color: "rgba(255,255,255,0.4)", fontSize: 14, marginBottom: 5 },
-  dateValue: { color: "rgba(255,255,255,0.9)", fontSize: 18, fontWeight: "500", marginBottom: 20 },
-  editButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, borderWidth: 1, borderColor: "rgba(120,200,255,0.5)", backgroundColor: "rgba(120,200,255,0.1)" },
-  editButtonText: { color: ACCENT, fontSize: 14, fontWeight: "600" },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scrollContent: { alignItems: 'center', padding: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 30, color: '#333' },
+  counterBox: {
+    backgroundColor: '#fff',
+    padding: 30,
+    borderRadius: 20,
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 30,
+  },
+  number: {
+    fontSize: 40, // Optymalny rozmiar dla liczb 5-cyfrowych
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  label: { fontSize: 16, color: '#666', marginTop: 10 },
+  button: { backgroundColor: '#007AFF', padding: 15, borderRadius: 12 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
