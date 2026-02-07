@@ -8,9 +8,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Na to:
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { markContractSigned } from '@/utils/onboarding';
 export default function KontraktScreen() {
   const [isChecked, setChecked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+
+  const handleEnter = async () => {
+    if (!isChecked || isSaving) return;
+    try {
+      setIsSaving(true);
+      await markContractSigned();
+      router.replace('/licznik');
+    } catch (e) {
+      console.error('Błąd zapisu kontraktu:', e);
+      setIsSaving(false);
+    }
+  };
 
   return (
     <BackgroundWrapper>
@@ -67,11 +81,11 @@ export default function KontraktScreen() {
 
           {/* Przycisk - teraz w pełni bezpieczny */}
           <TouchableOpacity 
-            style={[styles.button, !isChecked && styles.buttonDisabled]} 
-            onPress={() => isChecked && router.replace('/(tabs)')}
-            disabled={!isChecked}
+            style={[styles.button, (!isChecked || isSaving) && styles.buttonDisabled]} 
+            onPress={handleEnter}
+            disabled={!isChecked || isSaving}
           >
-            <Text style={styles.buttonText}>Wchodzę</Text>
+            <Text style={styles.buttonText}>{isSaving ? 'Zapisywanie...' : 'Wchodzę'}</Text>
           </TouchableOpacity>
           
           <View style={{ height: 40 }} /> 

@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getOnboardingStep } from '@/utils/onboarding';
 
 export default function LicznikScreen() {
   const [date, setDate] = useState(new Date());
@@ -46,7 +48,13 @@ export default function LicznikScreen() {
   };
 
   const saveData = async (d: Date) => {
-    try { await AsyncStorage.setItem('startDate', d.toISOString()); } 
+    try {
+      const stepBeforeSave = await getOnboardingStep();
+      await AsyncStorage.setItem('startDate', d.toISOString());
+      if (stepBeforeSave === 'startDate') {
+        router.replace('/onboarding-done');
+      }
+    }
     catch (e) { console.error('Błąd zapisu:', e); }
   };
 
