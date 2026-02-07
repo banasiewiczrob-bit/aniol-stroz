@@ -12,7 +12,7 @@ export default function AngelMark({
   return (
     <View pointerEvents="none" style={[styles.container, { opacity }]}>
       <Image
-        source={require("../app/assets/images/maly_aniol.png")}
+        source={require('../assets/images/maly_aniol.png')}
         style={{ width: size, height: size }}
         resizeMode="contain"
       />

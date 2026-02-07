@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { TYPE } from "@/styles/typography";
 
 const KEY = "single_note_v1";
 
@@ -82,14 +83,13 @@ export default function NoteScreen() {
     >
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18 }}>
         <Pressable onPress={handleBack} style={{ paddingVertical: 10 }}>
-          <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 16 }}>←</Text>
+          <Text style={{ ...TYPE.bodySmall, color: "rgba(255,255,255,0.85)" }}>←</Text>
         </Pressable>
 
         <Text
           style={{
+            ...TYPE.bodyStrong,
             color: "rgba(255,255,255,0.92)",
-            fontSize: 18,
-            fontWeight: "700",
             marginTop: 10,
           }}
         >
@@ -106,11 +106,10 @@ export default function NoteScreen() {
           autoFocus
           textAlignVertical="top"
           style={{
+            ...TYPE.body,
             marginTop: 14,
             flex: 1,
             color: "rgba(255,255,255,0.92)",
-            fontSize: 18,
-            lineHeight: 26,
             paddingVertical: 12,
           }}
         />
