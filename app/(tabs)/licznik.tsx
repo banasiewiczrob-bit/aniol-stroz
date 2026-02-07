@@ -26,14 +26,20 @@ export default function LicznikScreen() {
 
   const calculateDays = (startDate: Date) => {
     const today = new Date();
-    const diffTime = Math.abs(today.getTime() - startDate.getTime());
+    const diffTime = today.getTime() - startDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    setDaysPassed(diffDays);
+    setDaysPassed(Math.max(0, diffDays));
   };
 
   const onChange = (event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setShow(Platform.OS === 'ios');
+    if (Platform.OS === 'android') {
+      setShow(false);
+    }
+    if (!selectedDate) return;
+    const currentDate = selectedDate;
+    if (Platform.OS === 'ios') {
+      setShow(true);
+    }
     setDate(currentDate);
     calculateDays(currentDate);
     saveData(currentDate);
@@ -64,6 +70,7 @@ export default function LicznikScreen() {
             value={date}
             mode="date"
             display="spinner"
+            maximumDate={new Date()}
             onChange={onChange}
           />
         )}

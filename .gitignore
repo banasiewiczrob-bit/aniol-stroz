@@ -40,3 +40,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# local backup artifacts
+backups/
+bugreport-*.zip
+expo-env.d.ts

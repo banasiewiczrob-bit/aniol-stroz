@@ -25,12 +25,20 @@ export default function PlanScreen() {
     try {
       const saved = await AsyncStorage.getItem('@daily_task');
       if (saved !== null) {
-        const parsed = JSON.parse(saved);
-        setTask(parsed.text);
-        setIsDone(parsed.done);
+        const parsed: unknown = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const value = parsed as { text?: unknown; done?: unknown };
+          setTask(typeof value.text === 'string' ? value.text : '');
+          setIsDone(typeof value.done === 'boolean' ? value.done : false);
+        } else {
+          setTask('');
+          setIsDone(false);
+        }
       }
     } catch (e) {
       console.error("Błąd odczytu", e);
+      setTask('');
+      setIsDone(false);
     }
   };
 
@@ -114,6 +122,9 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  checkButtonDone: {
+    opacity: 0.9,
   },
   buttonText: { color: '#D1D1D1', marginLeft: 10, fontSize: 16 },
   buttonTextDone: { color: '#78C8FF', fontWeight: 'bold' },
