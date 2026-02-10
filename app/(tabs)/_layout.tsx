@@ -45,6 +45,7 @@ export default function TabLayout() {
       {/* 2. BLOKADA TRÓJKĄCIKÓW - DOKŁADNE NAZWY Z TWOJEGO VS CODE */}
       <Tabs.Screen name="kontrakt" options={{ href: null }} />
       <Tabs.Screen name="plan-dnia" options={{ href: null }} />
+      <Tabs.Screen name="licznik-nagrody" options={{ href: null }} />
       
       {/* Pliki wsparcia (z przedrostkiem wsparcie- jak na Twoim screenie) */}
       <Tabs.Screen name="wsparcie-24" options={{ href: null }} />

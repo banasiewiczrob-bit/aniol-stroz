@@ -10,7 +10,39 @@ const SECTION = "rgba(255,255,255,0.85)";
 // Poprawiona ścieżka - wychodzimy z (tabs) do app, potem do assets
 const Watermark = require("../assets/images/maly_aniol.png");
 
-function Tile({ title, subtitle, to, disabled }: { title: string; subtitle?: string; to?: string; disabled?: boolean; }) {
+type RoutePath =
+  | "/kontrakt"
+  | "/licznik"
+  | "/plan-dnia"
+  | "/wsparcie-24"
+  | "/wsparcie-halt"
+  | "/wsparcie-modlitwa"
+  | "/wsparcie-desiderata"
+  | "/wsparcie-siatka"
+  | "/wsparcie-kontakt";
+
+type TileItem = {
+  title: string;
+  subtitle: string;
+  to: RoutePath;
+};
+
+const mainItems: TileItem[] = [
+  { title: "Kontrakt", subtitle: "Umowa z samym sobą", to: "/kontrakt" },
+  { title: "Licznik zdrowienia", subtitle: "Start zdrowienia i rocznice", to: "/licznik" },
+  { title: "Plan dnia", subtitle: "Jedna rzecz na teraz", to: "/plan-dnia" },
+];
+
+const supportItems: TileItem[] = [
+  { title: "Właśnie dzisiaj", subtitle: "Program na 24 godziny", to: "/wsparcie-24" },
+  { title: "HALT", subtitle: "Cztery ważne sprawy", to: "/wsparcie-halt" },
+  { title: "Modlitwa o pogodę ducha", subtitle: "Kilka zwykłych słów", to: "/wsparcie-modlitwa" },
+  { title: "Desiderata", subtitle: "Tekst do codziennego czytania", to: "/wsparcie-desiderata" },
+  { title: "Siatka wsparcia", subtitle: "Ludzie i kontakty", to: "/wsparcie-siatka" },
+  { title: "Kontakt", subtitle: "Gdy potrzebujesz pomocy", to: "/wsparcie-kontakt" },
+];
+
+function Tile({ title, subtitle, to, disabled }: { title: string; subtitle?: string; to?: RoutePath; disabled?: boolean; }) {
   return (
     <Pressable
       onPress={() => { if (!disabled && to) router.push(to as any); }}
@@ -32,12 +64,13 @@ function Tile({ title, subtitle, to, disabled }: { title: string; subtitle?: str
     >
       <Image
         source={Watermark}
+        resizeMode="contain"
         style={{
           position: "absolute",
-          right: -15,
-          bottom: -15,
-          width: 80,
-          height: 80,
+          right: -6,
+          bottom: -6,
+          width: 86,
+          height: 86,
           opacity: 0.07,
           tintColor: "white",
           transform: [{ rotate: "15deg" }],
@@ -65,17 +98,15 @@ export default function Dom() {
         A ja jestem tutaj, aby Cię wspierać na każdym etapie tej drogi.
       </Text>
 
-      <Tile title="Kontrakt" subtitle="Umowa z samym sobą" to="/kontrakt" />
-      <Tile title="Licznik zdrowienia" subtitle="Start zdrowienia i rocznice" to="/licznik" />
-      <Tile title="Plan dnia" subtitle="Jedna rzecz na teraz" to="/plan-dnia" />
+      {mainItems.map((item) => (
+        <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
+      ))}
 
       <View style={{ marginTop: 28, marginBottom: 12 }}>
         <Text style={styles.sectionTitle}>Wsparcie</Text>
-        <Tile title="Modlitwa o pogodę ducha" subtitle="kilka zwykłych słów" to="/wsparcie" />
-        <Tile title="HALT" subtitle="Cztery ważne sprawy" to="/wsparcie" />
-        <Tile title="Właśnie dzisiaj" subtitle="program na 24 godziny" to="/wsparcie" />
-        <Tile title="Siatka wsparcia" subtitle="Ludzie i kontakty" to="/wsparcie-siatka" />
-        <Tile title="Kontakt" subtitle="Gdy potrzebujesz pomocy" to="/wsparcie-kontakt" />
+        {supportItems.map((item) => (
+          <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
+        ))}
       </View>
       <View style={{ height: 40 }} />
     </ScrollView>
