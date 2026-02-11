@@ -1,20 +1,19 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { DailyReadToggle } from "@/components/DailyReadToggle";
+import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
+import { ScrollView, StyleSheet, Text } from "react-native";
 
 const BG = "#071826";
 const SUB = "rgba(255,255,255,0.7)";
 
 export default function WsparcieDesiderata() {
-  const intro = [
+  const paragraphs = [
     "Krocz spokojnie wśród zgiełku i pośpiechu - pamiętaj jaki pokój może być w ciszy.",
     "Tak dalece jak to możliwe nie wyrzekając się siebie, bądź w dobrych stosunkach z innymi ludźmi.",
     "Prawdę swą głoś spokojnie i jasno, słuchaj też tego co mówią inni, nawet głupcy i ignoranci, oni też mają swoją opowieść.",
     "Jeśli porównujesz się z innymi możesz stać się próżny lub zgorzkniały, albowiem zawsze będą lepsi i gorsi od ciebie.",
     "Ciesz się zarówno swymi osiągnięciami jak i planami.",
     "Wykonuj z sercem swą pracę, jakakolwiek by była skromna. Jest ona trwałą wartością w zmiennych kolejach losu.",
-  ];
-
-  const outro = [
     "Zachowaj ostrożność w swych przedsięwzięciach - świat bowiem pełen jest oszustwa.",
     "Lecz niech ci to nie przesłania prawdziwej cnoty, wielu ludzi dąży do wzniosłych ideałów i wszędzie życie pełne jest heroizmu.",
     "Bądź sobą, a zwłaszcza nie zwalczaj uczuć: nie bądź cyniczny wobec miłości, albowiem w obliczu wszelkiej oschłości i rozczarowań jest ona wieczna jak trawa.",
@@ -29,19 +28,17 @@ export default function WsparcieDesiderata() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Desiderata</Text>
-      {intro.map((paragraph) => (
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="To tekst do codziennego wzmacniania spokoju, pokory i życzliwego podejścia do siebie oraz innych."
+        jak="Czytaj bez pośpiechu, akapit po akapicie. Zaznacz w głowie jedno zdanie, które chcesz dziś wprowadzić w życie."
+      />
+      {paragraphs.map((paragraph) => (
         <Text key={paragraph} style={styles.paragraph}>
           {paragraph}
         </Text>
       ))}
-
-      <View style={styles.separator} />
-
-      {outro.map((paragraph) => (
-        <Text key={paragraph} style={styles.paragraph}>
-          {paragraph}
-        </Text>
-      ))}
+      <DailyReadToggle id="desiderata" />
     </ScrollView>
   );
 }
@@ -51,9 +48,4 @@ const styles = StyleSheet.create({
   content: { padding: 18, paddingTop: 56, paddingBottom: 40 },
   title: { ...TYPE.h1, color: "white", marginBottom: 14 },
   paragraph: { ...TYPE.body, color: SUB, marginBottom: 14 },
-  separator: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    marginVertical: 16,
-  },
 });

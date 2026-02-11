@@ -1,4 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { DailyReadToggle } from "@/components/DailyReadToggle";
+import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
 
 const BG = "#071826";
@@ -28,6 +30,11 @@ export default function Wsparcie24() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>24 godziny</Text>
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="To tekst pomagający przeżyć dzień spokojniej, krok po kroku, bez przytłoczenia wszystkim naraz."
+        jak="Przeczytaj rano i wybierz 1-2 zdania, które bierzesz dla siebie na dziś. Wieczorem wróć i sprawdź, co zadziałało."
+      />
       {paragraphs.map((paragraph) => (
         <Text key={paragraph} style={styles.paragraph}>
           {paragraph}
@@ -44,6 +51,8 @@ export default function Wsparcie24() {
           </View>
         ))}
       </View>
+
+      <DailyReadToggle id="wsparcie24" />
     </ScrollView>
   );
 }

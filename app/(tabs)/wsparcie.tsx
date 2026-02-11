@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { CoJakSection } from '@/components/CoJakSection';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -21,6 +22,11 @@ export default function WsparcieScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Wsparcie</Text>
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="To baza treści i narzędzi pomocowych, do których możesz wracać codziennie."
+        jak="Wybierz materiał, który teraz najbardziej Cię wspiera. Pracuj krok po kroku, bez pośpiechu."
+      />
       <Text style={styles.subtext}>Wybierz material, z ktorego chcesz teraz skorzystac.</Text>
 
       {ITEMS.map((item) => (
@@ -39,8 +45,8 @@ export default function WsparcieScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#071826' },
   content: { padding: 18, paddingTop: 56, paddingBottom: 30 },
-  title: { color: 'white', fontSize: 36, fontWeight: '900', marginBottom: 8 },
-  subtext: { color: 'rgba(255,255,255,0.7)', fontSize: 16, marginBottom: 18 },
+  title: { color: 'white', fontSize: 39, fontWeight: '900', marginBottom: 10 },
+  subtext: { color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 26, marginBottom: 20 },
   card: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 14,
@@ -52,7 +58,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  cardTitle: { color: 'white', fontSize: 18, fontWeight: '700' },
-  cardSubtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginTop: 2 },
-  arrow: { color: '#78C8FF', fontSize: 28, fontWeight: '700' },
+  cardTitle: { color: 'white', fontSize: 21, fontWeight: '700' },
+  cardSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 16, lineHeight: 22, marginTop: 3 },
+  arrow: { color: '#78C8FF', fontSize: 31, fontWeight: '700' },
 });

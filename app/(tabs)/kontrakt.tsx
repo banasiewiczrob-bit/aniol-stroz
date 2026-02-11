@@ -1,4 +1,5 @@
 import Checkbox from 'expo-checkbox';
+import { CoJakSection } from '@/components/CoJakSection';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -21,6 +22,11 @@ export default function KontraktScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Moja Umowa z Samym Sobą</Text>
+          <CoJakSection
+            title="Opis i instrukcja"
+            co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co zaczynasz."
+            jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz checkbox dopiero wtedy, gdy czujesz gotowość wejścia w proces."
+          />
           
           <Text style={styles.intro}>
             Zaczynam tę drogę dla siebie i z sobą podpisuję ten kontrakt:

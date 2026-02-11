@@ -1,5 +1,6 @@
 import { AnimatedAngel } from '@/components/AnimatedAngel';
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { CoJakSection } from '@/components/CoJakSection';
 import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -139,6 +140,11 @@ export default function LicznikNagrody() {
     <BackgroundWrapper>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Tutaj znajdziesz swoje rocznice</Text>
+        <CoJakSection
+          title="Opis i instrukcja"
+          co="Ten ekran zbiera Twoje rocznice i odznaki, żeby wzmacniać motywację oraz poczucie postępu."
+          jak="Sprawdź swoje rocznice i, jeśli chcesz, udostępnij sukces. To ma być wsparcie i ślad Twojej drogi."
+        />
         <Text style={styles.subtitle}>Oto symbole na Twojej drodze zdrowienia. Bądź z nich dumny.</Text>
 
         <View style={styles.shareCaptureCanvas}>

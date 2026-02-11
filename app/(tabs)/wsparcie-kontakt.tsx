@@ -1,4 +1,5 @@
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
 
 const BG = "#071826";
@@ -19,6 +20,11 @@ export default function WsparcieKontakt() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Kontakt</Text>
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="Ten ekran daje szybki dostęp do kontaktu, gdy potrzebujesz wsparcia tu i teraz."
+        jak="Wybierz odpowiedni kontakt i działaj od razu. W kryzysie użyj pilnego wsparcia bez zwlekania."
+      />
       <Text style={styles.subtitle}>
         Jeśli czujesz, że potrzebujesz rozmowy — sięgnij po pomoc. Nie musisz być sam.
       </Text>

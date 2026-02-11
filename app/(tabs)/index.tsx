@@ -1,3 +1,4 @@
+import { CoJakSection } from "@/components/CoJakSection";
 import { router } from "expo-router";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -33,11 +34,14 @@ const mainItems: TileItem[] = [
   { title: "Plan dnia", subtitle: "Jedna rzecz na teraz", to: "/plan-dnia" },
 ];
 
-const supportItems: TileItem[] = [
+const dailyTextsItems: TileItem[] = [
+  { title: "Modlitwa o pogodę ducha", subtitle: "Kilka zwykłych słów", to: "/wsparcie-modlitwa" },
   { title: "Właśnie dzisiaj", subtitle: "Program na 24 godziny", to: "/wsparcie-24" },
   { title: "HALT", subtitle: "Cztery ważne sprawy", to: "/wsparcie-halt" },
-  { title: "Modlitwa o pogodę ducha", subtitle: "Kilka zwykłych słów", to: "/wsparcie-modlitwa" },
   { title: "Desiderata", subtitle: "Tekst do codziennego czytania", to: "/wsparcie-desiderata" },
+];
+
+const supportItems: TileItem[] = [
   { title: "Siatka wsparcia", subtitle: "Ludzie i kontakty", to: "/wsparcie-siatka" },
   { title: "Kontakt", subtitle: "Gdy potrzebujesz pomocy", to: "/wsparcie-kontakt" },
 ];
@@ -79,7 +83,7 @@ function Tile({ title, subtitle, to, disabled }: { title: string; subtitle?: str
       <View style={{ zIndex: 2 }}>
         <Text style={{ color: "white", fontSize: 20, fontWeight: "700" }}>{title}</Text>
         {!!subtitle && (
-          <Text style={{ marginTop: 6, color: SUB, fontSize: 14, lineHeight: 19, width: '80%' }}>
+          <Text style={{ marginTop: 6, color: SUB, fontSize: 16, lineHeight: 23, width: '85%' }}>
             {subtitle}
           </Text>
         )}
@@ -97,12 +101,33 @@ export default function Dom() {
         Znajdziesz tu podstawowe narzędzia potrzebne w Twojej podróży ku zdrowieniu.
         A ja jestem tutaj, aby Cię wspierać na każdym etapie tej drogi.
       </Text>
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="Jeśli dotarłeś tutaj i czytasz ten tekst to znaczy że masz za sobą ju podpisanie kontraktu 
+        (otrzymałeś Białego Aniołka o imieniu Właśnie Dzisiaj). To dobrze.
+        Prawdopodobnie zaznaczyłeś też już datę
+        startu Twojego zdrowienia w Liczniku, a może nawet zacząłeś korzystać z Planu dnia."
+        jak="A zatem zatrzymaj sie na chwilę. Tak, Plan Dnia jest osią Anioła Stróża, ale możesz korzystać z aplikacji
+        take bez Planu. Po prostu czytając teksty. To take ma sens.
+        Rozejrzyj się po tym miejscu i zobacz 
+        co może Ci się przydać już teraz, a co dopiero w przyszłości. 
+        Nie musisz korzystać ze wszystkiego od razu. 
+        Wybierz to, co jest dla Ciebie najbardziej pomocne w tej chwili."
+      />
 
+      <Text style={styles.sectionTitle}>Narzędzia</Text>
       {mainItems.map((item) => (
         <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
       ))}
 
       <View style={{ marginTop: 28, marginBottom: 12 }}>
+        <Text style={styles.sectionTitle}>Teksty codzienne</Text>
+        {dailyTextsItems.map((item) => (
+          <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
+        ))}
+      </View>
+
+      <View style={{ marginTop: 12, marginBottom: 12 }}>
         <Text style={styles.sectionTitle}>Wsparcie</Text>
         {supportItems.map((item) => (
           <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
@@ -114,7 +139,7 @@ export default function Dom() {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: { color: "white", fontSize: 32, fontWeight: "800", marginBottom: 16 },
-  headerSubtitle: { color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 24, fontWeight: "400", marginBottom: 40 },
-  sectionTitle: { color: SECTION, fontSize: 22, fontWeight: "700", marginBottom: 16 },
+  headerTitle: { color: "white", fontSize: 36, fontWeight: "800", marginBottom: 16 },
+  headerSubtitle: { color: "rgba(255,255,255,0.76)", fontSize: 18, lineHeight: 28, fontWeight: "400", marginBottom: 40 },
+  sectionTitle: { color: SECTION, fontSize: 25, fontWeight: "700", marginBottom: 16 },
 });

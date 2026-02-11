@@ -1,4 +1,6 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { DailyReadToggle } from '@/components/DailyReadToggle';
+import { CoJakSection } from '@/components/CoJakSection';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -13,6 +15,11 @@ export default function HaltScreen() {
         <Text style={styles.subtitle}>
           Zanim podejmiesz decyzję lub działanie, sprawdź czy nie jesteś:
         </Text>
+        <CoJakSection
+          title="Opis i instrukcja"
+          co="HALT pomaga zauważyć stany, które zwiększają napięcie i ryzyko impulsywnych decyzji."
+          jak="Przed ważniejszą decyzją zrób krótki check: głód, złość, samotność, zmęczenie. Najpierw zadbaj o potrzeby, potem działaj."
+        />
 
         <HaltItem 
           letter="H" 
@@ -41,6 +48,8 @@ export default function HaltScreen() {
           description="Dbaj o odpowiednią ilość snu i odpoczynek, aby uniknąć fizycznego i psychicznego wyczerpania." 
           icon="bed-outline"
         />
+
+        <DailyReadToggle id="halt" />
         
         <View style={{ height: 50 }} />
       </ScrollView>

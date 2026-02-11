@@ -1,4 +1,5 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { CoJakSection } from '@/components/CoJakSection';
 import { SCREEN_PADDING } from '@/styles/screenStyles';
 import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
@@ -197,6 +198,11 @@ export default function LicznikScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.captureArea}>
           <Text style={styles.title}>Twój licznik zdrowienia</Text>
+          <CoJakSection
+            title="Opis i instrukcja"
+            co="Licznik pokazuje, jak długo trwa Twoja droga zdrowienia i pomaga zauważyć postęp dzień po dniu."
+            jak="Ustaw datę początkową i aktualizuj ją tylko wtedy, gdy naprawdę trzeba. Traktuj licznik jako wsparcie, nie presję."
+          />
           <Text style={styles.headerSubtitle}>
             Każdy z nas lubi wiedzieć jak długo zdrowieje. Mimo tego, co mówię, że: "To nie ważne", to jednak dobrze
             znam datę rozpoczęcia tej drogi. A Twoja trwa już:

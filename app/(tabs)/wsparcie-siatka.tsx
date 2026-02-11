@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CoJakSection } from "@/components/CoJakSection";
 import React, { useEffect, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { TYPE } from "@/styles/typography";
@@ -106,6 +107,11 @@ export default function WsparcieSiatka() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Siatka wsparcia</Text>
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="Tu budujesz listę osób, do których możesz zadzwonić w trudniejszym momencie."
+        jak="Dodaj kontakty wcześniej, zanim pojawi się kryzys. Aktualizuj numery i utrzymuj listę pod ręką."
+      />
       <Text style={styles.subtitle}>
         Zapisz osoby, do których możesz zadzwonić w kryzysie, albo po prostu pogadać. 
         Zbuduj swoją siatkę wsparcia. W ten sposób łatwiej będzie Ci sięgnąć po pomoc, 

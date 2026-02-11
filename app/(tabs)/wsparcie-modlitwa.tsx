@@ -1,4 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { DailyReadToggle } from "@/components/DailyReadToggle";
+import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
 
 const BG = "#071826";
@@ -15,6 +17,11 @@ export default function WsparcieModlitwa() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Modlitwa o pogodę ducha</Text>
+      <CoJakSection
+        title="Opis i instrukcja"
+        co="To krótkie słowa porządkujące to, co mogę zmienić i czego nie mogę dziś kontrolować."
+        jak="Przeczytaj powoli 1-2 razy. Zatrzymaj się na zdaniu, które teraz najbardziej do Ciebie trafia."
+      />
       <View style={styles.card}>
         {lines.map((line) => (
           <Text key={line} style={styles.line}>
@@ -22,6 +29,7 @@ export default function WsparcieModlitwa() {
           </Text>
         ))}
       </View>
+      <DailyReadToggle id="modlitwa" />
     </ScrollView>
   );
 }
