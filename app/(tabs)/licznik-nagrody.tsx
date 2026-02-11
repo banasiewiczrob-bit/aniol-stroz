@@ -142,8 +142,11 @@ export default function LicznikNagrody() {
         <Text style={styles.title}>Tutaj znajdziesz swoje rocznice</Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="Ten ekran zbiera Twoje rocznice i odznaki, żeby wzmacniać motywację oraz poczucie postępu."
-          jak="Sprawdź swoje rocznice i, jeśli chcesz, udostępnij sukces. To ma być wsparcie i ślad Twojej drogi."
+          co="Ten ekran zbiera Twoje rocznice i odznaki, 
+          żeby wzmacniać Twoją motywację oraz poczucie postępu."
+          jak="Sprawdź swoje rocznice i, jeśli chcesz, 
+          udostępnij Swój sukces. To ma być wsparcie i ślad Twojej drogi. Poza tym to symbol, 
+          że jesteś na dobrej drodze i że warto iść dalej. Gdy pokazujesz własne osiągnięcia wtedy to pomaga taże innym.Gratulacje!"
         />
         <Text style={styles.subtitle}>Oto symbole na Twojej drodze zdrowienia. Bądź z nich dumny.</Text>
 

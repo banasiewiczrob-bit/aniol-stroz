@@ -1,11 +1,11 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
-import { DailyReadToggle } from '@/components/DailyReadToggle';
 import { CoJakSection } from '@/components/CoJakSection';
+import { DailyReadToggle } from '@/components/DailyReadToggle';
+import { SCREEN_CONTAINER, SCREEN_TITLE } from '@/styles/screenStyles';
+import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SCREEN_CONTAINER, SCREEN_TITLE } from '@/styles/screenStyles';
-import { TYPE } from '@/styles/typography';
 
 export default function HaltScreen() {
   return (
@@ -17,8 +17,11 @@ export default function HaltScreen() {
         </Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="HALT pomaga zauważyć stany, które zwiększają napięcie i ryzyko impulsywnych decyzji."
-          jak="Przed ważniejszą decyzją zrób krótki check: głód, złość, samotność, zmęczenie. Najpierw zadbaj o potrzeby, potem działaj."
+          co="Znasz tak zwany program HALT? Jego stosowanie pomaga zauważyć stany, które zwiększają napięcie i ryzyko impulsywnych decyzji."
+          jak="Przed kadą waną dla Ciebie decyzją zrób krótki sprawdzian: głód, złość, samotność, zmęczenie. 
+          Najpierw pomyśl o swoich potrzebach, potem działaj. Przeczytaj każdy punkt i zastanów się, 
+          czy któryś z nich nie jest teraz w Tobie obecny. Jeśli tak, zatrzymaj się i zadbaj o tę 
+          potrzebę, zanim podejmiesz decyzję. Zaznacz na dole Przeczytałem."
         />
 
         <HaltItem 

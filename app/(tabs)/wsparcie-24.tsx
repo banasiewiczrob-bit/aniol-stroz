@@ -1,14 +1,14 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { CoJakSection } from "@/components/CoJakSection";
+import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const BG = "#071826";
 const SUB = "rgba(255,255,255,0.7)";
 
 export default function Wsparcie24() {
   const paragraphs = [
-    "To spis kilku prostych działań, czynności, które skupią Cię na czymś najważniejszym, na „Tu i teraz”. Bo chodzi o to, aby robić jedną rzecz na raz i żyć jeden dzień na raz. Wiem, że to trudne, prawdopodobnie nie masz zbyt dużo doświadczeń w „Tu i teraz”, też nie miałem. Wszystko możesz zmienić. Zacznij już dziś. Ułóż plan na dziś i działaj.",
+    "",
   ];
 
   const bullets = [
@@ -32,16 +32,20 @@ export default function Wsparcie24() {
       <Text style={styles.title}>24 godziny</Text>
       <CoJakSection
         title="Opis i instrukcja"
-        co="To tekst pomagający przeżyć dzień spokojniej, krok po kroku, bez przytłoczenia wszystkim naraz."
-        jak="Przeczytaj rano i wybierz 1-2 zdania, które bierzesz dla siebie na dziś. Wieczorem wróć i sprawdź, co zadziałało."
+        co="To spis kilku prostych działań, czynności, które skupiają się na  najważniejszym, 
+        na Tu i teraz. Bo chodzi o to, aby robić jedną rzecz na raz i żyć jeden dzień na raz. 
+        Wiem, że to trudne, prawdopodobnie nie masz zbyt dużo doświadczeń w Tu i teraz, 
+        też nie miałem. Wszystko możesz zmienić. Zacznij już dziś. 
+        Ułóż plan na dziś i działaj.To tekst pomagający przeżyć dzień spokojniej, 
+        krok po kroku, bez przytłoczenia wszystkim naraz."
+        jak="Przeczytaj rano i wybierz 1-2 zdania, które bierzesz dla siebie na dziś. 
+        Wieczorem wróć i sprawdź, co zadziałało. Zaznacz na dole Przeczytałem."
       />
       {paragraphs.map((paragraph) => (
         <Text key={paragraph} style={styles.paragraph}>
           {paragraph}
         </Text>
       ))}
-
-      <View style={styles.separator} />
 
       <View style={styles.list}>
         {bullets.map((item) => (
@@ -66,9 +70,4 @@ const styles = StyleSheet.create({
   listItem: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
   bullet: { ...TYPE.bodyStrong, color: SUB, marginRight: 8 },
   listText: { ...TYPE.body, color: SUB, flex: 1 },
-  separator: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    marginVertical: 16,
-  },
 });

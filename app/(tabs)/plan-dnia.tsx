@@ -167,7 +167,7 @@ export default function PlanScreen() {
   const [archiveOpen, setArchiveOpen] = useState(true);
   const [readDone, setReadDone] = useState<Record<DailyTextId, boolean>>(EMPTY_DAILY_TEXTS);
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [instructionOpen, setInstructionOpen] = useState(true);
+  const [instructionOpen, setInstructionOpen] = useState(false);
   const [summary, setSummary] = useState<{ emoji: string; message: string; score: number; completedCount: number; readCount: number; haltCount: number }>({
     emoji: '🙂',
     message: '',

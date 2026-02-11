@@ -1,5 +1,5 @@
-import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { CoJakSection } from "@/components/CoJakSection";
+import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
 import { ScrollView, StyleSheet, Text } from "react-native";
 
@@ -30,8 +30,10 @@ export default function WsparcieDesiderata() {
       <Text style={styles.title}>Desiderata</Text>
       <CoJakSection
         title="Opis i instrukcja"
-        co="To tekst do codziennego wzmacniania spokoju, pokory i życzliwego podejścia do siebie oraz innych."
-        jak="Czytaj bez pośpiechu, akapit po akapicie. Zaznacz w głowie jedno zdanie, które chcesz dziś wprowadzić w życie."
+        co="Kolejny znany Ci zapewne tekst. Desiderata. To słowa do codziennego wzmacniania spokoju, 
+        pokory i życzliwego podejścia do siebie oraz innych."
+        jak="Czytaj bez pośpiechu, akapit po akapicie. 
+        Zaznacz w głowie jedno zdanie, które chcesz dziś wprowadzić w życie. Zaznacz na dole Przeczytałem."
       />
       {paragraphs.map((paragraph) => (
         <Text key={paragraph} style={styles.paragraph}>

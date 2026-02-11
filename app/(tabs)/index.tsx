@@ -15,6 +15,7 @@ type RoutePath =
   | "/kontrakt"
   | "/licznik"
   | "/plan-dnia"
+  | "/moje-doswiadczenie"
   | "/wsparcie-24"
   | "/wsparcie-halt"
   | "/wsparcie-modlitwa"
@@ -39,6 +40,10 @@ const dailyTextsItems: TileItem[] = [
   { title: "Właśnie dzisiaj", subtitle: "Program na 24 godziny", to: "/wsparcie-24" },
   { title: "HALT", subtitle: "Cztery ważne sprawy", to: "/wsparcie-halt" },
   { title: "Desiderata", subtitle: "Tekst do codziennego czytania", to: "/wsparcie-desiderata" },
+];
+
+const taskItems: TileItem[] = [
+  { title: "Napisz co Ci pomaga", subtitle: "Zapisz, co dziś przeżyłeś", to: "/moje-doswiadczenie" },
 ];
 
 const supportItems: TileItem[] = [
@@ -107,8 +112,9 @@ export default function Dom() {
         (otrzymałeś Białego Aniołka o imieniu Właśnie Dzisiaj). To dobrze.
         Prawdopodobnie zaznaczyłeś też już datę
         startu Twojego zdrowienia w Liczniku, a może nawet zacząłeś korzystać z Planu dnia."
-        jak="A zatem zatrzymaj sie na chwilę. Tak, Plan Dnia jest osią Anioła Stróża, ale możesz korzystać z aplikacji
-        take bez Planu. Po prostu czytając teksty. To take ma sens.
+        jak="A zatem zatrzymaj sie na chwilę. 
+        Tak, Plan Dnia jest osią Anioła Stróża, ale możesz korzystać z aplikacji
+        take bez Planu. Po prostu czytając teksty i używając innych funkcjonalności. To take ma sens.
         Rozejrzyj się po tym miejscu i zobacz 
         co może Ci się przydać już teraz, a co dopiero w przyszłości. 
         Nie musisz korzystać ze wszystkiego od razu. 
@@ -123,6 +129,13 @@ export default function Dom() {
       <View style={{ marginTop: 28, marginBottom: 12 }}>
         <Text style={styles.sectionTitle}>Teksty codzienne</Text>
         {dailyTextsItems.map((item) => (
+          <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
+        ))}
+      </View>
+
+      <View style={{ marginTop: 12, marginBottom: 12 }}>
+        <Text style={styles.sectionTitle}>Zadania</Text>
+        {taskItems.map((item) => (
           <Tile key={item.title} title={item.title} subtitle={item.subtitle} to={item.to} />
         ))}
       </View>

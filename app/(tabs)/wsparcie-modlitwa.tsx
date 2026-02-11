@@ -1,7 +1,7 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { CoJakSection } from "@/components/CoJakSection";
+import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const BG = "#071826";
 const SUB = "rgba(255,255,255,0.7)";
@@ -19,8 +19,10 @@ export default function WsparcieModlitwa() {
       <Text style={styles.title}>Modlitwa o pogodę ducha</Text>
       <CoJakSection
         title="Opis i instrukcja"
-        co="To krótkie słowa porządkujące to, co mogę zmienić i czego nie mogę dziś kontrolować."
-        jak="Przeczytaj powoli 1-2 razy. Zatrzymaj się na zdaniu, które teraz najbardziej do Ciebie trafia."
+        co="Być może znasz tę modlitwę. Być moze odmawiałeś ją już wiele razy. 
+        To proste słowa porządkujące to, co mogę zmienić i czego nie mogę dziś kontrolować."
+        jak="Przeczytaj powoli raz, może dwa razy. Zatrzymaj się na zdaniu, które dzisiaj najbardziej 
+        do Ciebie trafia. Zaznacz na dole Przeczytałem i wróć do tego zdania w ciągu dnia, kiedy poczujesz, że potrzebujesz wsparcia."
       />
       <View style={styles.card}>
         {lines.map((line) => (

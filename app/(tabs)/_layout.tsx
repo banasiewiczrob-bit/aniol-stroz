@@ -46,6 +46,7 @@ export default function TabLayout() {
       <Tabs.Screen name="kontrakt" options={{ href: null }} />
       <Tabs.Screen name="plan-dnia" options={{ href: null }} />
       <Tabs.Screen name="licznik-nagrody" options={{ href: null }} />
+      <Tabs.Screen name="moje-doswiadczenie" options={{ href: null }} />
       
       {/* Pliki wsparcia (z przedrostkiem wsparcie- jak na Twoim screenie) */}
       <Tabs.Screen name="wsparcie-24" options={{ href: null }} />

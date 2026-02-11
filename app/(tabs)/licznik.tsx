@@ -200,12 +200,13 @@ export default function LicznikScreen() {
           <Text style={styles.title}>Twój licznik zdrowienia</Text>
           <CoJakSection
             title="Opis i instrukcja"
-            co="Licznik pokazuje, jak długo trwa Twoja droga zdrowienia i pomaga zauważyć postęp dzień po dniu."
-            jak="Ustaw datę początkową i aktualizuj ją tylko wtedy, gdy naprawdę trzeba. Traktuj licznik jako wsparcie, nie presję."
+            co=",Każdy z nas lubi wiedzieć jak długo zdrowieje. Mimo tego, co mówimy, że: To nie ważne, 
+            to jednak dobrze znamy datę rozpoczęcia tej drogi. Licznik pokazuje, jak długo trwa Twoja droga i pomaga zauważyć postęp dzień po dniu."
+            jak="Ustaw datę początkową i aktualizuj ją tylko wtedy, gdy naprawdę trzeba. 
+            Traktuj licznik jako wsparcie, nie presję. Gdy ustawisz datę a licznik pokaże liczbę dni, sprawdź co jest w Twoje odznaki i zobacz, czy nie masz już jakiejś nagrody do odebrania. Pamiętaj, że to nie wyścig, a każdy dzień zdrowienia jest ważny."
           />
           <Text style={styles.headerSubtitle}>
-            Każdy z nas lubi wiedzieć jak długo zdrowieje. Mimo tego, co mówię, że: "To nie ważne", to jednak dobrze
-            znam datę rozpoczęcia tej drogi. A Twoja trwa już:
+             Twoje zdrowienie trwa już:
           </Text>
 
           <View style={styles.counterWrap}>
