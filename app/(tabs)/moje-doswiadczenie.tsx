@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { BackButton } from "@/components/BackButton";
 import { useEffect, useRef, useState } from "react";
 import { TYPE } from "@/styles/typography";
 import { Alert, Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
@@ -61,11 +61,6 @@ export default function MojeDoswiadczenieScreen() {
     return () => sub.remove();
   }, [text, loaded]);
 
-  const handleBack = async () => {
-    await saveNow(text);
-    router.back();
-  };
-
   const handleSendToRobert = async () => {
     const trimmed = text.trim();
     if (!trimmed) {
@@ -113,12 +108,13 @@ export default function MojeDoswiadczenieScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
     >
+      <BackButton />
       <ScrollView
         ref={scrollRef}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: insets.top + 8,
+          paddingTop: 18,
           paddingBottom: Math.max(18, insets.bottom + 12),
         }}
       >

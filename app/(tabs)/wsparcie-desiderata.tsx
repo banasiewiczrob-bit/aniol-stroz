@@ -1,7 +1,8 @@
+import { BackButton } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const BG = "#071826";
 const SUB = "rgba(255,255,255,0.7)";
@@ -26,28 +27,32 @@ export default function WsparcieDesiderata() {
   ];
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Desiderata</Text>
-      <CoJakSection
-        title="Opis i instrukcja"
-        co="Kolejny znany Ci zapewne tekst. Desiderata. To słowa do codziennego wzmacniania spokoju, 
-        pokory i życzliwego podejścia do siebie oraz innych."
-        jak="Czytaj bez pośpiechu, akapit po akapicie. 
-        Zaznacz w głowie jedno zdanie, które chcesz dziś wprowadzić w życie. Zaznacz na dole Przeczytałem."
-      />
-      {paragraphs.map((paragraph) => (
-        <Text key={paragraph} style={styles.paragraph}>
-          {paragraph}
-        </Text>
-      ))}
-      <DailyReadToggle id="desiderata" />
-    </ScrollView>
+    <View style={styles.screen}>
+      <BackButton />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Desiderata</Text>
+        <CoJakSection
+          title="Opis i instrukcja"
+          co="Kolejny znany Ci zapewne tekst. Desiderata. To słowa do codziennego wzmacniania spokoju, 
+          pokory i życzliwego podejścia do siebie oraz innych."
+          jak="Czytaj bez pośpiechu, akapit po akapicie. 
+          Zaznacz w głowie jedno zdanie, które chcesz dziś wprowadzić w życie. Zaznacz na dole Przeczytałem."
+        />
+        {paragraphs.map((paragraph) => (
+          <Text key={paragraph} style={styles.paragraph}>
+            {paragraph}
+          </Text>
+        ))}
+        <DailyReadToggle id="desiderata" />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BG },
-  content: { padding: 18, paddingTop: 56, paddingBottom: 40 },
+  scroll: { flex: 1 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 40 },
   title: { ...TYPE.h1, color: "white", marginBottom: 14 },
   paragraph: { ...TYPE.body, color: SUB, marginBottom: 14 },
 });

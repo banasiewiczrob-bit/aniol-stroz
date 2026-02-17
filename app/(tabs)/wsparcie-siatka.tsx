@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BackButton } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import React, { useEffect, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -105,99 +106,103 @@ export default function WsparcieSiatka() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Siatka wsparcia</Text>
-      <CoJakSection
-        title="Opis i instrukcja"
-        co="Tu budujesz listę osób, do których możesz zadzwonić w trudniejszym momencie."
-        jak="Dodaj kontakty wcześniej, zanim pojawi się kryzys. Aktualizuj numery i utrzymuj listę pod ręką."
-      />
-      <Text style={styles.subtitle}>
-        Zapisz osoby, do których możesz zadzwonić w kryzysie, albo po prostu pogadać. 
-        Zbuduj swoją siatkę wsparcia. W ten sposób łatwiej będzie Ci sięgnąć po pomoc, 
-        gdy znajdziesz się w potrzebie.
-      </Text>
-
-      <TextInput
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Szukaj po imieniu lub numerze"
-        placeholderTextColor="rgba(255,255,255,0.35)"
-        style={styles.searchInput}
-      />
-
-      <View style={styles.form}>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Imię, nazwisko lub pseudonim"
-          placeholderTextColor="rgba(255,255,255,0.35)"
-          style={styles.input}
+    <View style={styles.screen}>
+      <BackButton />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Siatka wsparcia</Text>
+        <CoJakSection
+          title="Opis i instrukcja"
+          co="Tu budujesz listę osób, do których możesz zadzwonić w trudniejszym momencie."
+          jak="Dodaj kontakty wcześniej, zanim pojawi się kryzys. Aktualizuj numery i utrzymuj listę pod ręką."
         />
+        <Text style={styles.subtitle}>
+          Zapisz osoby, do których możesz zadzwonić w kryzysie, albo po prostu pogadać. 
+          Zbuduj swoją siatkę wsparcia. W ten sposób łatwiej będzie Ci sięgnąć po pomoc, 
+          gdy znajdziesz się w potrzebie.
+        </Text>
+
         <TextInput
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="Numer telefonu"
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Szukaj po imieniu lub numerze"
           placeholderTextColor="rgba(255,255,255,0.35)"
-          keyboardType="phone-pad"
-          style={styles.input}
+          style={styles.searchInput}
         />
-        <View style={styles.formActions}>
-          <Pressable style={styles.addButton} onPress={handleAddOrSave}>
-            <Text style={styles.addButtonText}>
-              {editingId ? "Zapisz zmiany" : "Dodaj kontakt"}
-            </Text>
-          </Pressable>
-          {editingId && (
-            <Pressable style={styles.cancelButton} onPress={resetForm}>
-              <Text style={styles.cancelButtonText}>Anuluj</Text>
+
+        <View style={styles.form}>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Imię, nazwisko lub pseudonim"
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            style={styles.input}
+          />
+          <TextInput
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Numer telefonu"
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            keyboardType="phone-pad"
+            style={styles.input}
+          />
+          <View style={styles.formActions}>
+            <Pressable style={styles.addButton} onPress={handleAddOrSave}>
+              <Text style={styles.addButtonText}>
+                {editingId ? "Zapisz zmiany" : "Dodaj kontakt"}
+              </Text>
             </Pressable>
+            {editingId && (
+              <Pressable style={styles.cancelButton} onPress={resetForm}>
+                <Text style={styles.cancelButtonText}>Anuluj</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.list}>
+          {contacts.filter((item) => {
+            const q = query.trim().toLowerCase();
+            if (!q) return true;
+            return item.name.toLowerCase().includes(q) || item.phone.toLowerCase().includes(q);
+          }).length === 0 ? (
+            <Text style={styles.emptyText}>Na razie brak zapisanych kontaktów.</Text>
+          ) : (
+            contacts
+              .filter((item) => {
+                const q = query.trim().toLowerCase();
+                if (!q) return true;
+                return item.name.toLowerCase().includes(q) || item.phone.toLowerCase().includes(q);
+              })
+              .map((item) => (
+              <View key={item.id} style={styles.card}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardName}>{item.name}</Text>
+                  <Text style={styles.cardPhone}>{item.phone}</Text>
+                </View>
+                <View style={styles.actions}>
+                  <Pressable style={styles.callButton} onPress={() => handleCall(item.phone)}>
+                    <Text style={styles.callButtonText}>Zadzwoń</Text>
+                  </Pressable>
+                  <Pressable style={styles.editButton} onPress={() => handleEdit(item)}>
+                    <Text style={styles.editButtonText}>Edytuj</Text>
+                  </Pressable>
+                  <Pressable style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+                    <Text style={styles.deleteButtonText}>Usuń</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))
           )}
         </View>
-      </View>
-
-      <View style={styles.list}>
-        {contacts.filter((item) => {
-          const q = query.trim().toLowerCase();
-          if (!q) return true;
-          return item.name.toLowerCase().includes(q) || item.phone.toLowerCase().includes(q);
-        }).length === 0 ? (
-          <Text style={styles.emptyText}>Na razie brak zapisanych kontaktów.</Text>
-        ) : (
-          contacts
-            .filter((item) => {
-              const q = query.trim().toLowerCase();
-              if (!q) return true;
-              return item.name.toLowerCase().includes(q) || item.phone.toLowerCase().includes(q);
-            })
-            .map((item) => (
-            <View key={item.id} style={styles.card}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.cardName}>{item.name}</Text>
-                <Text style={styles.cardPhone}>{item.phone}</Text>
-              </View>
-              <View style={styles.actions}>
-                <Pressable style={styles.callButton} onPress={() => handleCall(item.phone)}>
-                  <Text style={styles.callButtonText}>Zadzwoń</Text>
-                </Pressable>
-                <Pressable style={styles.editButton} onPress={() => handleEdit(item)}>
-                  <Text style={styles.editButtonText}>Edytuj</Text>
-                </Pressable>
-                <Pressable style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
-                  <Text style={styles.deleteButtonText}>Usuń</Text>
-                </Pressable>
-              </View>
-            </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BG },
-  content: { padding: 18, paddingTop: 56, paddingBottom: 40 },
+  scroll: { flex: 1 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 40 },
   title: { ...TYPE.h1, color: "white", marginBottom: 14 },
   subtitle: { ...TYPE.body, color: SUB, marginBottom: 18 },
   searchInput: {

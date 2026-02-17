@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -81,88 +82,90 @@ export default function WsparcieKontakt() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Kontakt</Text>
-      <CoJakSection
-        title="Opis i instrukcja"
-        co="Ten ekran daje szybki dostęp do kontaktu, gdy potrzebujesz wsparcia tu i teraz."
-        jak="Wybierz odpowiedniego człowieka i działaj od razu. W kryzysie użyj pilnego wsparcia 
-        bez zwlekania. Jeśli czujesz, że potrzebujesz rozmowy — sięgnij po pomoc. Nie musisz być sam."
-      />
+    <View style={styles.screen}>
+      <BackButton />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Kontakt</Text>
+        <CoJakSection
+          title="Opis i instrukcja"
+          co="Ten ekran daje szybki dostęp do kontaktu, gdy potrzebujesz wsparcia tu i teraz."
+          jak="Wybierz odpowiedniego człowieka i działaj od razu. W kryzysie użyj pilnego wsparcia 
+          bez zwlekania. Jeśli czujesz, że potrzebujesz rozmowy — sięgnij po pomoc. Nie musisz być sam."
+        />
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pilne wsparcie</Text>
-        <Text style={styles.sectionText}>
-          Jeśli jesteś w kryzysie lub zagrożeniu zdrowia/życia, dzwoń natychmiast. Ten numer znasz.
-        </Text>
-        <Pressable style={styles.ctaPrimary} onPress={() => handleCall("112")}>
-          <Text style={styles.ctaPrimaryText}>Zadzwoń 112</Text>
-        </Pressable>
-      </View>
-<View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pamiętaj: Twoja Siatka Wsparcia to najlepsze rozwiązanie. </Text>
-        <Text style={styles.sectionText}>
-          Najszybciej pomoże rozmowa z kimś, kto Cię zna. Dodaj osoby w zakładce „Siatka wsparcia” Nie czekaj a będziesz w potrzebie. Dzwoń do ludzi w stałych porach..
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Kontakt z Aniołem</Text>
-        <Text style={styles.sectionText}>
-          Jeśli chcesz się skontaktować, napisz:
-        </Text>
-        <Text style={styles.email}>info@aniolstroz.com.pl</Text>
-        <Text style={styles.note}>
-        Odpowiadam na wszystkie wiadomości, ale może to zająć trochę czasu. 
-        Nie zostawiam wiadomości bez odpowiedzi.
-        </Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Wsparcie telefoniczne</Text>
-        <Text style={styles.sectionText}>
-          Możesz zadzwonić do wybranej osoby lub specjalisty.
-        </Text>
-        <View style={styles.card}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Robert Banasiewicz</Text>
-            <Text style={styles.cardSubtitle}>Twórca Anioła Stróża — terapeuta, pedagog</Text>
-            <Text style={styles.cardPhone}>+48 513683660</Text>
-          </View>
-          <View style={styles.cardActions}>
-            <Pressable style={styles.callButton} onPress={() => handleCall("+48513683660")}>
-              <Text style={styles.callButtonText}>Zadzwoń</Text>
-            </Pressable>
-            <Pressable style={styles.smsButton} onPress={() => handleSms("+48513683660")}>
-              <Text style={styles.smsButtonText}>SMS</Text>
-            </Pressable>
-          </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Pilne wsparcie</Text>
+          <Text style={styles.sectionText}>
+            Jeśli jesteś w kryzysie lub zagrożeniu zdrowia/życia, dzwoń natychmiast. Ten numer znasz.
+          </Text>
+          <Pressable style={styles.ctaPrimary} onPress={() => handleCall("112")}>
+            <Text style={styles.ctaPrimaryText}>Zadzwoń 112</Text>
+          </Pressable>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Pamiętaj: Twoja siatka wsparcia to najlepsze rozwiązanie.</Text>
+          <Text style={styles.sectionText}>
+            Najszybciej pomoże rozmowa z kimś, kto Cię zna. Dodaj osoby w zakładce „Siatka wsparcia”. Nie czekaj, aż będziesz w potrzebie. Dzwoń do ludzi w stałych porach.
+          </Text>
         </View>
 
-        <Text style={[styles.sectionTitle, { marginTop: 18 }]}>Numery pomocowe</Text>
-        {HOTLINES.map((item) => (
-          <View key={item.id} style={styles.card}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Kontakt z Aniołem</Text>
+          <Text style={styles.sectionText}>
+            Jeśli chcesz się skontaktować, napisz:
+          </Text>
+          <Text style={styles.email}>info@aniolstroz.com.pl</Text>
+          <Text style={styles.note}>
+          Odpowiadam na wszystkie wiadomości, ale może to zająć trochę czasu. 
+          Nie zostawiam wiadomości bez odpowiedzi.
+          </Text>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Wsparcie telefoniczne</Text>
+          <Text style={styles.sectionText}>
+            Możesz zadzwonić do wybranej osoby lub specjalisty.
+          </Text>
+          <View style={styles.card}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSubtitle}>{item.details}</Text>
-              <Text style={styles.cardPhone}>{item.phone}</Text>
+              <Text style={styles.cardTitle}>Robert Banasiewicz</Text>
+              <Text style={styles.cardSubtitle}>Twórca Anioła Stróża — terapeuta, pedagog</Text>
+              <Text style={styles.cardPhone}>+48 513683660</Text>
             </View>
             <View style={styles.cardActions}>
-              <Pressable style={styles.callButton} onPress={() => handleCall(item.phone)}>
+              <Pressable style={styles.callButton} onPress={() => handleCall("+48513683660")}>
                 <Text style={styles.callButtonText}>Zadzwoń</Text>
+              </Pressable>
+              <Pressable style={styles.smsButton} onPress={() => handleSms("+48513683660")}>
+                <Text style={styles.smsButtonText}>SMS</Text>
               </Pressable>
             </View>
           </View>
-        ))}
-      </View>
 
-      
-    </ScrollView>
+          <Text style={[styles.sectionTitle, { marginTop: 18 }]}>Numery pomocowe</Text>
+          {HOTLINES.map((item) => (
+            <View key={item.id} style={styles.card}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={styles.cardSubtitle}>{item.details}</Text>
+                <Text style={styles.cardPhone}>{item.phone}</Text>
+              </View>
+              <View style={styles.cardActions}>
+                <Pressable style={styles.callButton} onPress={() => handleCall(item.phone)}>
+                  <Text style={styles.callButtonText}>Zadzwoń</Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BG },
-  content: { padding: 18, paddingTop: 56, paddingBottom: 40 },
+  scroll: { flex: 1 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 40 },
   title: { ...TYPE.h1, color: "white", marginBottom: 10 },
   subtitle: { ...TYPE.body, color: SUB, marginBottom: 22 },
   section: { marginBottom: 22 },

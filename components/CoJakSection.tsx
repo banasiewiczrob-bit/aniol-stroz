@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { LayoutAnimation, Platform, Pressable, StyleSheet, Text, UIManager, View } from 'react-native';
+import React, { useState } from 'react';
+import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export function CoJakSection({
   co,
@@ -11,12 +11,6 @@ export function CoJakSection({
   title?: string;
 }) {
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
-  }, []);
 
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);

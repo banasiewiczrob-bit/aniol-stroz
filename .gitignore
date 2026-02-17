@@ -40,3 +40,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Local backups (never commit)
+backups/*.tar.gz
+backups/*.bundle

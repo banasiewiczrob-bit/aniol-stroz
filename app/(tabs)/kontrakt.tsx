@@ -1,7 +1,9 @@
 import { CoJakSection } from '@/components/CoJakSection';
+import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Zmień to:
@@ -11,7 +13,33 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 export default function KontraktScreen() {
   const [isChecked, setChecked] = useState(false);
+  const [signatureLoaded, setSignatureLoaded] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const loadSignature = async () => {
+      try {
+        const signedRaw = await AsyncStorage.getItem(CONTRACT_SIGNED_STORAGE_KEY);
+        setChecked(signedRaw === '1');
+      } catch (e) {
+        console.error('Błąd ładowania podpisu kontraktu:', e);
+      } finally {
+        setSignatureLoaded(true);
+      }
+    };
+
+    void loadSignature();
+  }, []);
+
+  const handleSign = async () => {
+    if (isChecked) return;
+    try {
+      await AsyncStorage.setItem(CONTRACT_SIGNED_STORAGE_KEY, '1');
+      setChecked(true);
+    } catch (e) {
+      console.error('Błąd zapisu podpisu kontraktu:', e);
+    }
+  };
 
   return (
     <BackgroundWrapper>
@@ -25,11 +53,11 @@ export default function KontraktScreen() {
           <CoJakSection
             title="Opis i instrukcja"
             co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
-            jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz checkbox dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
+            jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
           />
           
           <Text style={styles.intro}>
-            Zaczynam tę drogę dla siebie i z sobą podpisuję ten kontrakt:
+            Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
           </Text>
 
           <View style={styles.point}>
@@ -42,15 +70,15 @@ export default function KontraktScreen() {
           <View style={styles.point}>
             <Text style={styles.pointTitle}>2. Otwartość</Text>
             <Text style={styles.pointText}>
-              Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otawrty wobec tego co do mnie przychodzi z
-              zewnętrz.
+              Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
+              zewnątrz.
             </Text>
           </View>
 
           <View style={styles.point}>
             <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
             <Text style={styles.pointText}>
-              Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę jaka jest do zapłacenia.
+              Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
             </Text>
           </View>
 
@@ -59,23 +87,25 @@ export default function KontraktScreen() {
           {/* Sekcja podpisu */}
           <TouchableOpacity 
             style={styles.checkboxContainer} 
-            onPress={() => setChecked(!isChecked)}
+            onPress={handleSign}
             activeOpacity={0.8}
           >
             <Checkbox
               style={styles.checkbox}
               value={isChecked}
-              onValueChange={setChecked}
+              onValueChange={handleSign}
               color={isChecked ? '#4630EB' : undefined}
             />
-            <Text style={styles.label}>Podpisuję się pod tym i zaczynam zmianę.</Text>
+            <Text style={styles.label}>
+              {isChecked ? 'Kontrakt podpisany.' : 'Podpisuję się pod tym i zaczynam zmianę.'}
+            </Text>
           </TouchableOpacity>
 
           {/* Przycisk - teraz w pełni bezpieczny */}
           <TouchableOpacity 
-            style={[styles.button, !isChecked && styles.buttonDisabled]} 
+            style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]} 
             onPress={() => isChecked && router.replace('/(tabs)')}
-            disabled={!isChecked}
+            disabled={!isChecked || !signatureLoaded}
           >
             <Text style={styles.buttonText}>Wchodzę</Text>
           </TouchableOpacity>
