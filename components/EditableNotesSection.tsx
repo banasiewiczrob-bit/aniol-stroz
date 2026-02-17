@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { LayoutAnimation, Platform, Pressable, StyleSheet, Text, TextInput, UIManager, View } from 'react-native';
+import { LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type NotesPayload = {
   description: string;
@@ -19,9 +19,6 @@ export function EditableNotesSection({
   const [instruction, setInstruction] = useState('');
 
   useEffect(() => {
-    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
     void load();
   }, [storageKey]);
 

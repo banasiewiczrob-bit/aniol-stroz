@@ -1,50 +1,76 @@
 import { router } from 'expo-router';
 import { CoJakSection } from '@/components/CoJakSection';
+import { BackButton } from '@/components/BackButton';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SupportRoute = {
   title: string;
   subtitle: string;
-  route: '/wsparcie-24' | '/wsparcie-desiderata' | '/wsparcie-halt' | '/wsparcie-kontakt' | '/wsparcie-modlitwa' | '/wsparcie-siatka';
+  route:
+    | '/wsparcie-24'
+    | '/wsparcie-12-krokow'
+    | '/wsparcie-desiderata'
+    | '/wsparcie-halt'
+    | '/wsparcie-kontakt'
+    | '/wsparcie-modlitwa'
+    | '/wsparcie-siatka'
+    | '/moje-doswiadczenie'
+    | '/spolecznosc';
 };
 
 const ITEMS: SupportRoute[] = [
-  { title: 'Wlasnie dzisiaj', subtitle: '24 godziny i plan na dzis', route: '/wsparcie-24' },
+  { title: 'Właśnie dzisiaj', subtitle: '24 godziny i plan na dziś', route: '/wsparcie-24' },
+  { title: '12 kroków', subtitle: 'Różne brzmienia kroków', route: '/wsparcie-12-krokow' },
   { title: 'HALT', subtitle: 'Hungry, Angry, Lonely, Tired', route: '/wsparcie-halt' },
-  { title: 'Modlitwa o pogode ducha', subtitle: 'Szybki dostep do tresci', route: '/wsparcie-modlitwa' },
+  { title: 'Modlitwa o pogodę ducha', subtitle: 'Szybki dostęp do treści', route: '/wsparcie-modlitwa' },
   { title: 'Desiderata', subtitle: 'Tekst do codziennego czytania', route: '/wsparcie-desiderata' },
   { title: 'Siatka wsparcia', subtitle: 'Twoje kontakty pomocowe', route: '/wsparcie-siatka' },
+  { title: 'Społeczność', subtitle: 'Grupy i forum wsparcia', route: '/spolecznosc' },
   { title: 'Kontakt', subtitle: 'Numery i szybkie akcje', route: '/wsparcie-kontakt' },
+  { title: 'Napisz, co Ci pomaga', subtitle: 'Zapisz, co dziś przeżyłeś', route: '/moje-doswiadczenie' },
 ];
 
 export default function WsparcieScreen() {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Wsparcie</Text>
-      <CoJakSection
-        title="Opis i instrukcja"
-        co="To baza treści i narzędzi pomocowych, do których możesz wracać codziennie."
-        jak="Wybierz materiał, który teraz najbardziej Cię wspiera. Pracuj krok po kroku, bez pośpiechu."
-      />
-      <Text style={styles.subtext}>Wybierz material, z ktorego chcesz teraz skorzystac.</Text>
+    <View style={styles.container}>
+      <BackButton />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Wsparcie</Text>
+        <CoJakSection
+          title="Opis i instrukcja"
+          co="To baza treści i narzędzi pomocowych, do których możesz wracać codziennie."
+          jak="Wybierz materiał, który teraz najbardziej Cię wspiera. Pracuj krok po kroku, bez pośpiechu."
+        />
+        <Text style={styles.subtext}>Wybierz materiał, z którego chcesz teraz skorzystać.</Text>
 
-      {ITEMS.map((item) => (
-        <Pressable key={item.route} style={styles.card} onPress={() => router.push(item.route)}>
-          <View>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </Pressable>
-      ))}
-    </ScrollView>
+        {ITEMS.map((item) => (
+          <Pressable
+            key={item.route}
+            style={styles.card}
+            onPress={() =>
+              router.push({
+                pathname: item.route as any,
+                params: { backTo: '/wsparcie' },
+              })
+            }
+          >
+            <View>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+            </View>
+            <Text style={styles.arrow}>›</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#071826' },
-  content: { padding: 18, paddingTop: 56, paddingBottom: 30 },
+  scroll: { flex: 1 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 30 },
   title: { color: 'white', fontSize: 39, fontWeight: '900', marginBottom: 10 },
   subtext: { color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 26, marginBottom: 20 },
   card: {

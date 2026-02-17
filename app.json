@@ -2,6 +2,7 @@
   "expo": {
     "name": "aniol-stroz",
     "slug": "aniol-stroz",
+    "icon": "./assets/images/ikona-z-logo2.png",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -9,10 +10,24 @@
     "scheme": "aniol-stroz",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.robert.aniol-stroz"
+      "bundleIdentifier": "com.robert.aniolstroz"
+    },
+    "android": {
+      "package": "com.robert.aniolstroz",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/ikona-z-logo2.png",
+        "backgroundColor": "#071826"
+      }
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0675cfe9-9986-4706-b4a2-64b75c2c9f8e"
+      }
+    },
+    "owner": "banasiewicz.rob"
   }
 }

@@ -1,8 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const tabBottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 10 : 0);
+
   return (
     <Tabs
       screenOptions={{
@@ -13,9 +18,9 @@ export default function TabLayout() {
           backgroundColor: '#071826',
           borderTopWidth: 1,
           borderTopColor: 'rgba(120,200,255,0.1)',
-          height: 65,
-          paddingBottom: 10,
-          paddingTop: 5,
+          height: 56 + tabBottomInset,
+          paddingBottom: tabBottomInset,
+          paddingTop: 6,
         },
       }}
     >
@@ -28,10 +33,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="licznik"
+        name="ustawienia"
         options={{
-          title: 'Licznik',
-          tabBarIcon: ({ color }) => <Ionicons name="time-outline" size={26} color={color} />,
+          title: 'Ustawienia',
+          tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={26} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -45,16 +50,25 @@ export default function TabLayout() {
       {/* 2. BLOKADA TRÓJKĄCIKÓW - DOKŁADNE NAZWY Z TWOJEGO VS CODE */}
       <Tabs.Screen name="kontrakt" options={{ href: null }} />
       <Tabs.Screen name="plan-dnia" options={{ href: null }} />
+      <Tabs.Screen name="licznik" options={{ href: null }} />
       <Tabs.Screen name="licznik-nagrody" options={{ href: null }} />
       <Tabs.Screen name="moje-doswiadczenie" options={{ href: null }} />
       
       {/* Pliki wsparcia (z przedrostkiem wsparcie- jak na Twoim screenie) */}
       <Tabs.Screen name="wsparcie-24" options={{ href: null }} />
+      <Tabs.Screen name="wsparcie-12-krokow" options={{ href: null }} />
       <Tabs.Screen name="wsparcie-desiderata" options={{ href: null }} />
       <Tabs.Screen name="wsparcie-halt" options={{ href: null }} />
       <Tabs.Screen name="wsparcie-kontakt" options={{ href: null }} />
       <Tabs.Screen name="wsparcie-modlitwa" options={{ href: null }} />
       <Tabs.Screen name="wsparcie-siatka" options={{ href: null }} />
+      <Tabs.Screen name="spolecznosc/index" options={{ href: null }} />
+      <Tabs.Screen name="spolecznosc/[groupId]" options={{ href: null }} />
+      <Tabs.Screen name="spolecznosc/watek/[threadId]" options={{ href: null }} />
+      <Tabs.Screen name="dzienniki" options={{ href: null }} />
+      <Tabs.Screen name="teksty-codzienne" options={{ href: null }} />
+      <Tabs.Screen name="zadania" options={{ href: null }} />
+      <Tabs.Screen name="centrum-wsparcia" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -5,8 +5,10 @@ import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+import { Alert, Animated, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 const APP_LOGO = require('../assets/images/ikona-z-logo2.png');
 const WATERMARK = require('../assets/images/maly_aniol.png');
@@ -23,6 +25,7 @@ export default function LicznikNagrody() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [ymd, setYmd] = useState({ years: 0, months: 0, days: 0 });
   const coinBounce = useRef(new Animated.Value(0)).current;
+  const shareCardRef = useRef<View>(null);
 
   const loadRewards = useCallback(async () => {
     try {
@@ -126,10 +129,33 @@ export default function LicznikNagrody() {
     const ymdLabel = `${ymd.years} lat ${ymd.months} mies. ${ymd.days} dni`;
     const badgeLabel = yearsPassed < 1 ? 'Właśnie dzisiaj' : `${toRoman(Math.min(yearsPassed, 40))} lat`;
     const message = `Moje rocznice - Anioł Stróż\n${badgeLabel}\n${ymdLabel}\nPierwszy dzień nowego życia: ${startDateLabel}`;
+
     try {
+      if (shareCardRef.current) {
+        const imageUri = await captureRef(shareCardRef, {
+          format: 'png',
+          quality: 1,
+          result: 'tmpfile',
+        });
+
+        const canShareFiles = await Sharing.isAvailableAsync();
+        if (canShareFiles) {
+          await Sharing.shareAsync(imageUri, {
+            mimeType: 'image/png',
+            UTI: 'public.png',
+            dialogTitle: 'Udostępnij swój sukces',
+          });
+          return;
+        }
+
+        await Share.share({ message, url: imageUri });
+        return;
+      }
+
       await Share.share({ message });
     } catch (e) {
       console.error('Błąd udostępniania:', e);
+      Alert.alert('Nie udało się udostępnić', 'Spróbuj ponownie za chwilę.');
     }
   };
 
@@ -146,11 +172,11 @@ export default function LicznikNagrody() {
           żeby wzmacniać Twoją motywację oraz poczucie postępu."
           jak="Sprawdź swoje rocznice i, jeśli chcesz, 
           udostępnij Swój sukces. To ma być wsparcie i ślad Twojej drogi. Poza tym to symbol, 
-          że jesteś na dobrej drodze i że warto iść dalej. Gdy pokazujesz własne osiągnięcia wtedy to pomaga taże innym.Gratulacje!"
+          że jesteś na dobrej drodze i że warto iść dalej. Gdy pokazujesz własne osiągnięcia, wtedy to pomaga także innym. Gratulacje!"
         />
         <Text style={styles.subtitle}>Oto symbole na Twojej drodze zdrowienia. Bądź z nich dumny.</Text>
 
-        <View style={styles.shareCaptureCanvas}>
+        <View ref={shareCardRef} collapsable={false} style={styles.shareCaptureCanvas}>
           <Image source={WATERMARK} style={styles.shareWatermark} resizeMode="contain" />
           <View style={styles.shareArea}>
             <Image source={APP_LOGO} style={styles.shareLogo} />

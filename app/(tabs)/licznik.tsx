@@ -1,5 +1,6 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { CoJakSection } from '@/components/CoJakSection';
+import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
 import { SCREEN_PADDING } from '@/styles/screenStyles';
 import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
@@ -185,6 +186,7 @@ export default function LicznikScreen() {
         onPress: async () => {
           const now = new Date();
           await AsyncStorage.removeItem('startDate');
+          await AsyncStorage.removeItem(CONTRACT_SIGNED_STORAGE_KEY);
           setDate(now);
           syncManualInputs(now);
           calculateStats(now);
@@ -200,10 +202,10 @@ export default function LicznikScreen() {
           <Text style={styles.title}>Twój licznik zdrowienia</Text>
           <CoJakSection
             title="Opis i instrukcja"
-            co=",Każdy z nas lubi wiedzieć jak długo zdrowieje. Mimo tego, co mówimy, że: To nie ważne, 
+            co="Każdy z nas lubi wiedzieć, jak długo zdrowieje. Mimo tego, co mówimy, że to nieważne, 
             to jednak dobrze znamy datę rozpoczęcia tej drogi. Licznik pokazuje, jak długo trwa Twoja droga i pomaga zauważyć postęp dzień po dniu."
             jak="Ustaw datę początkową i aktualizuj ją tylko wtedy, gdy naprawdę trzeba. 
-            Traktuj licznik jako wsparcie, nie presję. Gdy ustawisz datę a licznik pokaże liczbę dni, sprawdź co jest w Twoje odznaki i zobacz, czy nie masz już jakiejś nagrody do odebrania. Pamiętaj, że to nie wyścig, a każdy dzień zdrowienia jest ważny."
+            Traktuj licznik jako wsparcie, nie presję. Gdy ustawisz datę, a licznik pokaże liczbę dni, sprawdź, co jest w Twoich odznakach i zobacz, czy nie masz już jakiejś nagrody do odebrania. Pamiętaj, że to nie wyścig, a każdy dzień zdrowienia jest ważny."
           />
           <Text style={styles.headerSubtitle}>
              Twoje zdrowienie trwa już:

@@ -1,3 +1,4 @@
+import { BackButton } from '@/components/BackButton';
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
@@ -14,6 +15,7 @@ export const BackgroundWrapper = ({ children }: BackgroundWrapperProps) => {
         <Image source={Watermark} style={styles.globalWatermark} resizeMode="contain" />
       </View>
 
+      <BackButton />
       <View style={styles.contentLayer}>{children}</View>
     </View>
   );
@@ -26,11 +28,11 @@ const styles = StyleSheet.create({
   },
   globalWatermark: {
     position: 'absolute',
-    top: '25%',
+    top: '20%',
     alignSelf: 'center',
-    width: 320,
-    height: 320,
-    opacity: 0.03,
+    width: 460,
+    height: 460,
+    opacity: 0.05,
     tintColor: 'white',
     transform: [{ rotate: '-12deg' }],
   },
