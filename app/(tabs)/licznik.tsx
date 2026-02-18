@@ -1,6 +1,7 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { CoJakSection } from '@/components/CoJakSection';
 import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
+import { markCounterDone } from '@/hooks/useFirstSteps';
 import { SCREEN_PADDING } from '@/styles/screenStyles';
 import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
@@ -91,6 +92,7 @@ export default function LicznikScreen() {
         setDate(d);
         syncManualInputs(d);
         calculateStats(d);
+        await markCounterDone();
       } else {
         const now = new Date();
         setDate(now);
@@ -129,17 +131,18 @@ export default function LicznikScreen() {
     setStats({ years: Math.max(0, years), months: Math.max(0, months), days: Math.max(0, days), totalDays: Math.max(0, totalDays) });
   };
 
-  const onChange = (event: any, selectedDate?: Date) => {
+  const onChange = async (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShow(false);
     if (!selectedDate) return;
 
     setDate(selectedDate);
     syncManualInputs(selectedDate);
     calculateStats(selectedDate);
-    AsyncStorage.setItem('startDate', selectedDate.toISOString());
+    await AsyncStorage.setItem('startDate', selectedDate.toISOString());
+    await markCounterDone();
   };
 
-  const applyManualDate = () => {
+  const applyManualDate = async () => {
     const day = Number.parseInt(manualDay, 10);
     const month = Number.parseInt(manualMonth, 10);
     const year = Number.parseInt(manualYear, 10);
@@ -174,7 +177,8 @@ export default function LicznikScreen() {
     setDate(selectedDate);
     syncManualInputs(selectedDate);
     calculateStats(selectedDate);
-    AsyncStorage.setItem('startDate', selectedDate.toISOString());
+    await AsyncStorage.setItem('startDate', selectedDate.toISOString());
+    await markCounterDone();
   };
 
   const handleReset = () => {
@@ -208,7 +212,7 @@ export default function LicznikScreen() {
             Traktuj licznik jako wsparcie, nie presję. Gdy ustawisz datę, a licznik pokaże liczbę dni, sprawdź, co jest w Twoich odznakach i zobacz, czy nie masz już jakiejś nagrody do odebrania. Pamiętaj, że to nie wyścig, a każdy dzień zdrowienia jest ważny."
           />
           <Text style={styles.headerSubtitle}>
-             Twoje zdrowienie trwa już:
+             Pierwsze kroki: ustaw datę startu. Twoje zdrowienie trwa już:
           </Text>
 
           <View style={styles.counterWrap}>

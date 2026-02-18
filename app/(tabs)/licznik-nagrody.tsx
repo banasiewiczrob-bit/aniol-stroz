@@ -1,6 +1,7 @@
 import { AnimatedAngel } from '@/components/AnimatedAngel';
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { CoJakSection } from '@/components/CoJakSection';
+import { markAnniversarySeen } from '@/hooks/useFirstSteps';
 import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,6 +52,10 @@ export default function LicznikNagrody() {
   useEffect(() => {
     loadRewards();
   }, [loadRewards]);
+
+  useEffect(() => {
+    void markAnniversarySeen();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -174,7 +179,7 @@ export default function LicznikNagrody() {
           udostępnij Swój sukces. To ma być wsparcie i ślad Twojej drogi. Poza tym to symbol, 
           że jesteś na dobrej drodze i że warto iść dalej. Gdy pokazujesz własne osiągnięcia, wtedy to pomaga także innym. Gratulacje!"
         />
-        <Text style={styles.subtitle}>Oto symbole na Twojej drodze zdrowienia. Bądź z nich dumny.</Text>
+        <Text style={styles.subtitle}>Pierwsze kroki: sprawdź swoje rocznice. Oto symbole na Twojej drodze zdrowienia.</Text>
 
         <View ref={shareCardRef} collapsable={false} style={styles.shareCaptureCanvas}>
           <Image source={WATERMARK} style={styles.shareWatermark} resizeMode="contain" />

@@ -17,6 +17,10 @@ export type AppSettings = {
   privacyConsentLocalStorage: boolean;
   privacyConsentNotifications: boolean;
   privacyConsentRegulations: boolean;
+  introSeen: boolean;
+  counterDone: boolean;
+  anniversaryDone: boolean;
+  firstStepsDone: boolean;
 };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -29,6 +33,10 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   privacyConsentLocalStorage: false,
   privacyConsentNotifications: false,
   privacyConsentRegulations: false,
+  introSeen: false,
+  counterDone: false,
+  anniversaryDone: false,
+  firstStepsDone: false,
 };
 
 function isTextScale(value: unknown): value is AppTextScale {
@@ -70,6 +78,16 @@ function normalizeSettings(value: Partial<AppSettings> | null | undefined): AppS
       typeof value?.privacyConsentRegulations === 'boolean'
         ? value.privacyConsentRegulations
         : DEFAULT_APP_SETTINGS.privacyConsentRegulations,
+    introSeen: typeof value?.introSeen === 'boolean' ? value.introSeen : DEFAULT_APP_SETTINGS.introSeen,
+    counterDone: typeof value?.counterDone === 'boolean' ? value.counterDone : DEFAULT_APP_SETTINGS.counterDone,
+    anniversaryDone:
+      typeof value?.anniversaryDone === 'boolean' ? value.anniversaryDone : DEFAULT_APP_SETTINGS.anniversaryDone,
+    firstStepsDone:
+      typeof value?.firstStepsDone === 'boolean'
+        ? value.firstStepsDone
+        : typeof (value as { onboardingDone?: unknown } | undefined)?.onboardingDone === 'boolean'
+          ? Boolean((value as { onboardingDone?: boolean }).onboardingDone)
+          : DEFAULT_APP_SETTINGS.firstStepsDone,
   };
 }
 

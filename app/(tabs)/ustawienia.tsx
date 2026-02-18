@@ -7,6 +7,7 @@ import {
   resetDailyPlanNotificationSettings,
   saveDailyPlanNotificationSettings,
 } from '@/hooks/useDailyPlanNotifications';
+import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from '@/hooks/useAppSettings';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
@@ -182,6 +183,10 @@ export default function UstawieniaScreen() {
         setNotice('Zapisano zgody.');
       }
       await collapseSection('consents');
+      const firstStepsStep = resolveFirstStepsStep(await getFirstStepsState());
+      if (firstStepsStep !== 'consents' && firstStepsStep !== 'done') {
+        router.replace('/');
+      }
     } catch (e) {
       console.error('Błąd zapisu zgód:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać zgód.');
@@ -321,7 +326,7 @@ export default function UstawieniaScreen() {
     <BackgroundWrapper>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Ustawienia</Text>
-        <Text style={styles.subtitle}>Najpierw zgody, potem pozostałe ustawienia aplikacji.</Text>
+        <Text style={styles.subtitle}>Pierwsze kroki: najpierw zgody, potem pozostałe ustawienia aplikacji.</Text>
 
         <View style={[styles.card, styles.cardPrimary]}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.consents && styles.sectionHeaderRowCollapsed]}>

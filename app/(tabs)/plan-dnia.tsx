@@ -28,13 +28,20 @@ type DoneState = {
   challenge: boolean;
 };
 
+type PlanItem = {
+  id: string;
+  text: string;
+  done: boolean;
+};
+
 type DailyPlan = {
   dateKey: DateKey;
+  planText: string;
+  items: PlanItem[];
   self: string;
   duties: string;
   relations: string;
   challenge: string;
-  done: DoneState;
   halt: HaltState;
   summarized: boolean;
   morningConfirmed: boolean;
@@ -44,11 +51,12 @@ type PlanStore = Record<DateKey, DailyPlan>;
 
 type ArchiveEntry = {
   dateKey: DateKey;
+  planText: string;
+  items: PlanItem[];
   self: string;
   duties: string;
   relations: string;
   challenge: string;
-  done: DoneState;
   halt: HaltState;
   completedCount: number;
   readCount: number;
@@ -62,17 +70,15 @@ type ArchiveEntry = {
 type DayViewMode = 'plan' | 'summary';
 type CalendarDisplayMode = 'week' | 'month';
 
-type EditablePlanField = 'self' | 'duties' | 'relations' | 'challenge';
-
 const STORAGE_KEY = '@daily_task';
 const ARCHIVE_KEY = '@daily_task_archive';
 const BG = '#071826';
 const SUB = 'rgba(255,255,255,0.7)';
 const WEEKDAY_LABELS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
 const PLAN_INSTRUCTION_CO =
-  'Wybierasz dzień z kalendarza i planujesz 3 obszary + 1 dodatkowy element. Wieczorem wracasz do tego samego dnia, potwierdzasz wykonanie i uzupełniasz HALT.';
+  'Wybierasz dzień z kalendarza i tworzysz plan z oddzielnych elementów. Elementy możesz nazwać dowolnie i dopasować do siebie.';
 const PLAN_INSTRUCTION_JAK =
-  'Kliknij datę, wpisz plan i zapisz. Wieczorem otwórz ten sam dzień, zaznacz, co się udało, wpisz HALT i zapisz do archiwum. Archiwum buduje wykres linii.';
+  'Kliknij datę, dodaj elementy planu i zapisz. Wieczorem wróć do tego samego dnia, zaznacz które elementy zrobiłeś, uzupełnij HALT i zapisz do archiwum.';
 const PLAN_INSTRUCTION_SHORT =
   'Zaplanuj dzień, wykonaj plan, podsumuj i ucz się na przyszłość. To prosta praktyka, która może pomóc Ci lepiej rozumieć siebie i swoje nawyki.';
 
@@ -116,11 +122,12 @@ function titleCase(value: string) {
 function emptyPlan(dateKey: DateKey): DailyPlan {
   return {
     dateKey,
+    planText: '',
+    items: [{ id: `${dateKey}_1`, text: '', done: false }],
     self: '',
     duties: '',
     relations: '',
     challenge: '',
-    done: { self: false, duties: false, relations: false, challenge: false },
     halt: { hungry: false, angry: false, lonely: false, tired: false },
     summarized: false,
     morningConfirmed: false,
@@ -128,7 +135,18 @@ function emptyPlan(dateKey: DateKey): DailyPlan {
 }
 
 function hasPlanContent(plan: DailyPlan) {
-  return [plan.self, plan.duties, plan.relations, plan.challenge].some((x) => x.trim().length > 0);
+  return (
+    plan.items.some((item) => item.text.trim().length > 0) ||
+    plan.planText.trim().length > 0 ||
+    [plan.self, plan.duties, plan.relations, plan.challenge].some((x) => x.trim().length > 0)
+  );
+}
+
+function toPlanText(items: PlanItem[]) {
+  return items
+    .map((item) => item.text.trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 function sanitizePlan(value: Partial<DailyPlan> | undefined, dateKey: DateKey): DailyPlan {
@@ -142,23 +160,83 @@ function sanitizePlan(value: Partial<DailyPlan> | undefined, dateKey: DateKey): 
         }
       : { hungry: false, angry: false, lonely: false, tired: false };
 
-  const done =
-    value?.done && typeof value.done === 'object'
+  const rawDone = (value as { done?: unknown } | undefined)?.done;
+  const legacyDone =
+    rawDone && typeof rawDone === 'object'
       ? {
-          self: Boolean((value.done as Partial<DoneState>).self),
-          duties: Boolean((value.done as Partial<DoneState>).duties),
-          relations: Boolean((value.done as Partial<DoneState>).relations),
-          challenge: Boolean((value.done as Partial<DoneState>).challenge),
+          self: Boolean((rawDone as Partial<DoneState>).self),
+          duties: Boolean((rawDone as Partial<DoneState>).duties),
+          relations: Boolean((rawDone as Partial<DoneState>).relations),
+          challenge: Boolean((rawDone as Partial<DoneState>).challenge),
         }
       : { self: false, duties: false, relations: false, challenge: false };
 
+  const legacySelf = typeof value?.self === 'string' ? value.self : '';
+  const legacyDuties = typeof value?.duties === 'string' ? value.duties : '';
+  const legacyRelations = typeof value?.relations === 'string' ? value.relations : '';
+  const legacyChallenge = typeof value?.challenge === 'string' ? value.challenge : '';
+  const planTextCandidate =
+    typeof value?.planText === 'string'
+      ? value.planText
+      : [legacySelf, legacyDuties, legacyRelations, legacyChallenge].filter(Boolean).join('\n');
+
+  const rawItems =
+    Array.isArray((value as { items?: unknown } | undefined)?.items)
+      ? ((value as { items: unknown[] }).items as unknown[])
+      : [];
+
+  const parsedItems: PlanItem[] = rawItems
+    .filter((item) => item && typeof item === 'object')
+    .map((item, index) => {
+      const row = item as Partial<PlanItem>;
+      const safeText = typeof row.text === 'string' ? row.text : '';
+      return {
+        id: typeof row.id === 'string' && row.id.trim().length > 0 ? row.id : `${dateKey}_${index + 1}`,
+        text: safeText,
+        done: Boolean(row.done),
+      };
+    });
+
+  let items = parsedItems;
+  if (items.length === 0) {
+    const legacyItems: Array<{ text: string; done: boolean }> = [
+      { text: legacySelf, done: legacyDone.self },
+      { text: legacyDuties, done: legacyDone.duties },
+      { text: legacyRelations, done: legacyDone.relations },
+      { text: legacyChallenge, done: legacyDone.challenge },
+    ].filter((row) => row.text.trim().length > 0);
+
+    if (legacyItems.length > 0) {
+      items = legacyItems.map((row, index) => ({ id: `${dateKey}_${index + 1}`, text: row.text, done: row.done }));
+    }
+  }
+
+  if (items.length === 0 && planTextCandidate.trim().length > 0) {
+    const lines = planTextCandidate
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    items = (lines.length > 0 ? lines : [planTextCandidate.trim()]).map((line, index) => ({
+      id: `${dateKey}_${index + 1}`,
+      text: line,
+      done: false,
+    }));
+  }
+
+  if (items.length === 0) {
+    items = [{ id: `${dateKey}_1`, text: '', done: false }];
+  }
+
+  const planText = toPlanText(items);
+
   return {
     dateKey,
-    self: typeof value?.self === 'string' ? value.self : '',
-    duties: typeof value?.duties === 'string' ? value.duties : '',
-    relations: typeof value?.relations === 'string' ? value.relations : '',
-    challenge: typeof value?.challenge === 'string' ? value.challenge : '',
-    done,
+    planText,
+    items,
+    self: legacySelf,
+    duties: legacyDuties,
+    relations: legacyRelations,
+    challenge: legacyChallenge,
     halt,
     summarized: Boolean(value?.summarized),
     morningConfirmed: Boolean(value?.morningConfirmed),
@@ -462,12 +540,34 @@ export default function PlanScreen() {
     }
   };
 
-  const updateText = (dateKey: DateKey, key: EditablePlanField, value: string) => {
-    patchPlan(dateKey, (current) => ({ ...current, [key]: value }));
+  const updatePlanItemText = (dateKey: DateKey, itemId: string, value: string) => {
+    patchPlan(dateKey, (current) => {
+      const items = current.items.map((item) => (item.id === itemId ? { ...item, text: value } : item));
+      return { ...current, items, planText: toPlanText(items) };
+    });
   };
 
-  const toggleDone = (dateKey: DateKey, key: keyof DoneState) => {
-    patchPlan(dateKey, (current) => ({ ...current, done: { ...current.done, [key]: !current.done[key] } }));
+  const addPlanItem = (dateKey: DateKey) => {
+    patchPlan(dateKey, (current) => {
+      const nextNumber = current.items.length + 1;
+      const items = [...current.items, { id: `${dateKey}_${Date.now()}_${nextNumber}`, text: '', done: false }];
+      return { ...current, items, planText: toPlanText(items) };
+    });
+  };
+
+  const removePlanItem = (dateKey: DateKey, itemId: string) => {
+    patchPlan(dateKey, (current) => {
+      const remaining = current.items.filter((item) => item.id !== itemId);
+      const items = remaining.length > 0 ? remaining : [{ id: `${dateKey}_1`, text: '', done: false }];
+      return { ...current, items, planText: toPlanText(items) };
+    });
+  };
+
+  const togglePlanItemDone = (dateKey: DateKey, itemId: string) => {
+    patchPlan(dateKey, (current) => {
+      const items = current.items.map((item) => (item.id === itemId ? { ...item, done: !item.done } : item));
+      return { ...current, items, planText: toPlanText(items) };
+    });
   };
 
   const toggleHalt = (dateKey: DateKey, key: keyof HaltState) => {
@@ -480,18 +580,21 @@ export default function PlanScreen() {
       return;
     }
 
-    const completedCount = Object.values(targetPlan.done).filter(Boolean).length;
+    const filledItems = targetPlan.items.filter((item) => item.text.trim().length > 0);
+    const doneItems = filledItems.filter((item) => item.done).length;
+    const completedCount = filledItems.length > 0 ? Math.round((doneItems / filledItems.length) * 4) : 0;
     const targetReadCount = Object.values(getDailyTextsForDate(textsStore, dateKey)).filter(Boolean).length;
     const haltCount = Object.values(targetPlan.halt).filter(Boolean).length;
     const res = evaluateDay(completedCount, targetReadCount, haltCount);
 
     const entry: ArchiveEntry = {
       dateKey: targetPlan.dateKey,
-      self: targetPlan.self,
+      planText: targetPlan.planText,
+      items: targetPlan.items,
+      self: targetPlan.planText || targetPlan.self,
       duties: targetPlan.duties,
       relations: targetPlan.relations,
       challenge: targetPlan.challenge,
-      done: targetPlan.done,
       halt: targetPlan.halt,
       completedCount,
       readCount: targetReadCount,
@@ -568,7 +671,9 @@ export default function PlanScreen() {
     setDayViewMode('plan');
   };
 
-  const completedCountToday = Object.values(todayPlan.done).filter(Boolean).length;
+  const todayFilledItems = todayPlan.items.filter((item) => item.text.trim().length > 0);
+  const todayDoneItems = todayFilledItems.filter((item) => item.done).length;
+  const completedCountToday = todayFilledItems.length > 0 ? Math.round((todayDoneItems / todayFilledItems.length) * 4) : 0;
   const readCountToday = Object.values(readDone).filter(Boolean).length;
   const haltCountToday = Object.values(todayPlan.halt).filter(Boolean).length;
   const evalResultToday = evaluateDay(completedCountToday, readCountToday, haltCountToday);
@@ -593,48 +698,30 @@ export default function PlanScreen() {
     plan: DailyPlan;
     title: string;
     subtitle: string;
-    challengeLabel?: string;
   }) => (
     <View style={styles.formCard}>
       <Text style={styles.sectionTitle}>{params.title}</Text>
       <Text style={styles.formSubLabel}>{params.subtitle}</Text>
       <Text style={styles.formDateLabel}>Data planu: {params.dateKey}</Text>
 
-      <Text style={styles.fieldLabel}>1. Dla siebie</Text>
-      <TextInput
-        style={styles.input}
-        value={params.plan.self}
-        placeholder="Np. spacer, modlitwa, dziennik"
-        placeholderTextColor="rgba(255,255,255,0.45)"
-        onChangeText={(v) => updateText(params.dateKey, 'self', v)}
-      />
-
-      <Text style={styles.fieldLabel}>2. Obowiązki</Text>
-      <TextInput
-        style={styles.input}
-        value={params.plan.duties}
-        placeholder="Np. praca, dom, terapia"
-        placeholderTextColor="rgba(255,255,255,0.45)"
-        onChangeText={(v) => updateText(params.dateKey, 'duties', v)}
-      />
-
-      <Text style={styles.fieldLabel}>3. Relacje</Text>
-      <TextInput
-        style={styles.input}
-        value={params.plan.relations}
-        placeholder="Np. kontakt, granice, wsparcie"
-        placeholderTextColor="rgba(255,255,255,0.45)"
-        onChangeText={(v) => updateText(params.dateKey, 'relations', v)}
-      />
-
-      <Text style={styles.fieldLabel}>{params.challengeLabel ?? '4. Extra (challenge)'}</Text>
-      <TextInput
-        style={styles.input}
-        value={params.plan.challenge}
-        placeholder="Jedno konkretne wyzwanie"
-        placeholderTextColor="rgba(255,255,255,0.45)"
-        onChangeText={(v) => updateText(params.dateKey, 'challenge', v)}
-      />
+      <Text style={styles.fieldLabel}>Elementy planu dnia</Text>
+      {params.plan.items.map((item, index) => (
+        <View key={item.id} style={styles.planItemRow}>
+          <TextInput
+            style={[styles.input, styles.planItemInput]}
+            value={item.text}
+            placeholder={`Element ${index + 1}`}
+            placeholderTextColor="rgba(255,255,255,0.45)"
+            onChangeText={(v) => updatePlanItemText(params.dateKey, item.id, v)}
+          />
+          <Pressable style={styles.planItemDeleteBtn} onPress={() => removePlanItem(params.dateKey, item.id)}>
+            <Text style={styles.planItemDeleteText}>Usuń</Text>
+          </Pressable>
+        </View>
+      ))}
+      <Pressable style={styles.planItemAddBtn} onPress={() => addPlanItem(params.dateKey)}>
+        <Text style={styles.planItemAddText}>+ Dodaj element</Text>
+      </Pressable>
     </View>
   );
 
@@ -824,8 +911,8 @@ export default function PlanScreen() {
                 {renderPlanForm({
                   dateKey: selectedDateKey,
                   plan: selectedPlan,
-                  title: selectedHasPlan ? 'PLAN DNIA (3 + 1)' : 'USTAW PLAN DNIA (3 + 1)',
-                  subtitle: 'Zaplanuj trzy rzeczy i jedną dodatkową.',
+                  title: selectedHasPlan ? 'PLAN DNIA' : 'USTAW PLAN DNIA',
+                  subtitle: 'Dodaj własne elementy planu, bez sztywnego schematu.',
                 })}
 
                 <View style={styles.reminderCard}>
@@ -860,31 +947,20 @@ export default function PlanScreen() {
                   <>
                     <View style={styles.previewCard}>
                       <Text style={styles.previewTitle}>Potwierdź wykonanie</Text>
-
-                      <Pressable style={styles.previewItem} onPress={() => toggleDone(selectedDateKey, 'self')}>
-                        <Text style={styles.previewCheck}>{selectedPlan.done.self ? '☑' : '☐'}</Text>
-                        <Text style={[styles.previewLine, selectedPlan.done.self && styles.previewLineDone]}>
-                          1. {selectedPlan.self.trim() || 'Dla siebie'}
-                        </Text>
-                      </Pressable>
-                      <Pressable style={styles.previewItem} onPress={() => toggleDone(selectedDateKey, 'duties')}>
-                        <Text style={styles.previewCheck}>{selectedPlan.done.duties ? '☑' : '☐'}</Text>
-                        <Text style={[styles.previewLine, selectedPlan.done.duties && styles.previewLineDone]}>
-                          2. {selectedPlan.duties.trim() || 'Obowiązki'}
-                        </Text>
-                      </Pressable>
-                      <Pressable style={styles.previewItem} onPress={() => toggleDone(selectedDateKey, 'relations')}>
-                        <Text style={styles.previewCheck}>{selectedPlan.done.relations ? '☑' : '☐'}</Text>
-                        <Text style={[styles.previewLine, selectedPlan.done.relations && styles.previewLineDone]}>
-                          3. {selectedPlan.relations.trim() || 'Relacje'}
-                        </Text>
-                      </Pressable>
-                      <Pressable style={styles.previewItem} onPress={() => toggleDone(selectedDateKey, 'challenge')}>
-                        <Text style={styles.previewCheck}>{selectedPlan.done.challenge ? '☑' : '☐'}</Text>
-                        <Text style={[styles.previewLine, selectedPlan.done.challenge && styles.previewLineDone]}>
-                          4. {selectedPlan.challenge.trim() || 'Extra (challenge)'}
-                        </Text>
-                      </Pressable>
+                      {selectedPlan.items.filter((item) => item.text.trim().length > 0).length === 0 ? (
+                        <Text style={styles.previewPlanText}>Brak wpisanych elementów planu.</Text>
+                      ) : (
+                        selectedPlan.items
+                          .filter((item) => item.text.trim().length > 0)
+                          .map((item, index) => (
+                            <Pressable key={item.id} style={styles.previewItem} onPress={() => togglePlanItemDone(selectedDateKey, item.id)}>
+                              <Text style={styles.previewCheck}>{item.done ? '☑' : '☐'}</Text>
+                              <Text style={[styles.previewLine, item.done && styles.previewLineDone]}>
+                                {index + 1}. {item.text}
+                              </Text>
+                            </Pressable>
+                          ))
+                      )}
                     </View>
 
                     <View style={styles.haltCard}>
@@ -972,7 +1048,7 @@ export default function PlanScreen() {
           <View style={styles.reminderCard}>
             <Text style={styles.reminderTitle}>Status dzisiaj</Text>
             <Text style={styles.reminderText}>
-              Dziś: plan {hasPlanContent(todayPlan) ? 'ustawiony' : 'brak'} | wykonane {completedCountToday}/4 | HALT {haltCountToday} | bilans {evalResultToday.score}
+              Dziś: plan {hasPlanContent(todayPlan) ? 'ustawiony' : 'brak'} | wykonane {todayDoneItems}/{todayFilledItems.length || 0} | HALT {haltCountToday} | bilans {evalResultToday.score}
             </Text>
           </View>
         )}
@@ -1283,6 +1359,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 11,
     fontSize: 18,
+  },
+  planItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  planItemInput: {
+    flex: 1,
+  },
+  planItemDeleteBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,120,120,0.45)',
+    backgroundColor: 'rgba(255,120,120,0.14)',
+    borderRadius: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+  },
+  planItemDeleteText: { color: '#FFD0D0', fontSize: 13, fontWeight: '700' },
+  planItemAddBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(120,200,255,0.35)',
+    backgroundColor: 'rgba(120,200,255,0.15)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  planItemAddText: { color: '#D8F1FF', fontSize: 14, fontWeight: '700' },
+  previewPlanText: {
+    color: SUB,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 8,
   },
 
   primaryButton: {
