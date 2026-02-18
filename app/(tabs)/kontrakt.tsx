@@ -104,7 +104,7 @@ export default function KontraktScreen() {
           {/* Przycisk - teraz w pełni bezpieczny */}
           <TouchableOpacity 
             style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]} 
-            onPress={() => isChecked && router.replace('/(tabs)')}
+            onPress={() => isChecked && router.replace('/')}
             disabled={!isChecked || !signatureLoaded}
           >
             <Text style={styles.buttonText}>Wchodzę</Text>

@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { markIntroSeen } from '@/hooks/useFirstSteps';
 
 // Poprawione ścieżki (zakładając, że assets są w folderze app)
 const Logo = require("./assets/images/icon-stroz.png");
@@ -20,9 +21,9 @@ export default function Intro() {
     ]).start();
   }, []);
 
-  const goNext = () => {
-    // Kierujemy do (tabs), co automatycznie otworzy ekran Dom (index.tsx)
-    router.replace("/(tabs)");
+  const goNext = async () => {
+    await markIntroSeen();
+    router.replace("/");
   };
 
   return (
@@ -35,6 +36,7 @@ export default function Intro() {
         <Animated.View style={[styles.textSection, { opacity: textAnim, transform: [{ translateY: textAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
           <View style={styles.textWrap}>
             <Text style={styles.hi}>Cześć.</Text>
+            <Text style={styles.kicker}>Pierwsze kroki</Text>
             <Text style={styles.line}>Jestem Anioł Stróż.</Text>
             <Text style={styles.line}>Będę Cię wspierał{"\n"}w Twoim procesie zdrowienia.</Text>
           </View>
@@ -61,6 +63,7 @@ const styles = StyleSheet.create({
   textSection: { marginTop: 30, zIndex: 2 },
   textWrap: { justifyContent: "center" },
   hi: { color: "#fff", fontSize: 32, fontWeight: "700", marginBottom: 20, letterSpacing: 0.6 },
+  kicker: { color: "rgba(120,200,255,0.9)", fontSize: 14, fontWeight: "700", marginBottom: 8, letterSpacing: 1.2, textTransform: 'uppercase' },
   line: { color: "rgba(255,255,255,0.85)", fontSize: 19, lineHeight: 30, letterSpacing: 0.4, marginBottom: 12 },
   watermark: { position: "absolute", right: -10, bottom: 120, width: 180, height: 180, opacity: 0.04, resizeMode: "contain", zIndex: 1 },
   bottomSection: { marginTop: 'auto', alignItems: 'center', width: '100%' },
