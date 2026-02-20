@@ -11,13 +11,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { captureRef } from 'react-native-view-shot';
 import { Alert, Animated, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
-const APP_LOGO = require('../assets/images/ikona-z-logo2.png');
-const WATERMARK = require('../assets/images/maly_aniol.png');
-const COIN_BLUE = require('../assets/images/coin-blue.png');
-const COIN_GREEN = require('../assets/images/coin-green.png');
-const COIN_BRONZE = require('../assets/images/coin-bronze.png');
-const COIN_SILVER = require('../assets/images/coin-silver.png');
-const COIN_GOLD = require('../assets/images/coin-gold.png');
+const APP_LOGO = require('../../../assets/images/ikona-z-logo2.png');
+const WATERMARK = require('../../../assets/images/maly_aniol.png');
+const COIN_BLUE = require('../../../assets/images/coin-blue.png');
+const COIN_GREEN = require('../../../assets/images/coin-green.png');
+const COIN_BRONZE = require('../../../assets/images/coin-bronze.png');
+const COIN_SILVER = require('../../../assets/images/coin-silver.png');
+const COIN_GOLD = require('../../../assets/images/coin-gold.png');
 
 const STORAGE_START_DATE = 'startDate';
 

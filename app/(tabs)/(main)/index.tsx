@@ -1,5 +1,7 @@
 import { CoJakSection } from '@/components/CoJakSection';
+import { useVisitedTiles } from '@/hooks/useVisitedTiles';
 import { router } from 'expo-router';
+import React, { useCallback } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const BG = '#071826';
@@ -8,7 +10,7 @@ const TILE_BORDER = 'rgba(120,200,255,0.22)';
 const SUB = 'rgba(255,255,255,0.88)';
 const SECTION = 'rgba(255,255,255,0.85)';
 
-const Watermark = require('../assets/images/maly_aniol.png');
+const Watermark = require('../../assets/images/maly_aniol.png');
 
 type RoutePath =
   | '/kontrakt'
@@ -33,11 +35,17 @@ const allTiles: DashboardTile[] = [
   { title: 'Wsparcie', subtitle: 'Siatka, społeczność, kontakt', to: '/centrum-wsparcia' },
 ];
 
-function SquareTile({ title, subtitle, to }: DashboardTile) {
+function SquareTile({
+  title,
+  subtitle,
+  to,
+  openedToday,
+  onOpen,
+}: DashboardTile & { openedToday: boolean; onOpen: (to: RoutePath) => void }) {
   return (
     <Pressable
-      onPress={() => router.push(to as any)}
-      style={({ pressed }) => [styles.squareTile, pressed && styles.tilePressed]}
+      onPress={() => onOpen(to)}
+      style={({ pressed }) => [styles.squareTile, openedToday && styles.squareTileOpened, pressed && styles.tilePressed]}
     >
       <Image source={Watermark} resizeMode="contain" style={styles.tileWatermark} />
       <View style={styles.tileContent}>
@@ -63,6 +71,16 @@ function SquareTile({ title, subtitle, to }: DashboardTile) {
 }
 
 export default function Dom() {
+  const { isVisited, markVisited } = useVisitedTiles();
+
+  const handleOpenTile = useCallback(async (to: RoutePath) => {
+    await markVisited(to);
+    router.push({
+      pathname: to as any,
+      params: { backTo: '/(tabs)' },
+    });
+  }, [markVisited]);
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.headerTitle}>Dom</Text>
@@ -78,9 +96,9 @@ export default function Dom() {
       />
 
       <Text style={styles.sectionTitle}>Menu główne</Text>
-      <View style={styles.grid}>
+        <View style={styles.grid}>
         {allTiles.map((item) => (
-          <SquareTile key={item.title} {...item} />
+          <SquareTile key={item.title} {...item} openedToday={isVisited(item.to)} onOpen={handleOpenTile} />
         ))}
       </View>
 
@@ -119,6 +137,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     overflow: 'hidden',
     position: 'relative',
+  },
+  squareTileOpened: {
+    backgroundColor: 'rgba(120,200,255,0.14)',
+    borderColor: 'rgba(170,225,255,0.72)',
   },
   tilePressed: {
     opacity: 0.82,

@@ -84,6 +84,12 @@ export default function KontraktScreen() {
 
           <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
 
+          {isChecked ? (
+            <View style={styles.statusBox}>
+              <Text style={styles.statusText}>Wszystko OK, kontrakt podpisany.</Text>
+            </View>
+          ) : null}
+
           {/* Sekcja podpisu */}
           <TouchableOpacity 
             style={styles.checkboxContainer} 
@@ -97,7 +103,7 @@ export default function KontraktScreen() {
               color={isChecked ? '#4630EB' : undefined}
             />
             <Text style={styles.label}>
-              {isChecked ? 'Kontrakt podpisany.' : 'Podpisuję się pod tym i zaczynam zmianę.'}
+              {isChecked ? 'Wszystko OK, kontrakt podpisany.' : 'Podpisuję się pod tym i zaczynam zmianę.'}
             </Text>
           </TouchableOpacity>
 
@@ -165,6 +171,21 @@ const styles = StyleSheet.create({
     textAlign: 'center', 
     color: '#66798b', 
     marginBottom: 35 
+  },
+  statusBox: {
+    backgroundColor: 'rgba(120, 200, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(120, 200, 255, 0.35)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+  },
+  statusText: {
+    color: '#D8F1FF',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   checkboxContainer: { 
     flexDirection: 'row', 

@@ -100,6 +100,7 @@ export type JournalEntry = EmotionJournalEntry | CravingJournalEntry | Gratitude
 
 export type CreateEmotionJournalInput = {
   dateKey?: DateKey;
+  createdAt?: string;
   baseEmotion: BaseEmotion;
   detailEmotion: string;
   intensity: number;
