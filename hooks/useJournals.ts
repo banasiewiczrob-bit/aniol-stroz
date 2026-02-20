@@ -213,8 +213,9 @@ export async function getJournalEntryById(entryId: string) {
 
 export async function createEmotionJournalEntry(input: CreateEmotionJournalInput) {
   const details = EMOTION_DETAILS_BY_BASE[input.baseEmotion];
-  const safeDetail = details.includes(input.detailEmotion) ? input.detailEmotion : details[0];
-  const createdAt = nowIso();
+  const detailTrimmed = input.detailEmotion.trim();
+  const safeDetail = detailTrimmed.length === 0 ? '' : details.includes(detailTrimmed) ? detailTrimmed : details[0];
+  const createdAt = input.createdAt ?? nowIso();
   const dateKey = input.dateKey ?? getJournalDateKey();
 
   const nextEntry: JournalEntry = {

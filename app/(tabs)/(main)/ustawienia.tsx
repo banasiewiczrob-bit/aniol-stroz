@@ -18,7 +18,7 @@ import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInpu
 
 const BG = '#071826';
 const SUB = 'rgba(255,255,255,0.72)';
-const AngelWatermark = require('../assets/images/maly_aniol.png');
+const AngelWatermark = require('../../assets/images/maly_aniol.png');
 const SETTINGS_SECTIONS_STORAGE_KEY = '@settings_sections_expanded';
 
 type ConsentKey = 'privacyConsentLocalStorage' | 'privacyConsentNotifications' | 'privacyConsentRegulations';
