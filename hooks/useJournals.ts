@@ -101,6 +101,7 @@ function normalizeCravingEntry(raw: Record<string, unknown>): JournalEntry | nul
     typeof raw.symptomsCount === 'number'
       ? Math.max(0, Math.min(20, Math.round(raw.symptomsCount)))
       : selectedSymptoms.length;
+  const cravingReported = typeof raw.cravingReported === 'boolean' ? raw.cravingReported : symptomsCount > 0;
 
   return {
     id: raw.id,
@@ -108,6 +109,7 @@ function normalizeCravingEntry(raw: Record<string, unknown>): JournalEntry | nul
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     dateKey: resolveDateKey(raw.dateKey, raw.createdAt),
+    cravingReported,
     urgeBefore: clampIntensity(raw.urgeBefore),
     selectedSymptoms,
     symptomsCount,
@@ -246,6 +248,7 @@ export async function createCravingJournalEntry(input: CreateCravingJournalInput
     new Set(input.selectedSymptoms.map((v) => v.trim()).filter((v) => v.length > 0))
   );
   const symptomsCount = uniqueSymptoms.length;
+  const cravingReported = input.cravingReported ?? symptomsCount > 0;
 
   const nextEntry: JournalEntry = {
     id: createId('journal_craving'),
@@ -253,6 +256,7 @@ export async function createCravingJournalEntry(input: CreateCravingJournalInput
     createdAt,
     updatedAt: createdAt,
     dateKey,
+    cravingReported,
     urgeBefore: clampIntensity(input.urgeBefore),
     selectedSymptoms: uniqueSymptoms,
     symptomsCount,

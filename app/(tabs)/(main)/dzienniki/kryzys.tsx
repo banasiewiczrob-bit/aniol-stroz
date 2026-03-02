@@ -8,11 +8,15 @@ import {
 import { createCravingJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const BG_CARD = 'rgba(255,255,255,0.05)';
-const BORDER = 'rgba(120,200,255,0.2)';
-const SUB = 'rgba(255,255,255,0.72)';
+const BG_CARD = 'rgba(12,38,62,0.78)';
+const BORDER = 'rgba(159,216,255,0.32)';
+const SUB = 'rgba(232,245,255,0.84)';
+const ACCENT = '#FF9E9E';
+const ACCENT_BG = 'rgba(255,158,158,0.25)';
+const ACCENT_BORDER = 'rgba(255,158,158,0.55)';
+const Watermark = require('../../../../assets/images/maly_aniol.png');
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
@@ -91,18 +95,14 @@ export default function DziennikKryzysuScreen() {
     setOpenHours((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const onSave = async () => {
-    if (selectedSymptoms.length === 0) {
-      Alert.alert('Brak objawów', 'Zaznacz przynajmniej jeden objaw.');
-      return;
-    }
-
+  const saveEntry = async (symptoms: string[], cravingReported: boolean, successMessage: string) => {
     setBusy(true);
     try {
       await createCravingJournalEntry({
         dateKey: selectedDateKey,
+        cravingReported,
         urgeBefore: 0,
-        selectedSymptoms,
+        selectedSymptoms: symptoms,
         preTriggerNote: '',
         plan15m: '',
         urgeAfter: null,
@@ -110,13 +110,25 @@ export default function DziennikKryzysuScreen() {
       });
       setSelectedSymptoms([]);
       await loadDayEntries();
-      Alert.alert('Zapisano', 'Wpis w Dzienniku Głodu/Kryzysu został zapisany.');
+      Alert.alert('Zapisano', successMessage);
     } catch (e) {
       console.error('Błąd zapisu Dziennika Głodu/Kryzysu:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać wpisu.');
     } finally {
       setBusy(false);
     }
+  };
+
+  const onSave = async () => {
+    if (selectedSymptoms.length === 0) {
+      Alert.alert('Brak objawów', 'Wybierz objawy albo użyj przycisku "Zapisz: bez objawów".');
+      return;
+    }
+    await saveEntry(selectedSymptoms, true, 'Wpis w Dzienniku Głodu/Kryzysu został zapisany.');
+  };
+
+  const onSaveNoSymptoms = async () => {
+    await saveEntry([], false, 'Zapisano dzień bez zgłoszonego głodu.');
   };
 
   const onDelete = (entryId: string) => {
@@ -136,12 +148,15 @@ export default function DziennikKryzysuScreen() {
   return (
     <BackgroundWrapper>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.bgOrbA} />
+        <View style={styles.bgOrbB} />
         <Text style={styles.title}>Dziennik Głodu/Kryzysu</Text>
         <Text style={styles.subtitle}>Checklista 20 objawów i podsumowanie dzienne.</Text>
 
         <WeekCalendar selectedDateKey={selectedDateKey} onChangeDateKey={setSelectedDateKey} title="Kalendarz kryzysu" />
 
         <View style={styles.card}>
+          <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>Objawy (1-20)</Text>
           <View style={styles.chipWrap}>
             {CRAVING_SYMPTOMS.map((symptom, idx) => {
@@ -168,6 +183,7 @@ export default function DziennikKryzysuScreen() {
         </View>
 
         <View style={styles.card}>
+          <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>Wybrane objawy</Text>
           {selectedSymptoms.length === 0 ? <Text style={styles.helpText}>Brak wybranych objawów.</Text> : null}
           {selectedSymptoms.map((symptom, index) => (
@@ -179,6 +195,9 @@ export default function DziennikKryzysuScreen() {
 
         <Pressable style={[styles.primaryBtn, busy && styles.btnDisabled]} onPress={onSave} disabled={busy}>
           <Text style={styles.primaryBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>
+        </Pressable>
+        <Pressable style={[styles.secondaryBtn, busy && styles.btnDisabled]} onPress={onSaveNoSymptoms} disabled={busy}>
+          <Text style={styles.secondaryBtnText}>Zapisz: bez objawów</Text>
         </Pressable>
 
         <Pressable style={styles.archiveHeader} onPress={() => setArchiveOpen((prev) => !prev)}>
@@ -215,8 +234,14 @@ export default function DziennikKryzysuScreen() {
                               ? entries.map((entry) => (
                                   <View key={entry.id} style={styles.entryRow}>
                                     <View style={{ flex: 1 }}>
-                                      <Text style={styles.entryTitle}>Objawy: {entry.symptomsCount}/20</Text>
-                                      <Text style={styles.helpText}>{entry.selectedSymptoms.join(', ')}</Text>
+                                      <Text style={styles.entryTitle}>
+                                        {entry.cravingReported ? `Objawy: ${entry.symptomsCount}/20` : 'Zapis: bez objawów'}
+                                      </Text>
+                                      {entry.cravingReported ? (
+                                        <Text style={styles.helpText}>{entry.selectedSymptoms.join(', ')}</Text>
+                                      ) : (
+                                        <Text style={styles.helpText}>Brak zgłoszonego głodu w tym zapisie.</Text>
+                                      )}
                                       <Text style={styles.helpText}>{formatTime(entry.createdAt)}</Text>
                                     </View>
                                     <Pressable style={styles.deleteBtn} onPress={() => onDelete(entry.id)}>
@@ -242,7 +267,25 @@ export default function DziennikKryzysuScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { padding: 18, paddingTop: 18, paddingBottom: 40 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 40, position: 'relative' },
+  bgOrbA: {
+    position: 'absolute',
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(255,158,158,0.1)',
+    top: -80,
+    right: -90,
+  },
+  bgOrbB: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(255,199,217,0.09)',
+    bottom: 120,
+    left: -80,
+  },
   title: { color: 'white', fontSize: 31, fontWeight: '800', marginBottom: 8 },
   subtitle: { color: SUB, fontSize: 16, lineHeight: 24, marginBottom: 14 },
   card: {
@@ -252,6 +295,18 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  cardWatermark: {
+    position: 'absolute',
+    right: -20,
+    bottom: -24,
+    width: 120,
+    height: 120,
+    opacity: 0.11,
+    tintColor: 'white',
+    transform: [{ rotate: '16deg' }],
   },
   sectionTitle: { color: 'white', fontSize: 17, fontWeight: '700', marginBottom: 10 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -264,8 +319,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
   chipActive: {
-    backgroundColor: 'rgba(120,200,255,0.25)',
-    borderColor: 'rgba(120,200,255,0.6)',
+    backgroundColor: ACCENT_BG,
+    borderColor: ACCENT_BORDER,
   },
   chipText: { color: 'rgba(255,255,255,0.86)', fontSize: 13, fontWeight: '600' },
   chipTextActive: { color: 'white' },
@@ -283,13 +338,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   archiveHeaderText: { color: 'white', fontSize: 16, fontWeight: '700' },
-  archiveHeaderChevron: { color: '#78C8FF', fontSize: 20, fontWeight: '700' },
+  archiveHeaderChevron: { color: ACCENT, fontSize: 20, fontWeight: '700' },
   innerArchiveHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(120,200,255,0.25)',
+    borderColor: ACCENT_BORDER,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -313,9 +368,9 @@ const styles = StyleSheet.create({
   },
   primaryBtn: {
     marginTop: 4,
-    backgroundColor: 'rgba(120,200,255,0.25)',
+    backgroundColor: ACCENT_BG,
     borderWidth: 1,
-    borderColor: 'rgba(120,200,255,0.55)',
+    borderColor: ACCENT_BORDER,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
@@ -323,6 +378,17 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.6 },
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '700' },
+  secondaryBtn: {
+    marginTop: -2,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.24)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  secondaryBtnText: { color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: '700' },
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -335,10 +401,10 @@ const styles = StyleSheet.create({
   hourGroup: {
     marginTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(120,200,255,0.22)',
+    borderTopColor: ACCENT_BORDER,
     paddingTop: 8,
   },
-  hourTitle: { color: '#AEE1FF', fontSize: 13, fontWeight: '700', marginBottom: 4 },
+  hourTitle: { color: ACCENT, fontSize: 13, fontWeight: '700', marginBottom: 4 },
   entryTitle: { color: 'white', fontSize: 15, fontWeight: '700' },
   deleteBtn: {
     borderWidth: 1,

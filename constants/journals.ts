@@ -80,6 +80,7 @@ export type EmotionJournalEntry = JournalEntryBase & {
 
 export type CravingJournalEntry = JournalEntryBase & {
   type: 'craving';
+  cravingReported: boolean;
   urgeBefore: number;
   selectedSymptoms: string[];
   symptomsCount: number;
@@ -111,6 +112,7 @@ export type CreateEmotionJournalInput = {
 
 export type CreateCravingJournalInput = {
   dateKey?: DateKey;
+  cravingReported?: boolean;
   urgeBefore: number;
   selectedSymptoms: string[];
   preTriggerNote: string;

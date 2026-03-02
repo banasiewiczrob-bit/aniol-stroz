@@ -20,7 +20,13 @@
       }
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Aplikacja potrzebuje dostępu do kontaktów, aby dodać osoby do Siatki wsparcia."
+        }
+      ]
     ],
     "extra": {
       "router": {},

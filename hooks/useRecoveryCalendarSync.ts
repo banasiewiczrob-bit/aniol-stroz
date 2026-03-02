@@ -217,11 +217,13 @@ async function loadJournalRollupByDate(): Promise<Map<DateKey, JournalRollup>> {
     } else if (entry.type === 'gratitude') {
       current.gratitudeCount += 1;
     } else if (entry.type === 'craving') {
-      current.cravingCount += 1;
-      current.cravingSymptomsTotal += entry.symptomsCount;
-      const level = getCravingLevelFromSymptoms(entry.symptomsCount);
-      if (cravingSeverityOrder[level] > cravingSeverityOrder[current.cravingMaxLevel]) {
-        current.cravingMaxLevel = level;
+      if (entry.cravingReported) {
+        current.cravingCount += 1;
+        current.cravingSymptomsTotal += entry.symptomsCount;
+        const level = getCravingLevelFromSymptoms(entry.symptomsCount);
+        if (cravingSeverityOrder[level] > cravingSeverityOrder[current.cravingMaxLevel]) {
+          current.cravingMaxLevel = level;
+        }
       }
     }
 

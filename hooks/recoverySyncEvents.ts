@@ -1,4 +1,4 @@
-export type SyncSource = 'plan' | 'journals' | 'texts';
+export type SyncSource = 'plan' | 'journals' | 'texts' | 'support';
 export type SyncListener = (source: SyncSource) => void;
 
 const listeners = new Set<SyncListener>();

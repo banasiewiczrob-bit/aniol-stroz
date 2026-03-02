@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { loadAppSettings, subscribeAppSettingsChanges } from '@/hooks/useAppSettings';
 
 const IDS_STORAGE_KEY = '@daily_plan_notification_ids';
 const SETTINGS_STORAGE_KEY = '@daily_plan_notification_settings';
@@ -265,6 +266,20 @@ export async function resetDailyPlanNotificationSettings() {
 
 export function useDailyPlanNotifications() {
   useEffect(() => {
-    void ensureDailyPlanNotifications();
+    const syncWithAppSettings = async () => {
+      const appSettings = await loadAppSettings();
+      const notificationSettings = await loadDailyPlanNotificationSettings();
+      const effective = appSettings.privacyConsentNotifications
+        ? notificationSettings
+        : { ...notificationSettings, enabled: false };
+      await ensureDailyPlanNotifications(effective);
+    };
+
+    void syncWithAppSettings();
+    const unsubscribe = subscribeAppSettingsChanges(() => {
+      void syncWithAppSettings();
+    });
+
+    return unsubscribe;
   }, []);
 }

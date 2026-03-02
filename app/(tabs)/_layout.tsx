@@ -1,6 +1,7 @@
 import { Stack, router, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { getFirstStepsState, resolveFirstStepsStep, subscribeFirstStepsChanges, type FirstStepsStep } from '@/hooks/useFirstSteps';
+import { markVisitedRoute } from '@/hooks/useVisitedTiles';
 
 export default function TabLayout() {
   const pathname = usePathname();
@@ -41,34 +42,31 @@ export default function TabLayout() {
   }, [pathname]);
 
   useEffect(() => {
+    if (__DEV__) return;
     if (!firstStepsStep || firstStepsStep === 'done') return;
-
-    if (firstStepsStep === 'intro') {
-      if (pathname !== '/intro') router.replace('/intro');
-      return;
-    }
-
     const requiredPath =
       firstStepsStep === 'consents'
         ? '/ustawienia'
         : firstStepsStep === 'contract'
           ? '/kontrakt'
-          : firstStepsStep === 'counter'
-            ? '/licznik'
-            : '/licznik-nagrody';
+          : '/licznik';
 
     if (pathname !== requiredPath) {
       router.replace(requiredPath as any);
     }
   }, [firstStepsStep, pathname]);
 
+  useEffect(() => {
+    void markVisitedRoute(pathname);
+  }, [pathname]);
+
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        gestureEnabled: true,
-        fullScreenGestureEnabled: true,
-        animation: 'slide_from_right',
+        gestureEnabled: false,
+        fullScreenGestureEnabled: false,
+        animation: 'none',
       }}
     >
       <Stack.Screen name="(main)" />
