@@ -6,16 +6,17 @@ const Watermark = require('../app/assets/images/maly_aniol.png');
 
 interface BackgroundWrapperProps {
   children: React.ReactNode;
+  showSwipeHint?: boolean;
 }
 
-export const BackgroundWrapper = ({ children }: BackgroundWrapperProps) => {
+export const BackgroundWrapper = ({ children, showSwipeHint = true }: BackgroundWrapperProps) => {
   return (
     <View style={styles.container}>
       <View style={StyleSheet.absoluteFill}>
         <Image source={Watermark} style={styles.globalWatermark} resizeMode="contain" />
       </View>
 
-      <BackButton />
+      <BackButton showSwipeHint={showSwipeHint} />
       <View style={styles.contentLayer}>{children}</View>
     </View>
   );

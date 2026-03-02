@@ -8,11 +8,12 @@ const PLAN_STORAGE_KEY = '@daily_task';
 const ARCHIVE_STORAGE_KEY = '@daily_task_archive';
 const ANNIVERSARY_SEEN_STORAGE_KEY = '@anniversary_seen_once';
 
-export type FirstStepsStep = 'intro' | 'consents' | 'contract' | 'counter' | 'anniversary' | 'done';
+export type FirstStepsStep = 'contract' | 'counter' | 'consents' | 'done';
 
 export type FirstStepsState = {
   introSeen: boolean;
   consentsCompleted: boolean;
+  setupPreferencesCompleted: boolean;
   contractSigned: boolean;
   counterDone: boolean;
   anniversaryDone: boolean;
@@ -61,12 +62,13 @@ function buildState(
   legacyUser: boolean
 ): FirstStepsState {
   const consentsCompleted = settings.privacyConsentLocalStorage && settings.privacyConsentRegulations;
-  const firstStepsDone =
-    legacyUser || (settings.introSeen && consentsCompleted && contractSigned && counterDone && anniversaryDone);
+  const setupPreferencesCompleted = settings.firstRunSetupDone || settings.firstStepsDone;
+  const firstStepsDone = legacyUser || (contractSigned && counterDone && consentsCompleted && setupPreferencesCompleted);
 
   return {
     introSeen: settings.introSeen,
     consentsCompleted,
+    setupPreferencesCompleted,
     contractSigned,
     counterDone,
     anniversaryDone,
@@ -77,11 +79,10 @@ function buildState(
 
 export function resolveFirstStepsStep(state: FirstStepsState): FirstStepsStep {
   if (state.firstStepsDone) return 'done';
-  if (!state.introSeen) return 'intro';
-  if (!state.consentsCompleted) return 'consents';
   if (!state.contractSigned) return 'contract';
   if (!state.counterDone) return 'counter';
-  if (!state.anniversaryDone) return 'anniversary';
+  if (!state.consentsCompleted) return 'consents';
+  if (!state.setupPreferencesCompleted) return 'consents';
   return 'done';
 }
 
@@ -102,6 +103,7 @@ export async function getFirstStepsState(): Promise<FirstStepsState> {
   const needsSettingsUpdate =
     settings.counterDone !== state.counterDone ||
     settings.anniversaryDone !== state.anniversaryDone ||
+    settings.firstRunSetupDone !== state.setupPreferencesCompleted ||
     settings.firstStepsDone !== state.firstStepsDone;
 
   if (needsSettingsUpdate) {
@@ -109,6 +111,7 @@ export async function getFirstStepsState(): Promise<FirstStepsState> {
       ...settings,
       counterDone: state.counterDone,
       anniversaryDone: state.anniversaryDone,
+      firstRunSetupDone: state.setupPreferencesCompleted,
       firstStepsDone: state.firstStepsDone,
     });
     notifyFirstStepsChanged();

@@ -4,11 +4,15 @@ import { getJournalDateKey, type GratitudeJournalEntry } from '@/constants/journ
 import { createGratitudeJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-const BG_CARD = 'rgba(255,255,255,0.05)';
-const BORDER = 'rgba(120,200,255,0.2)';
-const SUB = 'rgba(255,255,255,0.72)';
+const BG_CARD = 'rgba(12,38,62,0.78)';
+const BORDER = 'rgba(159,216,255,0.32)';
+const SUB = 'rgba(232,245,255,0.84)';
+const ACCENT = '#FFD18A';
+const ACCENT_BG = 'rgba(255,209,138,0.22)';
+const ACCENT_BORDER = 'rgba(255,209,138,0.55)';
+const Watermark = require('../../../../assets/images/maly_aniol.png');
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
@@ -110,6 +114,8 @@ export default function DziennikWdziecznosciScreen() {
   return (
     <BackgroundWrapper>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.bgOrbA} />
+        <View style={styles.bgOrbB} />
         <Text style={styles.title}>Dziennik Wdzięczności</Text>
         <Text style={styles.subtitle}>Dodawaj tyle wpisów dziennie, ile potrzebujesz.</Text>
 
@@ -120,6 +126,7 @@ export default function DziennikWdziecznosciScreen() {
         />
 
         <View style={styles.card}>
+          <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>Napisz za co dzis możesz być wdzięczny</Text>
           <Text style={styles.sectionHint}>
             Jeśli codziennie wpiszesz tylko 3 różne wdzięczności, po tygodniu będziesz miał 21 powodów do zadowolenia.
@@ -132,7 +139,7 @@ export default function DziennikWdziecznosciScreen() {
             placeholderTextColor="rgba(255,255,255,0.45)"
           />
           <Pressable style={[styles.plusBtn, busy && styles.btnDisabled]} onPress={onSave} disabled={busy}>
-            <Text style={styles.plusBtnText}>{busy ? 'Dodawanie...' : '+ Dodaj wdzięczność'}</Text>
+            <Text style={styles.plusBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>
           </Pressable>
         </View>
 
@@ -196,7 +203,25 @@ export default function DziennikWdziecznosciScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { padding: 18, paddingTop: 18, paddingBottom: 40 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 40, position: 'relative' },
+  bgOrbA: {
+    position: 'absolute',
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(255,209,138,0.1)',
+    top: -80,
+    right: -90,
+  },
+  bgOrbB: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(158,231,216,0.09)',
+    bottom: 120,
+    left: -80,
+  },
   title: { color: 'white', fontSize: 31, fontWeight: '800', marginBottom: 8 },
   subtitle: { color: SUB, fontSize: 16, lineHeight: 24, marginBottom: 14 },
   card: {
@@ -206,6 +231,18 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  cardWatermark: {
+    position: 'absolute',
+    right: -20,
+    bottom: -24,
+    width: 120,
+    height: 120,
+    opacity: 0.11,
+    tintColor: 'white',
+    transform: [{ rotate: '16deg' }],
   },
   sectionTitle: { color: 'white', fontSize: 17, fontWeight: '700', marginBottom: 10 },
   sectionHint: {
@@ -228,13 +265,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   archiveHeaderText: { color: 'white', fontSize: 16, fontWeight: '700' },
-  archiveHeaderChevron: { color: '#78C8FF', fontSize: 20, fontWeight: '700' },
+  archiveHeaderChevron: { color: ACCENT, fontSize: 20, fontWeight: '700' },
   innerArchiveHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(120,200,255,0.25)',
+    borderColor: ACCENT_BORDER,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -269,11 +306,11 @@ const styles = StyleSheet.create({
   plusBtn: {
     marginTop: 10,
     borderWidth: 1,
-    borderColor: 'rgba(120,200,255,0.55)',
+    borderColor: ACCENT_BORDER,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: 'rgba(120,200,255,0.2)',
+    backgroundColor: ACCENT_BG,
   },
   plusBtnText: { color: 'white', fontSize: 15, fontWeight: '700' },
   btnDisabled: { opacity: 0.6 },
@@ -290,10 +327,10 @@ const styles = StyleSheet.create({
   hourGroup: {
     marginTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(120,200,255,0.22)',
+    borderTopColor: ACCENT_BORDER,
     paddingTop: 8,
   },
-  hourTitle: { color: '#AEE1FF', fontSize: 13, fontWeight: '700', marginBottom: 4 },
+  hourTitle: { color: ACCENT, fontSize: 13, fontWeight: '700', marginBottom: 4 },
   entryTitle: { color: 'white', fontSize: 15, fontWeight: '700' },
   deleteBtn: {
     borderWidth: 1,

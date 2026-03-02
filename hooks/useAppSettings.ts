@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const APP_SETTINGS_STORAGE_KEY = '@app_settings';
+const settingsListeners = new Set<(settings: AppSettings) => void>();
 
 export type PlanCalendarView = 'week' | 'month';
 export type PlanDayOpenMode = 'plan' | 'summary';
@@ -21,6 +22,10 @@ export type AppSettings = {
   counterDone: boolean;
   anniversaryDone: boolean;
   firstStepsDone: boolean;
+  intelligentSupportEnabled: boolean;
+  intelligentSupportPromptNextAt: string | null;
+  badgeIndicatorsEnabled: boolean;
+  firstRunSetupDone: boolean;
 };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -37,6 +42,10 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   counterDone: false,
   anniversaryDone: false,
   firstStepsDone: false,
+  intelligentSupportEnabled: false,
+  intelligentSupportPromptNextAt: null,
+  badgeIndicatorsEnabled: false,
+  firstRunSetupDone: false,
 };
 
 function isTextScale(value: unknown): value is AppTextScale {
@@ -88,6 +97,24 @@ function normalizeSettings(value: Partial<AppSettings> | null | undefined): AppS
         : typeof (value as { onboardingDone?: unknown } | undefined)?.onboardingDone === 'boolean'
           ? Boolean((value as { onboardingDone?: boolean }).onboardingDone)
           : DEFAULT_APP_SETTINGS.firstStepsDone,
+    intelligentSupportEnabled:
+      typeof value?.intelligentSupportEnabled === 'boolean'
+        ? value.intelligentSupportEnabled
+        : DEFAULT_APP_SETTINGS.intelligentSupportEnabled,
+    intelligentSupportPromptNextAt:
+      typeof value?.intelligentSupportPromptNextAt === 'string' || value?.intelligentSupportPromptNextAt === null
+        ? value.intelligentSupportPromptNextAt
+        : DEFAULT_APP_SETTINGS.intelligentSupportPromptNextAt,
+    badgeIndicatorsEnabled:
+      typeof value?.badgeIndicatorsEnabled === 'boolean'
+        ? value.badgeIndicatorsEnabled
+        : DEFAULT_APP_SETTINGS.badgeIndicatorsEnabled,
+    firstRunSetupDone:
+      typeof value?.firstRunSetupDone === 'boolean'
+        ? value.firstRunSetupDone
+        : typeof value?.firstStepsDone === 'boolean'
+          ? value.firstStepsDone
+          : DEFAULT_APP_SETTINGS.firstRunSetupDone,
   };
 }
 
@@ -106,9 +133,17 @@ export async function loadAppSettings(): Promise<AppSettings> {
 export async function saveAppSettings(settings: AppSettings) {
   const normalized = normalizeSettings(settings);
   await AsyncStorage.setItem(APP_SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
+  settingsListeners.forEach((listener) => listener(normalized));
 }
 
 export async function resetAppSettings() {
   await saveAppSettings(DEFAULT_APP_SETTINGS);
   return DEFAULT_APP_SETTINGS;
+}
+
+export function subscribeAppSettingsChanges(listener: (settings: AppSettings) => void) {
+  settingsListeners.add(listener);
+  return () => {
+    settingsListeners.delete(listener);
+  };
 }

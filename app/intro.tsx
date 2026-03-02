@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { markIntroSeen } from '@/hooks/useFirstSteps';
+import { getFirstStepsState, markIntroSeen, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 
 // Poprawione ścieżki (zakładając, że assets są w folderze app)
 const Logo = require("./assets/images/icon-stroz.png");
@@ -21,9 +21,19 @@ export default function Intro() {
     ]).start();
   }, []);
 
+  const resolveNextRoute = async () => {
+    const state = await getFirstStepsState();
+    const step = resolveFirstStepsStep(state);
+    if (step === 'consents') return '/ustawienia';
+    if (step === 'contract') return '/kontrakt';
+    if (step === 'counter') return '/licznik';
+    return '/(tabs)';
+  };
+
   const goNext = async () => {
     await markIntroSeen();
-    router.replace("/");
+    const nextRoute = await resolveNextRoute();
+    router.replace(nextRoute as any);
   };
 
   return (
@@ -42,11 +52,16 @@ export default function Intro() {
           </View>
         </Animated.View>
 
-        <Image source={Watermark} style={styles.watermark} />
+        <View pointerEvents="none" style={styles.watermarkWrap}>
+          <Image source={Watermark} style={styles.watermark} />
+        </View>
 
         <Animated.View style={[styles.bottomSection, { opacity: bottomAnim, transform: [{ translateY: bottomAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
           <Pressable onPress={goNext} style={styles.button}>
             <Text style={styles.buttonText}>Dalej</Text>
+          </Pressable>
+          <Pressable onPress={goNext} style={styles.skipButton}>
+            <Text style={styles.skipButtonText}>Pomiń intro</Text>
           </Pressable>
           <Text style={styles.footer}>Robert Banasiewicz</Text>
         </Animated.View>
@@ -65,9 +80,12 @@ const styles = StyleSheet.create({
   hi: { color: "#fff", fontSize: 32, fontWeight: "700", marginBottom: 20, letterSpacing: 0.6 },
   kicker: { color: "rgba(120,200,255,0.9)", fontSize: 14, fontWeight: "700", marginBottom: 8, letterSpacing: 1.2, textTransform: 'uppercase' },
   line: { color: "rgba(255,255,255,0.85)", fontSize: 19, lineHeight: 30, letterSpacing: 0.4, marginBottom: 12 },
-  watermark: { position: "absolute", right: -10, bottom: 120, width: 180, height: 180, opacity: 0.04, resizeMode: "contain", zIndex: 1 },
+  watermarkWrap: { position: "absolute", right: -10, bottom: 120, zIndex: 1 },
+  watermark: { width: 180, height: 180, opacity: 0.04, resizeMode: "contain" },
   bottomSection: { marginTop: 'auto', alignItems: 'center', width: '100%' },
   button: { width: "100%", paddingVertical: 18, borderRadius: 25, alignItems: "center", backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(120,200,255,0.35)" },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  skipButton: { marginTop: 14, paddingVertical: 8, paddingHorizontal: 12 },
+  skipButtonText: { color: 'rgba(255,255,255,0.75)', fontSize: 15, fontWeight: '600' },
   footer: { marginTop: 25, color: "rgba(255,255,255,0.35)", fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase' },
 });

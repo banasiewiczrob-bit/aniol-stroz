@@ -12,23 +12,23 @@ import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } f
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import Constants from 'expo-constants';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
-const BG = '#071826';
-const SUB = 'rgba(255,255,255,0.72)';
-const AngelWatermark = require('../../assets/images/maly_aniol.png');
+const BG = '#061A2C';
+const SUB = 'rgba(232,245,255,0.84)';
 const SETTINGS_SECTIONS_STORAGE_KEY = '@settings_sections_expanded';
 
 type ConsentKey = 'privacyConsentLocalStorage' | 'privacyConsentNotifications' | 'privacyConsentRegulations';
-type SettingsSectionKey = 'consents' | 'notifications' | 'plan' | 'personalization';
+type SettingsSectionKey = 'consents' | 'notifications' | 'plan' | 'intelligentSupport' | 'personalization';
 type SectionExpandedState = Record<SettingsSectionKey, boolean>;
 
 const DEFAULT_SECTION_EXPANDED: SectionExpandedState = {
   consents: false,
   notifications: false,
   plan: false,
+  intelligentSupport: false,
   personalization: false,
 };
 
@@ -42,6 +42,10 @@ function normalizeSectionExpanded(value: unknown): SectionExpandedState {
     consents: typeof parsed.consents === 'boolean' ? parsed.consents : DEFAULT_SECTION_EXPANDED.consents,
     notifications: typeof parsed.notifications === 'boolean' ? parsed.notifications : DEFAULT_SECTION_EXPANDED.notifications,
     plan: typeof parsed.plan === 'boolean' ? parsed.plan : DEFAULT_SECTION_EXPANDED.plan,
+    intelligentSupport:
+      typeof parsed.intelligentSupport === 'boolean'
+        ? parsed.intelligentSupport
+        : DEFAULT_SECTION_EXPANDED.intelligentSupport,
     personalization:
       typeof parsed.personalization === 'boolean' ? parsed.personalization : DEFAULT_SECTION_EXPANDED.personalization,
   };
@@ -65,6 +69,7 @@ function parseTime(value: string) {
 }
 
 export default function UstawieniaScreen() {
+  const params = useLocalSearchParams<{ openSection?: string }>();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -78,6 +83,7 @@ export default function UstawieniaScreen() {
   const [appSettings, setAppSettingsState] = useState<AppSettings>(DEFAULT_APP_SETTINGS);
   const [sectionExpanded, setSectionExpanded] = useState<SectionExpandedState>(DEFAULT_SECTION_EXPANDED);
   const sectionExpandedRef = useRef<SectionExpandedState>(DEFAULT_SECTION_EXPANDED);
+  const [onboardingSettingsRequired, setOnboardingSettingsRequired] = useState(false);
 
   const notificationsConsentEnabled = appSettings.privacyConsentNotifications;
   const notificationsSectionLocked = busy || !notificationsConsentEnabled;
@@ -104,6 +110,21 @@ export default function UstawieniaScreen() {
     setMorningTime(`${pad(safeNotif.morningHour)}:${pad(safeNotif.morningMinute)}`);
     setEveningTime(`${pad(safeNotif.eveningHour)}:${pad(safeNotif.eveningMinute)}`);
     setAppSettingsState(app);
+
+    const onboardingExpanded: SectionExpandedState = {
+      consents: true,
+      notifications: true,
+      plan: false,
+      intelligentSupport: true,
+      personalization: true,
+    };
+    if (!app.firstRunSetupDone) {
+      setOnboardingSettingsRequired(true);
+      setSectionExpanded(onboardingExpanded);
+      sectionExpandedRef.current = onboardingExpanded;
+      return;
+    }
+    setOnboardingSettingsRequired(false);
 
     if (!savedSectionExpandedRaw) {
       setSectionExpanded(DEFAULT_SECTION_EXPANDED);
@@ -138,6 +159,18 @@ export default function UstawieniaScreen() {
 
     void load();
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    if (typeof params.openSection !== 'string') return;
+    const allowed: SettingsSectionKey[] = ['consents', 'notifications', 'plan', 'intelligentSupport', 'personalization'];
+    if (!allowed.includes(params.openSection as SettingsSectionKey)) return;
+    setSectionExpanded((prev) => {
+      const next = { ...prev, [params.openSection as SettingsSectionKey]: true };
+      sectionExpandedRef.current = next;
+      return next;
+    });
+  }, [loading, params.openSection]);
 
   const setAppSettings = (patch: Partial<AppSettings>) => {
     setAppSettingsState((prev) => ({ ...prev, ...patch }));
@@ -183,10 +216,6 @@ export default function UstawieniaScreen() {
         setNotice('Zapisano zgody.');
       }
       await collapseSection('consents');
-      const firstStepsStep = resolveFirstStepsStep(await getFirstStepsState());
-      if (firstStepsStep !== 'consents' && firstStepsStep !== 'done') {
-        router.replace('/');
-      }
     } catch (e) {
       console.error('Błąd zapisu zgód:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać zgód.');
@@ -291,6 +320,63 @@ export default function UstawieniaScreen() {
     }
   };
 
+  const finishOnboardingSettings = async () => {
+    if (!appSettings.privacyConsentLocalStorage || !appSettings.privacyConsentRegulations) {
+      Alert.alert('Brak wymaganych zgód', 'Aby zakończyć konfigurację, zaznacz zgodę na zapis danych i akceptację zasad.');
+      return;
+    }
+
+    const morning = parseTime(morningTime);
+    const evening = parseTime(eveningTime);
+    if (notificationSettings.enabled && (!morning || !evening)) {
+      Alert.alert('Niepoprawny format godziny', 'Użyj formatu HH:MM, np. 08:00 lub 20:30.');
+      return;
+    }
+
+    setBusy(true);
+    setNotice('');
+    try {
+      const nextNotifications: DailyPlanNotificationSettings = {
+        ...notificationSettings,
+        enabled: appSettings.privacyConsentNotifications ? notificationSettings.enabled : false,
+        morningHour: morning?.hour ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.morningHour,
+        morningMinute: morning?.minute ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.morningMinute,
+        eveningHour: evening?.hour ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.eveningHour,
+        eveningMinute: evening?.minute ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.eveningMinute,
+      };
+
+      const nextPromptAt =
+        appSettings.intelligentSupportEnabled
+          ? null
+          : (() => {
+              const d = new Date();
+              d.setDate(d.getDate() + 30);
+              return d.toISOString();
+            })();
+
+      const nextAppSettings: AppSettings = {
+        ...appSettings,
+        firstRunSetupDone: true,
+        intelligentSupportPromptNextAt: nextPromptAt,
+      };
+
+      await saveDailyPlanNotificationSettings(nextNotifications);
+      await ensureDailyPlanNotifications(nextNotifications);
+      await saveAppSettings(nextAppSettings);
+
+      setAppSettingsState(nextAppSettings);
+      setNotificationSettings(nextNotifications);
+      setOnboardingSettingsRequired(false);
+      setNotice('Pierwsza konfiguracja została zapisana.');
+      router.replace('/(tabs)');
+    } catch (e) {
+      console.error('Błąd zapisu konfiguracji startowej:', e);
+      Alert.alert('Błąd', 'Nie udało się zapisać konfiguracji startowej.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const restorePlanDefaults = async () => {
     setBusy(true);
     setNotice('');
@@ -314,7 +400,7 @@ export default function UstawieniaScreen() {
 
   if (loading) {
     return (
-      <BackgroundWrapper>
+      <BackgroundWrapper showSwipeHint={false}>
         <View style={styles.loadingWrap}>
           <Text style={styles.loadingText}>Ładowanie ustawień...</Text>
         </View>
@@ -323,10 +409,16 @@ export default function UstawieniaScreen() {
   }
 
   return (
-    <BackgroundWrapper>
+    <BackgroundWrapper showSwipeHint={false}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.bgOrbA} />
+        <View style={styles.bgOrbB} />
         <Text style={styles.title}>Ustawienia</Text>
-        <Text style={styles.subtitle}>Pierwsze kroki: najpierw zgody, potem pozostałe ustawienia aplikacji.</Text>
+        <Text style={styles.subtitle}>
+          {onboardingSettingsRequired
+            ? 'Krok 3 z 3: ustaw zgody oraz preferencje startowe (powiadomienia, badge i inteligentne wsparcie).'
+            : 'Pierwsze kroki: najpierw zgody, potem pozostałe ustawienia aplikacji.'}
+        </Text>
 
         <View style={[styles.card, styles.cardPrimary]}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.consents && styles.sectionHeaderRowCollapsed]}>
@@ -487,7 +579,8 @@ export default function UstawieniaScreen() {
           ) : null}
         </View>
 
-        <View style={styles.card}>
+        {!onboardingSettingsRequired ? (
+          <View style={styles.card}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.plan && styles.sectionHeaderRowCollapsed]}>
             <Text style={[styles.cardTitle, styles.cardTitleTight]}>Plan dnia</Text>
             {!sectionExpanded.plan ? (
@@ -564,6 +657,64 @@ export default function UstawieniaScreen() {
               </Pressable>
             </>
           ) : null}
+          </View>
+        ) : null}
+
+        <View style={styles.card}>
+          <View style={[styles.sectionHeaderRow, !sectionExpanded.intelligentSupport && styles.sectionHeaderRowCollapsed]}>
+            <Text style={[styles.cardTitle, styles.cardTitleTight]}>Inteligentne wsparcie</Text>
+            {!sectionExpanded.intelligentSupport ? (
+              <Pressable style={styles.sectionEditButton} disabled={busy} onPress={() => expandSection('intelligentSupport')}>
+                <Text style={styles.sectionEditButtonText}>Zmień</Text>
+              </Pressable>
+            ) : null}
+          </View>
+
+          {sectionExpanded.intelligentSupport ? (
+            <>
+              <Text style={styles.cardText}>Opcjonalne wsparcie, które reaguje na trudniejsze dni.</Text>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.fieldLabel}>🔘 Powiadomienia reagujące na Twój rytm</Text>
+                <Switch
+                  value={appSettings.intelligentSupportEnabled}
+                  onValueChange={(v) =>
+                    setAppSettings({
+                      intelligentSupportEnabled: v,
+                      intelligentSupportPromptNextAt: v ? null : appSettings.intelligentSupportPromptNextAt,
+                    })
+                  }
+                  trackColor={{ false: '#334', true: '#4f85a6' }}
+                  thumbColor={appSettings.intelligentSupportEnabled ? '#AEE1FF' : '#d5d5d5'}
+                />
+              </View>
+              <Text style={styles.hintText}>
+                Aplikacja może wysyłać delikatne przypomnienia, gdy zauważy trudniejsze dni.{'\n'}
+                Możesz to wyłączyć w każdej chwili.
+              </Text>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.fieldLabel}>Ikony i badge</Text>
+                <Switch
+                  value={appSettings.badgeIndicatorsEnabled}
+                  onValueChange={(v) => setAppSettings({ badgeIndicatorsEnabled: v })}
+                  trackColor={{ false: '#334', true: '#4f85a6' }}
+                  thumbColor={appSettings.badgeIndicatorsEnabled ? '#AEE1FF' : '#d5d5d5'}
+                />
+              </View>
+              <Text style={styles.hintText}>
+                Pokazuje liczniki na kaflach i zakładce Dom oraz badge na ikonie aplikacji.
+              </Text>
+
+              <Pressable
+                style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
+                disabled={busy}
+                onPress={() => saveAppPreferences('Zapisano ustawienia inteligentnego wsparcia.', 'intelligentSupport')}
+              >
+                <Text style={styles.buttonPrimaryText}>Zapisz inteligentne wsparcie</Text>
+              </Pressable>
+            </>
+          ) : null}
         </View>
 
         <View style={styles.card}>
@@ -619,6 +770,12 @@ export default function UstawieniaScreen() {
               >
                 <Text style={styles.buttonPrimaryText}>Zapisz personalizację</Text>
               </Pressable>
+
+              {onboardingSettingsRequired ? (
+                <Pressable style={[styles.buttonPrimary, busy && styles.buttonDisabled]} disabled={busy} onPress={finishOnboardingSettings}>
+                  <Text style={styles.buttonPrimaryText}>Zapisz i przejdź do Domu</Text>
+                </Pressable>
+              ) : null}
             </>
           ) : null}
         </View>
@@ -626,19 +783,15 @@ export default function UstawieniaScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Pomoc i informacje</Text>
           <Text style={styles.cardText}>Wersja aplikacji: {appVersion}</Text>
+          <Pressable style={styles.buttonSecondary} onPress={() => router.push('/polityka-prywatnosci')}>
+            <Text style={styles.buttonSecondaryText}>Polityka prywatności</Text>
+          </Pressable>
           <Pressable style={styles.buttonSecondary} onPress={() => router.push('/wsparcie-kontakt')}>
             <Text style={styles.buttonSecondaryText}>Kontakt i wsparcie</Text>
           </Pressable>
         </View>
 
         {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
-        <Pressable style={styles.homeTile} onPress={() => router.push('/(tabs)')}>
-          <Image source={AngelWatermark} resizeMode="contain" style={styles.homeTileWatermark} />
-          <View style={styles.homeTileContent}>
-            <Text style={styles.homeTileTitle}>Dom</Text>
-            <Text style={styles.homeTileSubtitle}>Przejdź do ekranu głównego</Text>
-          </View>
-        </Pressable>
       </ScrollView>
     </BackgroundWrapper>
   );
@@ -649,15 +802,33 @@ const styles = StyleSheet.create({
   loadingText: { color: 'white', fontSize: 18, fontWeight: '700' },
 
   screen: { flex: 1, backgroundColor: BG },
-  content: { padding: 18, paddingTop: 78, paddingBottom: 42 },
+  content: { padding: 18, paddingTop: 78, paddingBottom: 42, position: 'relative' },
+  bgOrbA: {
+    position: 'absolute',
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(118, 214, 255, 0.1)',
+    top: -90,
+    right: -92,
+  },
+  bgOrbB: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(184, 198, 255, 0.1)',
+    bottom: 120,
+    left: -80,
+  },
   title: { color: 'white', fontSize: 36, fontWeight: '800', marginBottom: 8 },
   subtitle: { color: SUB, fontSize: 18, lineHeight: 27, marginBottom: 18 },
 
   card: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(12,38,62,0.78)',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(120,200,255,0.24)',
+    borderColor: 'rgba(159,216,255,0.32)',
     padding: 14,
     marginBottom: 12,
   },
@@ -795,41 +966,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 2,
     marginTop: 2,
-  },
-  homeTile: {
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 2,
-    borderColor: 'rgba(120,200,255,0.22)',
-    marginTop: 14,
-    overflow: 'hidden',
-    minHeight: 85,
-  },
-  homeTileContent: {
-    zIndex: 2,
-    width: '84%',
-  },
-  homeTileTitle: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  homeTileSubtitle: {
-    marginTop: 6,
-    color: SUB,
-    fontSize: 16,
-    lineHeight: 23,
-  },
-  homeTileWatermark: {
-    position: 'absolute',
-    right: -6,
-    bottom: -6,
-    width: 86,
-    height: 86,
-    opacity: 0.07,
-    tintColor: 'white',
-    transform: [{ rotate: '15deg' }],
   },
 });

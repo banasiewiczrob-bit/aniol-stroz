@@ -1,20 +1,9 @@
-import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { Redirect } from 'expo-router';
+import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { useEffect, useState } from 'react';
 
-type StartRoute = '/intro' | '/ustawienia' | '/kontrakt' | '/licznik' | '/licznik-nagrody' | '/(tabs)';
-
-function stepToRoute(step: ReturnType<typeof resolveFirstStepsStep>): StartRoute {
-  if (step === 'intro') return '/intro';
-  if (step === 'consents') return '/ustawienia';
-  if (step === 'contract') return '/kontrakt';
-  if (step === 'counter') return '/licznik';
-  if (step === 'anniversary') return '/licznik-nagrody';
-  return '/(tabs)';
-}
-
 export default function Index() {
-  const [targetRoute, setTargetRoute] = useState<StartRoute | null>(null);
+  const [targetRoute, setTargetRoute] = useState<'/intro' | '/kontrakt' | '/licznik' | '/ustawienia' | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -22,7 +11,19 @@ export default function Index() {
       const state = await getFirstStepsState();
       const step = resolveFirstStepsStep(state);
       if (mounted) {
-        setTargetRoute(stepToRoute(step));
+        if (step === 'contract') {
+          setTargetRoute('/kontrakt');
+          return;
+        }
+        if (step === 'counter') {
+          setTargetRoute('/licznik');
+          return;
+        }
+        if (step === 'consents') {
+          setTargetRoute('/ustawienia');
+          return;
+        }
+        setTargetRoute('/intro');
       }
     };
     void run();
