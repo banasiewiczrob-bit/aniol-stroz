@@ -1,8 +1,8 @@
+import { getFirstStepsState, markIntroSeen, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFirstStepsState, markIntroSeen, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 
 // Poprawione ścieżki (zakładając, że assets są w folderze app)
 const Logo = require("./assets/images/icon-stroz.png");
@@ -63,7 +63,7 @@ export default function Intro() {
           <Pressable onPress={goNext} style={styles.skipButton}>
             <Text style={styles.skipButtonText}>Pomiń intro</Text>
           </Pressable>
-          <Text style={styles.footer}>Robert Banasiewicz</Text>
+          <Text style={styles.footer}>Anioł Stróż. Dzień po dniu. 1.0.0</Text>
         </Animated.View>
       </View>
     </SafeAreaView>
