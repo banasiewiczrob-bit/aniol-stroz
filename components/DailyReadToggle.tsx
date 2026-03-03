@@ -12,7 +12,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export function DailyReadToggle({ id }: { id: DailyTextId }) {
-  const todayKey = useMemo(() => getDateKey(new Date()), []);
+  const todayKey = getDateKey(new Date());
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {

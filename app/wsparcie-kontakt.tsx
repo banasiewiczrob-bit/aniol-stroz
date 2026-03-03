@@ -1,7 +1,10 @@
 import { BackButton } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
-import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Contacts from "expo-contacts";
+import React, { useEffect, useState } from "react";
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 const BG = "#061A2C";
 const SUB = "rgba(245,236,216,0.88)";
@@ -9,7 +12,11 @@ const MUTED = "rgba(255,255,255,0.5)";
 const ACCENT = "#FFD18A";
 const ACCENT_BG = "rgba(255,209,138,0.22)";
 const ACCENT_BORDER = "rgba(255,209,138,0.55)";
+const SOS_BG = "#E11D1D";
+const SOS_BG_PRESSED = "#C41414";
+const SOS_BORDER = "#FF7A7A";
 const Watermark = require("../assets/images/maly_aniol.png");
+const SOS_CONTACT_KEY = "@sos_contact_v1";
 const HOTLINES = [
   {
     id: "116111",
@@ -50,6 +57,26 @@ const HOTLINES = [
 ] as const;
 
 export default function WsparcieKontakt() {
+  const [sosName, setSosName] = useState("");
+  const [sosPhone, setSosPhone] = useState("");
+  const [sosFormOpen, setSosFormOpen] = useState(false);
+
+  useEffect(() => {
+    const loadSosContact = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(SOS_CONTACT_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as { name?: string; phone?: string };
+        if (parsed?.name) setSosName(parsed.name);
+        if (parsed?.phone) setSosPhone(parsed.phone);
+      } catch (e) {
+        console.error("Błąd odczytu kontaktu S.O.S:", e);
+      }
+    };
+
+    void loadSosContact();
+  }, []);
+
   const handleCall = async (phone: string) => {
     const normalized = phone.replace(/[^\d+]/g, "");
     const telPromptUrl = `telprompt:${normalized}`;
@@ -85,6 +112,105 @@ export default function WsparcieKontakt() {
     Linking.openURL(`sms:${normalized}`);
   };
 
+  const pickSosFromPhoneContacts = async () => {
+    try {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Brak uprawnień", "Zezwól aplikacji na dostęp do kontaktów w ustawieniach telefonu.");
+        return;
+      }
+
+      const picked = await Contacts.presentContactPickerAsync();
+      if (!picked) return;
+
+      const contact = await Contacts.getContactByIdAsync(picked.id, [
+        Contacts.Fields.Name,
+        Contacts.Fields.FirstName,
+        Contacts.Fields.LastName,
+        Contacts.Fields.PhoneNumbers,
+      ]);
+      const source = contact ?? picked;
+      const phones = (source.phoneNumbers ?? [])
+        .map((phoneItem) => phoneItem.number?.trim())
+        .filter((number): number is string => Boolean(number));
+      const displayName =
+        source.name?.trim() ||
+        [source.firstName, source.lastName].filter(Boolean).join(" ").trim() ||
+        "Kontakt z telefonu";
+
+      if (phones.length === 0) {
+        Alert.alert("Brak numeru", "Wybrany kontakt nie ma numeru telefonu.");
+        return;
+      }
+
+      if (phones.length === 1) {
+        setSosName(displayName);
+        setSosPhone(phones[0]);
+        return;
+      }
+
+      Alert.alert(
+        "Wybierz numer",
+        displayName,
+        [
+          ...phones.slice(0, 6).map((number) => ({
+            text: number,
+            onPress: () => {
+              setSosName(displayName);
+              setSosPhone(number);
+            },
+          })),
+          { text: "Anuluj", style: "cancel" as const },
+        ],
+        { cancelable: true }
+      );
+    } catch (e) {
+      console.error("Błąd wyboru kontaktu S.O.S z telefonu:", e);
+      Alert.alert("Błąd", "Nie udało się wybrać kontaktu z telefonu.");
+    }
+  };
+
+  const saveSosContact = async () => {
+    const name = sosName.trim();
+    const phone = sosPhone.trim();
+    const normalized = phone.replace(/[^\d+]/g, "");
+
+    if (!name || !normalized) {
+      Alert.alert("Uzupełnij dane", "Wpisz imię/nazwę i numer telefonu osoby S.O.S.");
+      return;
+    }
+
+    if (normalized.length < 6) {
+      Alert.alert("Nieprawidłowy numer", "Wpisz poprawny numer telefonu.");
+      return;
+    }
+
+    try {
+      await AsyncStorage.setItem(SOS_CONTACT_KEY, JSON.stringify({ name, phone }));
+      setSosFormOpen(false);
+      Alert.alert("Zapisano", "Kontakt S.O.S został zapisany.");
+    } catch (e) {
+      console.error("Błąd zapisu kontaktu S.O.S:", e);
+      Alert.alert("Błąd", "Nie udało się zapisać kontaktu S.O.S.");
+    }
+  };
+
+  const hasSosContact = sosName.trim().length > 0 && sosPhone.trim().length > 0;
+
+  const openSosActions = () => {
+    if (!hasSosContact) {
+      setSosFormOpen((prev) => !prev);
+      return;
+    }
+
+    Alert.alert("S.O.S", "Wybierz działanie.", [
+      { text: "Dzwoń 112", onPress: () => void handleCall("112") },
+      { text: `Dzwoń do: ${sosName}`, onPress: () => void handleCall(sosPhone) },
+      { text: "Edytuj kontakt S.O.S", onPress: () => setSosFormOpen(true) },
+      { text: "Anuluj", style: "cancel" },
+    ]);
+  };
+
   return (
     <View style={styles.screen}>
       <View style={styles.bgOrbA} />
@@ -104,10 +230,66 @@ export default function WsparcieKontakt() {
           <Text style={styles.sectionText}>
             Jeśli jesteś w kryzysie lub zagrożeniu zdrowia/życia, dzwoń natychmiast. Ten numer znasz.
           </Text>
-          <Pressable style={styles.ctaPrimary} onPress={() => handleCall("112")}>
-            <Text style={styles.ctaPrimaryText}>Zadzwoń 112</Text>
+          <Pressable
+            style={({ pressed }) => [styles.sosPrimary, pressed && styles.sosPrimaryPressed]}
+            onPress={openSosActions}
+          >
+            <Text style={styles.sosPrimaryText}>SOS</Text>
           </Pressable>
+          <View style={styles.card}>
+            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>Kontakt S.O.S (sponsor / bliska osoba)</Text>
+              {hasSosContact ? (
+                <>
+                  <Text style={styles.cardSubtitle}>{sosName}</Text>
+                  <Text style={styles.cardPhone}>{sosPhone}</Text>
+                </>
+              ) : (
+                <Text style={styles.cardSubtitle}>Brak zapisanego kontaktu S.O.S.</Text>
+              )}
+              <View style={styles.sosButtonsWrap}>
+                {hasSosContact ? (
+                  <Pressable style={[styles.callButton, styles.sosCallButton]} onPress={() => void handleCall(sosPhone)}>
+                    <Text style={styles.callButtonText}>Zadzwoń do osoby S.O.S</Text>
+                  </Pressable>
+                ) : null}
+                <Text style={styles.cardHint}>Aby dodać lub edytować kontakt, użyj czerwonego przycisku SOS.</Text>
+              </View>
+            </View>
+          </View>
+          {sosFormOpen ? (
+            <View style={styles.card}>
+              <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+              <View style={{ flex: 1 }}>
+                <TextInput
+                  value={sosName}
+                  onChangeText={setSosName}
+                  placeholder="Imię / rola (np. Sponsor A.A.)"
+                  placeholderTextColor="rgba(255,255,255,0.45)"
+                  style={styles.input}
+                />
+                <TextInput
+                  value={sosPhone}
+                  onChangeText={setSosPhone}
+                  placeholder="Numer telefonu"
+                  placeholderTextColor="rgba(255,255,255,0.45)"
+                  keyboardType="phone-pad"
+                  style={styles.input}
+                />
+                <View style={styles.sosButtonsWrap}>
+                  <Pressable style={[styles.callButton, styles.sosPickButton]} onPress={() => void pickSosFromPhoneContacts()}>
+                    <Text style={styles.callButtonText}>Wybierz z kontaktów telefonu</Text>
+                  </Pressable>
+                  <Pressable style={styles.callButton} onPress={() => void saveSosContact()}>
+                    <Text style={styles.callButtonText}>Zapisz kontakt S.O.S</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          ) : null}
         </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pamiętaj: Twoja siatka wsparcia to najlepsze rozwiązanie.</Text>
           <Text style={styles.sectionText}>
@@ -207,6 +389,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ctaPrimaryText: { ...TYPE.button, color: "white" },
+  sosPrimary: {
+    marginTop: 12,
+    backgroundColor: SOS_BG,
+    borderColor: SOS_BORDER,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  sosPrimaryPressed: {
+    backgroundColor: SOS_BG_PRESSED,
+  },
+  sosPrimaryText: { ...TYPE.button, color: "white", fontSize: 24, letterSpacing: 1.2, fontWeight: "900" },
+  input: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    color: "white",
+    ...TYPE.bodySmall,
+  },
   card: {
     marginTop: 14,
     backgroundColor: "rgba(12,38,62,0.78)",
@@ -233,7 +438,9 @@ const styles = StyleSheet.create({
   cardTitle: { ...TYPE.bodyStrong, color: "white" },
   cardSubtitle: { ...TYPE.caption, color: MUTED, marginTop: 4 },
   cardPhone: { ...TYPE.bodySmall, color: "white", marginTop: 8 },
+  cardHint: { ...TYPE.caption, color: MUTED, marginTop: 6 },
   cardActions: { alignItems: "flex-end", gap: 8 },
+  sosButtonsWrap: { marginTop: 10, gap: 8 },
   callButton: {
     backgroundColor: ACCENT_BG,
     borderWidth: 1,
@@ -241,6 +448,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 10,
+  },
+  sosCallButton: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.28)",
+  },
+  sosPickButton: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.28)",
   },
   callButtonText: { ...TYPE.caption, color: "white" },
   smsButton: {

@@ -4,6 +4,9 @@ export type CommunityGroup = {
   description: string;
 };
 
+export const DISCORD_INVITE_URL =
+  process.env.EXPO_PUBLIC_DISCORD_INVITE_URL ?? 'https://discord.gg/UvTquwcRcX';
+
 export const COMMUNITY_GROUPS: CommunityGroup[] = [
   {
     id: 'codziennosc',

@@ -25,8 +25,16 @@ type DoneState = {
   challenge: boolean;
 };
 
+type PlanItem = {
+  id: string;
+  text: string;
+  done: boolean;
+};
+
 type DailyPlan = {
   dateKey: DateKey;
+  planText: string;
+  items: PlanItem[];
   self: string;
   duties: string;
   relations: string;
@@ -96,6 +104,8 @@ const cravingSeverityOrder: Record<CravingRiskLevel, number> = {
 function emptyPlan(dateKey: DateKey): DailyPlan {
   return {
     dateKey,
+    planText: '',
+    items: [],
     self: '',
     duties: '',
     relations: '',
@@ -107,7 +117,20 @@ function emptyPlan(dateKey: DateKey): DailyPlan {
 }
 
 function hasPlanContent(plan: DailyPlan) {
-  return [plan.self, plan.duties, plan.relations, plan.challenge].some((v) => v.trim().length > 0);
+  return (
+    plan.items.some((item) => item.text.trim().length > 0) ||
+    plan.planText.trim().length > 0 ||
+    [plan.self, plan.duties, plan.relations, plan.challenge].some((v) => v.trim().length > 0)
+  );
+}
+
+function calculatePlanDoneCount(plan: DailyPlan) {
+  const filledItems = plan.items.filter((item) => item.text.trim().length > 0);
+  if (filledItems.length > 0) {
+    const doneItems = filledItems.filter((item) => item.done).length;
+    return Math.round((doneItems / filledItems.length) * 4);
+  }
+  return Object.values(plan.done).filter(Boolean).length;
 }
 
 function normalizePlan(raw: unknown, fallbackDateKey: DateKey): DailyPlan {
@@ -116,9 +139,22 @@ function normalizePlan(raw: unknown, fallbackDateKey: DateKey): DailyPlan {
 
   const doneParsed = parsed.done && typeof parsed.done === 'object' ? (parsed.done as Partial<DoneState>) : {};
   const haltParsed = parsed.halt && typeof parsed.halt === 'object' ? (parsed.halt as Partial<HaltState>) : {};
+  const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
+  const items: PlanItem[] = rawItems
+    .filter((item) => item && typeof item === 'object')
+    .map((item, index) => {
+      const row = item as Partial<PlanItem>;
+      return {
+        id: typeof row.id === 'string' && row.id.trim().length > 0 ? row.id : `${dateKey}_${index + 1}`,
+        text: typeof row.text === 'string' ? row.text : '',
+        done: row.done === true,
+      };
+    });
 
   return {
     dateKey: dateKey as DateKey,
+    planText: typeof parsed.planText === 'string' ? parsed.planText : '',
+    items,
     self: typeof parsed.self === 'string' ? parsed.self : '',
     duties: typeof parsed.duties === 'string' ? parsed.duties : '',
     relations: typeof parsed.relations === 'string' ? parsed.relations : '',
@@ -242,7 +278,7 @@ export async function loadDaySnapshot(dateKey: DateKey): Promise<DaySnapshot> {
 
   const plan = planStore[dateKey] ?? emptyPlan(dateKey);
   const hasPlan = hasPlanContent(plan);
-  const doneCount = Object.values(plan.done).filter(Boolean).length;
+  const doneCount = calculatePlanDoneCount(plan);
   const haltCount = Object.values(plan.halt).filter(Boolean).length;
 
   const texts = getDailyTextsForDate(textsStore, dateKey);
