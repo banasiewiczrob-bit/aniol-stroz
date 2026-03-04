@@ -45,11 +45,11 @@ export default function KontraktScreen() {
     };
   }, []);
 
-  const handleSign = async () => {
-    if (isChecked) return;
+  const handleContinue = async () => {
+    if (!isChecked) return;
     try {
       await AsyncStorage.setItem(CONTRACT_SIGNED_STORAGE_KEY, '1');
-      setChecked(true);
+      router.replace('/licznik');
     } catch (e) {
       console.error('Błąd zapisu podpisu kontraktu:', e);
     }
@@ -67,82 +67,65 @@ export default function KontraktScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Moja Umowa z Samym Sobą</Text>
-          {isChecked ? (
-            <View style={styles.statusOnlyWrap}>
-              <View style={styles.statusBox}>
-                <Text style={styles.statusText}>Kontrakt podpisany.</Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.button, !signatureLoaded && styles.buttonDisabled]}
-                onPress={() => router.replace('/licznik')}
-                disabled={!signatureLoaded}
-              >
-                <Text style={styles.buttonText}>Przechodzę dalej</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <CoJakSection
-                title="Opis i instrukcja"
-                co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
-                jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
-              />
-              {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
+          <CoJakSection
+            title="Opis i instrukcja"
+            co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
+            jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
+          />
+          {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
 
-              <Text style={styles.intro}>
-                Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
-              </Text>
+          <Text style={styles.intro}>
+            Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
+          </Text>
 
-              <View style={styles.point}>
-                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-                <Text style={styles.pointTitle}>1. Uczciwość</Text>
-                <Text style={styles.pointText}>
-                  Będę szczery wobec siebie. To nie tylko prawdomówność, ale przede wszystkim spójność.
-                </Text>
-              </View>
+          <View style={styles.point}>
+            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+            <Text style={styles.pointTitle}>1. Uczciwość</Text>
+            <Text style={styles.pointText}>
+              Będę szczery wobec siebie. To nie tylko prawdomówność, ale przede wszystkim spójność.
+            </Text>
+          </View>
 
-              <View style={styles.point}>
-                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-                <Text style={styles.pointTitle}>2. Otwartość</Text>
-                <Text style={styles.pointText}>
-                  Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
-                  zewnątrz.
-                </Text>
-              </View>
+          <View style={styles.point}>
+            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+            <Text style={styles.pointTitle}>2. Otwartość</Text>
+            <Text style={styles.pointText}>
+              Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
+              zewnątrz.
+            </Text>
+          </View>
 
-              <View style={styles.point}>
-                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-                <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
-                <Text style={styles.pointText}>
-                  Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
-                </Text>
-              </View>
+          <View style={styles.point}>
+            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+            <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
+            <Text style={styles.pointText}>
+              Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
+            </Text>
+          </View>
 
-              <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
+          <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
 
-              <TouchableOpacity
-                style={styles.checkboxContainer}
-                onPress={handleSign}
-                activeOpacity={0.8}
-              >
-                <Checkbox
-                  style={styles.checkbox}
-                  value={isChecked}
-                  onValueChange={handleSign}
-                  color={isChecked ? '#4630EB' : undefined}
-                />
-                <Text style={styles.label}>Podpisuję się pod tym i zaczynam zmianę.</Text>
-              </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setChecked((prev) => !prev)}
+            activeOpacity={0.8}
+          >
+            <Checkbox
+              style={styles.checkbox}
+              value={isChecked}
+              onValueChange={setChecked}
+              color={isChecked ? '#4630EB' : undefined}
+            />
+            <Text style={styles.label}>Podpisuję się pod tym i zaczynam zmianę.</Text>
+          </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]}
-                onPress={() => isChecked && router.replace('/')}
-                disabled={!isChecked || !signatureLoaded}
-              >
-                <Text style={styles.buttonText}>Wchodzę</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <TouchableOpacity
+            style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]}
+            onPress={() => void handleContinue()}
+            disabled={!isChecked || !signatureLoaded}
+          >
+            <Text style={styles.buttonText}>Wchodzę</Text>
+          </TouchableOpacity>
           
           <View style={{ height: 40 }} /> 
         </ScrollView>
@@ -238,24 +221,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'rgba(232,245,255,0.88)',
     marginBottom: 20,
-  },
-  statusBox: {
-    backgroundColor: 'rgba(120, 200, 255, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(120, 200, 255, 0.35)',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 14,
-  },
-  statusText: {
-    color: '#E8F5FF',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  statusOnlyWrap: {
-    marginTop: 16,
   },
   checkboxContainer: { 
     flexDirection: 'row', 

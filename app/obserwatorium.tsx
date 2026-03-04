@@ -52,6 +52,7 @@ export default function DziennikiHomeScreen() {
   const compact = height <= 900;
   const { hasPremium, source } = usePremiumAccess();
   const { isVisited, markVisited } = useVisitedTiles();
+  const showEmotionLabTile = source === 'tester_preview' || __DEV__;
 
   return (
     <BackgroundWrapper>
@@ -108,21 +109,23 @@ export default function DziennikiHomeScreen() {
                   });
                 }}
               />
-              <JournalTile
-                title="Dziennik Uczuć 2.0 (test)"
-                subtitle="Wersja testowa: uczucie + sytuacja + wyrażenie."
-                accent="#7ED8BE"
-                glow="rgba(126,216,190,0.26)"
-                compact={compact}
-                openedToday={isVisited('/dzienniki/uczucia-test')}
-                onPress={async () => {
-                  await markVisited('/dzienniki/uczucia-test');
-                  router.push({
-                    pathname: '/dziennik-uczucia-test',
-                    params: { backTo: '/obserwatorium' },
-                  });
-                }}
-              />
+              {showEmotionLabTile ? (
+                <JournalTile
+                  title="Dziennik Uczuć 2.0 (test)"
+                  subtitle="Wersja testowa: uczucie + sytuacja + wyrażenie."
+                  accent="#7ED8BE"
+                  glow="rgba(126,216,190,0.26)"
+                  compact={compact}
+                  openedToday={isVisited('/dzienniki/uczucia-test')}
+                  onPress={async () => {
+                    await markVisited('/dzienniki/uczucia-test');
+                    router.push({
+                      pathname: '/dziennik-uczucia-test',
+                      params: { backTo: '/obserwatorium' },
+                    });
+                  }}
+                />
+              ) : null}
               <JournalTile
                 title="Dziennik Głodu/Kryzysu"
                 subtitle="Szybki zapis napięcia, HALT i plan 15 minut."

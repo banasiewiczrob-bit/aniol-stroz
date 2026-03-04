@@ -259,7 +259,11 @@ export default function LicznikScreen() {
               <Text style={styles.headerSubtitle}>Pierwsze kroki: ustaw datę startu. Twoje zdrowienie trwa już:</Text>
             </>
           )}
-          {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={2} compact /> : null}
+          {showFirstStepsRoadmap && !compact ? (
+            <View style={styles.roadmapWrap}>
+              <FirstStepsRoadmap currentStep={2} compact />
+            </View>
+          ) : null}
 
           <View style={[styles.counterWrap, compact && styles.counterWrapCompact]}>
             <Animated.View
@@ -327,6 +331,11 @@ export default function LicznikScreen() {
             <Ionicons name="arrow-forward" size={20} color="white" style={{ marginRight: 10 }} />
             <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>Krok 3: zgody i ustawienia</Text>
           </Pressable>
+        ) : null}
+        {showFirstStepsRoadmap && compact ? (
+          <View style={styles.roadmapWrapBelow}>
+            <FirstStepsRoadmap currentStep={2} compact />
+          </View>
         ) : null}
 
         {show && (
@@ -443,6 +452,17 @@ const styles = StyleSheet.create({
     left: -80,
   },
   captureArea: { width: '100%', alignItems: 'center', backgroundColor: 'transparent', paddingVertical: 6 },
+  roadmapWrap: {
+    width: '100%',
+    marginBottom: 12,
+    zIndex: 4,
+  },
+  roadmapWrapBelow: {
+    width: '100%',
+    marginTop: 8,
+    marginBottom: 8,
+    zIndex: 4,
+  },
   title: { ...TYPE.h1, color: 'white', marginBottom: 8, alignSelf: 'flex-start' },
   titleCompact: { fontSize: 32, lineHeight: 36, marginBottom: 4 },
   infoCompact: {
@@ -485,11 +505,14 @@ const styles = StyleSheet.create({
     height: 230,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 8,
     marginBottom: 12,
+    zIndex: 1,
   },
   counterWrapCompact: {
-    width: 192,
-    height: 192,
+    width: 206,
+    height: 206,
+    marginTop: 10,
     marginBottom: 8,
   },
   counterGlow: {
