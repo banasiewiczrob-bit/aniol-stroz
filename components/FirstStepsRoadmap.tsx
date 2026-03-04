@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
+    alignSelf: 'stretch',
   },
   cardCompact: {
     marginTop: 8,

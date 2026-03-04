@@ -95,6 +95,9 @@ export default function UstawieniaScreen() {
   const haloPulseAnim = useRef(new Animated.Value(0)).current;
   const sparkleFallAnim = useRef(new Animated.Value(0)).current;
   const sparkleOpacityAnim = useRef(new Animated.Value(0)).current;
+  const confettiBurstScaleAnim = useRef(new Animated.Value(0.7)).current;
+  const confettiBurstOpacityAnim = useRef(new Animated.Value(0)).current;
+  const confettiSpinAnim = useRef(new Animated.Value(0)).current;
 
   const notificationsConsentEnabled = appSettings.privacyConsentNotifications;
   const notificationsSectionLocked = busy || !notificationsConsentEnabled;
@@ -118,6 +121,9 @@ export default function UstawieniaScreen() {
       haloPulseAnim.setValue(0);
       sparkleFallAnim.setValue(0);
       sparkleOpacityAnim.setValue(0);
+      confettiBurstScaleAnim.setValue(0.7);
+      confettiBurstOpacityAnim.setValue(0);
+      confettiSpinAnim.setValue(0);
       return;
     }
 
@@ -191,6 +197,33 @@ export default function UstawieniaScreen() {
         }),
       ])
     );
+    Animated.parallel([
+      Animated.timing(confettiBurstOpacityAnim, {
+        toValue: 1,
+        duration: 360,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(confettiBurstScaleAnim, {
+        toValue: 1.35,
+        duration: 900,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(confettiSpinAnim, {
+        toValue: 1,
+        duration: 960,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      Animated.timing(confettiBurstOpacityAnim, {
+        toValue: 0,
+        duration: 650,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    });
     loop.start();
     haloLoop.start();
     sparkleLoop.start();
@@ -207,6 +240,9 @@ export default function UstawieniaScreen() {
     haloPulseAnim,
     sparkleFallAnim,
     sparkleOpacityAnim,
+    confettiBurstOpacityAnim,
+    confettiBurstScaleAnim,
+    confettiSpinAnim,
   ]);
 
   const loadAllSettings = async () => {
@@ -1014,6 +1050,85 @@ export default function UstawieniaScreen() {
             />
             <Animated.View
               style={[
+                styles.confettiBurstRing,
+                {
+                  opacity: confettiBurstOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.65] }),
+                  transform: [{ scale: confettiBurstScaleAnim }],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.confettiPiece,
+                styles.confettiPieceA,
+                {
+                  opacity: confettiBurstOpacityAnim,
+                  transform: [
+                    { translateY: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [-10, -62] }) },
+                    { translateX: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [0, -12] }) },
+                    { rotate: confettiSpinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '235deg'] }) },
+                  ],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.confettiPiece,
+                styles.confettiPieceB,
+                {
+                  opacity: confettiBurstOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.95] }),
+                  transform: [
+                    { translateY: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [-8, -54] }) },
+                    { translateX: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [0, 14] }) },
+                    { rotate: confettiSpinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-215deg'] }) },
+                  ],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.confettiPiece,
+                styles.confettiPieceC,
+                {
+                  opacity: confettiBurstOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.85] }),
+                  transform: [
+                    { translateY: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [-4, -50] }) },
+                    { translateX: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [0, -22] }) },
+                    { rotate: confettiSpinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '210deg'] }) },
+                  ],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.confettiPiece,
+                styles.confettiPieceD,
+                {
+                  opacity: confettiBurstOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.92] }),
+                  transform: [
+                    { translateY: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [-6, -58] }) },
+                    { translateX: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [0, 18] }) },
+                    { rotate: confettiSpinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-260deg'] }) },
+                  ],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.confettiPiece,
+                styles.confettiPieceE,
+                {
+                  opacity: confettiBurstOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.88] }),
+                  transform: [
+                    { translateY: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [-6, -52] }) },
+                    { translateX: confettiBurstScaleAnim.interpolate({ inputRange: [0.7, 1.35], outputRange: [0, -20] }) },
+                    { rotate: confettiSpinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '245deg'] }) },
+                  ],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
                 styles.sparkleDot,
                 styles.sparkleDotA,
                 {
@@ -1055,18 +1170,21 @@ export default function UstawieniaScreen() {
                 },
               ]}
             />
+            <View style={styles.fullAccessBadge}>
+              <Text style={styles.fullAccessBadgeText}>Odblokowano</Text>
+            </View>
             <Text style={styles.fullAccessTitle}>Masz pełny dostęp</Text>
             <Text style={styles.fullAccessText}>
               do wszystkich funkcjonalności aplikacji. Gratuluję!{'\n'}Anioł Stróż. Korzystaj dzień po dniu.
             </Text>
             <Pressable
-              style={styles.buttonPrimary}
+              style={styles.fullAccessButton}
               onPress={() => {
                 setFullAccessModalVisible(false);
                 router.replace('/(tabs)');
               }}
             >
-              <Text style={styles.buttonPrimaryText}>Przejdź do Domu</Text>
+              <Text style={styles.fullAccessButtonText}>Wejdź do aplikacji</Text>
             </Pressable>
           </Animated.View>
         </View>
@@ -1259,14 +1377,19 @@ const styles = StyleSheet.create({
   fullAccessCard: {
     width: '100%',
     backgroundColor: 'rgba(12,38,62,0.95)',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(159,216,255,0.42)',
-    paddingHorizontal: 18,
-    paddingTop: 22,
-    paddingBottom: 16,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(159,216,255,0.52)',
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 18,
     alignItems: 'center',
     overflow: 'hidden',
+    shadowColor: '#9BD8FF',
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 16,
   },
   fullAccessOrbA: {
     position: 'absolute',
@@ -1294,6 +1417,43 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(159,216,255,0.4)',
     top: 44,
     alignSelf: 'center',
+  },
+  confettiBurstRing: {
+    position: 'absolute',
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    borderWidth: 3,
+    borderColor: 'rgba(186,230,255,0.9)',
+    top: 10,
+    alignSelf: 'center',
+  },
+  confettiPiece: {
+    position: 'absolute',
+    width: 13,
+    height: 20,
+    borderRadius: 4,
+    top: 58,
+  },
+  confettiPieceA: {
+    left: 104,
+    backgroundColor: '#FFE083',
+  },
+  confettiPieceB: {
+    right: 100,
+    backgroundColor: '#C4F5DD',
+  },
+  confettiPieceC: {
+    left: 86,
+    backgroundColor: '#FFC6DF',
+  },
+  confettiPieceD: {
+    right: 78,
+    backgroundColor: '#C5E3FF',
+  },
+  confettiPieceE: {
+    left: 74,
+    backgroundColor: '#FFE9A8',
   },
   sparkleDot: {
     position: 'absolute',
@@ -1323,24 +1483,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F8FF',
   },
   fullAccessAngel: {
-    width: 120,
-    height: 120,
+    width: 132,
+    height: 132,
     tintColor: 'white',
-    opacity: 0.9,
-    marginBottom: 10,
+    opacity: 0.94,
+    marginBottom: 8,
+  },
+  fullAccessBadge: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(180,233,255,0.65)',
+    backgroundColor: 'rgba(120,200,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginBottom: 8,
+  },
+  fullAccessBadgeText: {
+    color: '#E2F5FF',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
   fullAccessTitle: {
     color: 'white',
-    fontSize: 28,
+    fontSize: 31,
     fontWeight: '800',
-    marginBottom: 10,
+    marginBottom: 8,
     textAlign: 'center',
   },
   fullAccessText: {
     color: SUB,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 17,
+    lineHeight: 25,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
+  },
+  fullAccessButton: {
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(120,200,255,0.6)',
+    backgroundColor: 'rgba(120,200,255,0.28)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    shadowColor: '#9BD8FF',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 10,
+  },
+  fullAccessButtonText: {
+    color: 'white',
+    fontSize: 17,
+    fontWeight: '800',
   },
 });
