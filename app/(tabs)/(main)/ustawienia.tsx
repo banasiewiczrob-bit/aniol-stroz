@@ -1,4 +1,6 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
+import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
 import {
   DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS,
   DailyPlanNotificationSettings,
@@ -14,11 +16,14 @@ import Checkbox from 'expo-checkbox';
 import Constants from 'expo-constants';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 const BG = '#061A2C';
 const SUB = 'rgba(232,245,255,0.84)';
 const SETTINGS_SECTIONS_STORAGE_KEY = '@settings_sections_expanded';
+const START_DATE_STORAGE_KEY = 'startDate';
+const ANNIVERSARY_SEEN_STORAGE_KEY = '@anniversary_seen_once';
+const Watermark = require('../../../assets/images/maly_aniol.png');
 
 type ConsentKey = 'privacyConsentLocalStorage' | 'privacyConsentNotifications' | 'privacyConsentRegulations';
 type SettingsSectionKey = 'consents' | 'notifications' | 'plan' | 'intelligentSupport' | 'personalization';
@@ -84,6 +89,12 @@ export default function UstawieniaScreen() {
   const [sectionExpanded, setSectionExpanded] = useState<SectionExpandedState>(DEFAULT_SECTION_EXPANDED);
   const sectionExpandedRef = useRef<SectionExpandedState>(DEFAULT_SECTION_EXPANDED);
   const [onboardingSettingsRequired, setOnboardingSettingsRequired] = useState(false);
+  const [fullAccessModalVisible, setFullAccessModalVisible] = useState(false);
+  const fullAccessAnim = useRef(new Animated.Value(0)).current;
+  const angelFloatAnim = useRef(new Animated.Value(0)).current;
+  const haloPulseAnim = useRef(new Animated.Value(0)).current;
+  const sparkleFallAnim = useRef(new Animated.Value(0)).current;
+  const sparkleOpacityAnim = useRef(new Animated.Value(0)).current;
 
   const notificationsConsentEnabled = appSettings.privacyConsentNotifications;
   const notificationsSectionLocked = busy || !notificationsConsentEnabled;
@@ -92,6 +103,111 @@ export default function UstawieniaScreen() {
     () => Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.0',
     []
   );
+  const canSimulateOnboarding = useMemo(() => {
+    const appOwnership = (Constants as { appOwnership?: string | null }).appOwnership;
+    const executionEnvironment = (Constants as { executionEnvironment?: string | null }).executionEnvironment;
+    const isExpoGo = appOwnership === 'expo' || executionEnvironment === 'storeClient';
+    const isSimulator = (Constants as { isDevice?: boolean }).isDevice === false;
+    return isExpoGo || isSimulator;
+  }, []);
+
+  useEffect(() => {
+    if (!fullAccessModalVisible) {
+      fullAccessAnim.setValue(0);
+      angelFloatAnim.setValue(0);
+      haloPulseAnim.setValue(0);
+      sparkleFallAnim.setValue(0);
+      sparkleOpacityAnim.setValue(0);
+      return;
+    }
+
+    Animated.timing(fullAccessAnim, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(angelFloatAnim, {
+          toValue: 1,
+          duration: 1700,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(angelFloatAnim, {
+          toValue: 0,
+          duration: 1700,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    const haloLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(haloPulseAnim, {
+          toValue: 1,
+          duration: 1800,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(haloPulseAnim, {
+          toValue: 0,
+          duration: 1800,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    const sparkleLoop = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(sparkleFallAnim, {
+            toValue: 1,
+            duration: 1800,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.sequence([
+            Animated.timing(sparkleOpacityAnim, {
+              toValue: 1,
+              duration: 350,
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(sparkleOpacityAnim, {
+              toValue: 0,
+              duration: 1350,
+              easing: Easing.in(Easing.quad),
+              useNativeDriver: true,
+            }),
+          ]),
+        ]),
+        Animated.timing(sparkleFallAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    haloLoop.start();
+    sparkleLoop.start();
+
+    return () => {
+      loop.stop();
+      haloLoop.stop();
+      sparkleLoop.stop();
+    };
+  }, [
+    angelFloatAnim,
+    fullAccessAnim,
+    fullAccessModalVisible,
+    haloPulseAnim,
+    sparkleFallAnim,
+    sparkleOpacityAnim,
+  ]);
 
   const loadAllSettings = async () => {
     const [notif, app, savedSectionExpandedRaw] = await Promise.all([
@@ -367,14 +483,82 @@ export default function UstawieniaScreen() {
       setAppSettingsState(nextAppSettings);
       setNotificationSettings(nextNotifications);
       setOnboardingSettingsRequired(false);
+      await collapseSection('personalization');
       setNotice('Pierwsza konfiguracja została zapisana.');
-      router.replace('/(tabs)');
+      setFullAccessModalVisible(true);
     } catch (e) {
       console.error('Błąd zapisu konfiguracji startowej:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać konfiguracji startowej.');
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleSavePersonalization = async () => {
+    const shouldFinishOnboarding =
+      onboardingSettingsRequired || !appSettings.firstRunSetupDone || !appSettings.firstStepsDone;
+    if (shouldFinishOnboarding) {
+      await finishOnboardingSettings();
+      return;
+    }
+    await saveAppPreferences('Zapisano personalizację.', 'personalization');
+  };
+
+  const resetOnboardingForSimulation = async () => {
+    Alert.alert(
+      'Symulacja onboardingu',
+      'To zresetuje tylko kroki startowe (intro/kontrakt/licznik/zgody) i przeniesie Cię na początek onboardingu.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Resetuj onboarding',
+          style: 'destructive',
+          onPress: async () => {
+            setBusy(true);
+            setNotice('');
+            try {
+              await AsyncStorage.multiRemove([
+                CONTRACT_SIGNED_STORAGE_KEY,
+                START_DATE_STORAGE_KEY,
+                ANNIVERSARY_SEEN_STORAGE_KEY,
+              ]);
+
+              const resetSettings: AppSettings = {
+                ...appSettings,
+                introSeen: false,
+                privacyConsentLocalStorage: false,
+                privacyConsentNotifications: false,
+                privacyConsentRegulations: false,
+                firstRunSetupDone: false,
+                firstStepsDone: false,
+                counterDone: false,
+                anniversaryDone: false,
+              };
+
+              await saveAppSettings(resetSettings);
+              setAppSettingsState(resetSettings);
+              setOnboardingSettingsRequired(true);
+              const onboardingExpanded: SectionExpandedState = {
+                consents: true,
+                notifications: true,
+                plan: false,
+                intelligentSupport: true,
+                personalization: true,
+              };
+              setSectionExpanded(onboardingExpanded);
+              sectionExpandedRef.current = onboardingExpanded;
+              setNotice('Tryb testowy: onboarding został zresetowany.');
+              router.replace('/intro');
+            } catch (e) {
+              console.error('Błąd resetu onboardingu:', e);
+              Alert.alert('Błąd', 'Nie udało się zresetować onboardingu.');
+            } finally {
+              setBusy(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const restorePlanDefaults = async () => {
@@ -419,6 +603,7 @@ export default function UstawieniaScreen() {
             ? 'Krok 3 z 3: ustaw zgody oraz preferencje startowe (powiadomienia, badge i inteligentne wsparcie).'
             : 'Pierwsze kroki: najpierw zgody, potem pozostałe ustawienia aplikacji.'}
         </Text>
+        {onboardingSettingsRequired ? <FirstStepsRoadmap currentStep={3} /> : null}
 
         <View style={[styles.card, styles.cardPrimary]}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.consents && styles.sectionHeaderRowCollapsed]}>
@@ -766,16 +951,10 @@ export default function UstawieniaScreen() {
               <Pressable
                 style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
                 disabled={busy}
-                onPress={() => saveAppPreferences('Zapisano personalizację.', 'personalization')}
+                onPress={() => void handleSavePersonalization()}
               >
                 <Text style={styles.buttonPrimaryText}>Zapisz personalizację</Text>
               </Pressable>
-
-              {onboardingSettingsRequired ? (
-                <Pressable style={[styles.buttonPrimary, busy && styles.buttonDisabled]} disabled={busy} onPress={finishOnboardingSettings}>
-                  <Text style={styles.buttonPrimaryText}>Zapisz i przejdź do Domu</Text>
-                </Pressable>
-              ) : null}
             </>
           ) : null}
         </View>
@@ -789,10 +968,109 @@ export default function UstawieniaScreen() {
           <Pressable style={styles.buttonSecondary} onPress={() => router.push('/wsparcie-kontakt')}>
             <Text style={styles.buttonSecondaryText}>Kontakt i wsparcie</Text>
           </Pressable>
+          {canSimulateOnboarding ? (
+            <Pressable
+              style={[styles.buttonSecondary, styles.buttonDanger, busy && styles.buttonDisabled]}
+              disabled={busy}
+              onPress={resetOnboardingForSimulation}
+            >
+              <Text style={styles.buttonSecondaryText}>Symuluj onboarding (Expo Go / symulator)</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
       </ScrollView>
+
+      <Modal
+        visible={fullAccessModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFullAccessModalVisible(false)}
+      >
+        <View style={styles.fullAccessOverlay}>
+          <Animated.View
+            style={[
+              styles.fullAccessCard,
+              {
+                opacity: fullAccessAnim,
+                transform: [
+                  { scale: fullAccessAnim.interpolate({ inputRange: [0, 1], outputRange: [0.93, 1] }) },
+                  { translateY: fullAccessAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.fullAccessOrbA} />
+            <View style={styles.fullAccessOrbB} />
+            <Animated.View
+              style={[
+                styles.fullAccessHalo,
+                {
+                  opacity: haloPulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.22, 0.44] }),
+                  transform: [{ scale: haloPulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1.08] }) }],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.sparkleDot,
+                styles.sparkleDotA,
+                {
+                  opacity: sparkleOpacityAnim,
+                  transform: [{ translateY: sparkleFallAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 72] }) }],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.sparkleDot,
+                styles.sparkleDotB,
+                {
+                  opacity: sparkleOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.9] }),
+                  transform: [{ translateY: sparkleFallAnim.interpolate({ inputRange: [0, 1], outputRange: [-34, 62] }) }],
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.sparkleDot,
+                styles.sparkleDotC,
+                {
+                  opacity: sparkleOpacityAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.8] }),
+                  transform: [{ translateY: sparkleFallAnim.interpolate({ inputRange: [0, 1], outputRange: [-12, 68] }) }],
+                },
+              ]}
+            />
+            <Animated.Image
+              source={Watermark}
+              resizeMode="contain"
+              style={[
+                styles.fullAccessAngel,
+                {
+                  transform: [
+                    { translateY: angelFloatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) },
+                    { scale: angelFloatAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] }) },
+                  ],
+                },
+              ]}
+            />
+            <Text style={styles.fullAccessTitle}>Masz pełny dostęp</Text>
+            <Text style={styles.fullAccessText}>
+              do wszystkich funkcjonalności aplikacji. Gratuluję!{'\n'}Anioł Stróż. Korzystaj dzień po dniu.
+            </Text>
+            <Pressable
+              style={styles.buttonPrimary}
+              onPress={() => {
+                setFullAccessModalVisible(false);
+                router.replace('/(tabs)');
+              }}
+            >
+              <Text style={styles.buttonPrimaryText}>Przejdź do Domu</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </Modal>
     </BackgroundWrapper>
   );
 }
@@ -957,6 +1235,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  buttonDanger: {
+    borderColor: 'rgba(255,140,140,0.42)',
+    backgroundColor: 'rgba(255,120,120,0.12)',
+  },
   buttonSecondaryText: { color: '#CDEBFF', fontSize: 14, fontWeight: '700' },
   buttonDisabled: { opacity: 0.6 },
 
@@ -966,5 +1248,99 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 2,
     marginTop: 2,
+  },
+  fullAccessOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(6,26,44,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  fullAccessCard: {
+    width: '100%',
+    backgroundColor: 'rgba(12,38,62,0.95)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(159,216,255,0.42)',
+    paddingHorizontal: 18,
+    paddingTop: 22,
+    paddingBottom: 16,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  fullAccessOrbA: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(154,199,255,0.22)',
+    top: -80,
+    right: -70,
+  },
+  fullAccessOrbB: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,199,217,0.16)',
+    bottom: -72,
+    left: -66,
+  },
+  fullAccessHalo: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(159,216,255,0.4)',
+    top: 44,
+    alignSelf: 'center',
+  },
+  sparkleDot: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#DDF4FF',
+  },
+  sparkleDotA: {
+    top: 56,
+    right: 70,
+  },
+  sparkleDotB: {
+    top: 46,
+    left: 78,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFE6EF',
+  },
+  sparkleDotC: {
+    top: 66,
+    left: 56,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#E8F8FF',
+  },
+  fullAccessAngel: {
+    width: 120,
+    height: 120,
+    tintColor: 'white',
+    opacity: 0.9,
+    marginBottom: 10,
+  },
+  fullAccessTitle: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  fullAccessText: {
+    color: SUB,
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
+    marginBottom: 16,
   },
 });

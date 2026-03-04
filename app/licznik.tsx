@@ -1,4 +1,5 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
 import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
 import { getFirstStepsState, markCounterDone, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { SCREEN_PADDING } from '@/styles/screenStyles';
@@ -9,15 +10,17 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Easing, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Watermark = require('../assets/images/maly_aniol.png');
 
 export default function LicznikScreen() {
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const compact = height <= 900;
+  const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
-  const noScrollMode = compact && !show;
   const [stats, setStats] = useState({ years: 0, months: 0, days: 0, totalDays: 0 });
   const [manualDay, setManualDay] = useState('');
   const [manualMonth, setManualMonth] = useState('');
@@ -29,6 +32,19 @@ export default function LicznikScreen() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadRoadmapVisibility = async () => {
+      const state = await getFirstStepsState();
+      const step = resolveFirstStepsStep(state);
+      if (mounted) setShowFirstStepsRoadmap(step !== 'done');
+    };
+    void loadRoadmapVisibility();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -219,10 +235,14 @@ export default function LicznikScreen() {
   return (
     <BackgroundWrapper>
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, compact && styles.scrollContentCompact]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          compact && styles.scrollContentCompact,
+          { paddingBottom: Math.max(140, insets.bottom + 110) },
+        ]}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!noScrollMode}
-        bounces={!noScrollMode}
+        scrollEnabled
+        bounces
       >
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
@@ -239,6 +259,7 @@ export default function LicznikScreen() {
               <Text style={styles.headerSubtitle}>Pierwsze kroki: ustaw datę startu. Twoje zdrowienie trwa już:</Text>
             </>
           )}
+          {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={2} compact /> : null}
 
           <View style={[styles.counterWrap, compact && styles.counterWrapCompact]}>
             <Animated.View
@@ -301,10 +322,12 @@ export default function LicznikScreen() {
           <Ionicons name="calendar-outline" size={20} color="white" style={{ marginRight: 10 }} />
           <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>{show ? 'Zwiń ustawienia' : 'Ustaw datę początkową'}</Text>
         </Pressable>
-        <Pressable style={[styles.button, compact && styles.buttonCompact, styles.nextStepButton]} onPress={() => void handleContinueFirstSteps()}>
-          <Ionicons name="arrow-forward" size={20} color="white" style={{ marginRight: 10 }} />
-          <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>Dalej: zgody i ustawienia</Text>
-        </Pressable>
+        {showFirstStepsRoadmap ? (
+          <Pressable style={[styles.button, compact && styles.buttonCompact, styles.nextStepButton]} onPress={() => void handleContinueFirstSteps()}>
+            <Ionicons name="arrow-forward" size={20} color="white" style={{ marginRight: 10 }} />
+            <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>Krok 3: zgody i ustawienia</Text>
+          </Pressable>
+        ) : null}
 
         {show && (
           <View style={styles.pickerContainer}>

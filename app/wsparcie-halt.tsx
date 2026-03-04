@@ -6,13 +6,20 @@ import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Watermark = require('../assets/images/maly_aniol.png');
 
 export default function HaltScreen() {
+  const insets = useSafeAreaInsets();
+
   return (
     <BackgroundWrapper>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
         <Text style={styles.title}>HALT</Text>
@@ -57,8 +64,6 @@ export default function HaltScreen() {
         />
 
         <DailyReadToggle id="halt" />
-        
-        <View style={{ height: 50 }} />
       </ScrollView>
     </BackgroundWrapper>
   );
@@ -82,7 +87,8 @@ function HaltItem({ letter, title, description, icon }: { letter: string, title:
 }
 
 const styles = StyleSheet.create({
-  container: { ...SCREEN_CONTAINER },
+  container: { flex: 1 },
+  content: { ...SCREEN_CONTAINER },
   bgOrbA: {
     position: 'absolute',
     width: 260,

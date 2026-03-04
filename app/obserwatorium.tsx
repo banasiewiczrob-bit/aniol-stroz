@@ -109,6 +109,21 @@ export default function DziennikiHomeScreen() {
                 }}
               />
               <JournalTile
+                title="Dziennik Uczuć 2.0 (test)"
+                subtitle="Wersja testowa: uczucie + sytuacja + wyrażenie."
+                accent="#7ED8BE"
+                glow="rgba(126,216,190,0.26)"
+                compact={compact}
+                openedToday={isVisited('/dzienniki/uczucia-test')}
+                onPress={async () => {
+                  await markVisited('/dzienniki/uczucia-test');
+                  router.push({
+                    pathname: '/dziennik-uczucia-test',
+                    params: { backTo: '/obserwatorium' },
+                  });
+                }}
+              />
+              <JournalTile
                 title="Dziennik Głodu/Kryzysu"
                 subtitle="Szybki zapis napięcia, HALT i plan 15 minut."
                 accent="#FF9E9E"
