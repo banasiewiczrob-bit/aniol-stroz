@@ -7,7 +7,7 @@ import {
 } from '@/constants/journals';
 import { createCravingJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const BG_CARD = 'rgba(12,38,62,0.78)';
@@ -30,8 +30,8 @@ export default function DziennikKryzysuScreen() {
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [focusedSymptom, setFocusedSymptom] = useState<string | null>(null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [lastTapKey, setLastTapKey] = useState<string | null>(null);
-  const [lastTapAt, setLastTapAt] = useState(0);
+  const lastTapKeyRef = useRef<string | null>(null);
+  const lastTapAtRef = useRef(0);
   const [busy, setBusy] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiveDateCount, setArchiveDateCount] = useState(0);
@@ -58,9 +58,9 @@ export default function DziennikKryzysuScreen() {
 
   const onChipTap = async (key: string, onSingleTap: () => void, onDoubleTap: () => Promise<void>) => {
     const now = Date.now();
-    const isDoubleTap = lastTapKey === key && now - lastTapAt < 350;
-    setLastTapKey(key);
-    setLastTapAt(now);
+    const isDoubleTap = lastTapKeyRef.current === key && now - lastTapAtRef.current < 450;
+    lastTapKeyRef.current = key;
+    lastTapAtRef.current = now;
     onSingleTap();
     if (isDoubleTap && !busy) {
       await onDoubleTap();
@@ -158,6 +158,7 @@ export default function DziennikKryzysuScreen() {
         <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>Objawy (1-20)</Text>
+          <Text style={styles.tapHint}>Jedno kliknięcie podświetla objaw, a podwójne kliknięcie wybiera go do wpisu.</Text>
           <View style={styles.chipWrap}>
             {CRAVING_SYMPTOMS.map((symptom, idx) => {
               const active = selectedSymptoms.includes(symptom) || focusedSymptom === symptom;
@@ -309,6 +310,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '16deg' }],
   },
   sectionTitle: { color: 'white', fontSize: 17, fontWeight: '700', marginBottom: 10 },
+  tapHint: { color: SUB, fontSize: 13, lineHeight: 18, marginBottom: 10 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderWidth: 1,

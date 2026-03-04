@@ -1,6 +1,7 @@
 import { getFirstStepsState, markIntroSeen, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
+import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
 import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,6 +10,7 @@ const Logo = require("./assets/images/icon-stroz.png");
 const Watermark = require("./assets/images/maly_aniol.png");
 
 export default function Intro() {
+  const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
   const logoAnim = useRef(new Animated.Value(0)).current;
   const textAnim = useRef(new Animated.Value(0)).current;
   const bottomAnim = useRef(new Animated.Value(0)).current;
@@ -19,6 +21,19 @@ export default function Intro() {
       Animated.timing(textAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       Animated.timing(bottomAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
     ]).start();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const state = await getFirstStepsState();
+      const step = resolveFirstStepsStep(state);
+      if (mounted) setShowFirstStepsRoadmap(step !== 'done');
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const resolveNextRoute = async () => {
@@ -49,6 +64,7 @@ export default function Intro() {
             <Text style={styles.kicker}>Pierwsze kroki</Text>
             <Text style={styles.line}>Jestem Anioł Stróż.</Text>
             <Text style={styles.line}>Będę Cię wspierał{"\n"}w Twoim procesie zdrowienia.</Text>
+            {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
           </View>
         </Animated.View>
 

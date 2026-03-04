@@ -1,7 +1,7 @@
 import { BackButton } from '@/components/BackButton';
 import { DISCORD_INVITE_URL } from '@/constants/community';
 import React, { useMemo } from 'react';
-import { Alert, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const BG = '#061A2C';
 const ACCENT_BG = 'rgba(154,199,255,0.22)';
@@ -50,7 +50,7 @@ export default function WsparcieSpolecznoscDiscordScreen() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <View style={styles.content}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Społeczność</Text>
         <Text style={styles.subtitle}>
           Społeczność Anioł Stróż działa na Discordzie. 
@@ -66,7 +66,7 @@ export default function WsparcieSpolecznoscDiscordScreen() {
         <Pressable style={styles.primaryBtn} onPress={() => void openDiscord()}>
           <Text style={styles.primaryBtnText}>Otwórz Discord</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -91,7 +91,8 @@ const styles = StyleSheet.create({
     bottom: 110,
     left: -80,
   },
-  content: { flex: 1, paddingHorizontal: 18, paddingTop: 78 },
+  scroll: { flex: 1 },
+  content: { padding: 18, paddingTop: 18, paddingBottom: 40, position: 'relative' },
   title: { color: 'white', fontSize: 36, fontWeight: '800', marginBottom: 10 },
   subtitle: { color: SUB, fontSize: 17, lineHeight: 25, marginBottom: 14 },
   card: {

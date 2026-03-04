@@ -241,6 +241,14 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="dziennik-uczucia-test"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
             name="polityka-prywatnosci"
             options={{
               gestureEnabled: true,

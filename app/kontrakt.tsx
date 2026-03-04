@@ -1,6 +1,8 @@
 import { CoJakSection } from '@/components/CoJakSection';
 import { BackButton } from '@/components/BackButton';
+import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
 import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
+import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import { useRouter } from 'expo-router';
@@ -12,6 +14,7 @@ const Watermark = require('../assets/images/maly_aniol.png');
 export default function KontraktScreen() {
   const [isChecked, setChecked] = useState(false);
   const [signatureLoaded, setSignatureLoaded] = useState(false);
+  const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +30,19 @@ export default function KontraktScreen() {
     };
 
     void loadSignature();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadRoadmapVisibility = async () => {
+      const state = await getFirstStepsState();
+      const step = resolveFirstStepsStep(state);
+      if (mounted) setShowFirstStepsRoadmap(step !== 'done');
+    };
+    void loadRoadmapVisibility();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleSign = async () => {
@@ -51,74 +67,82 @@ export default function KontraktScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Moja Umowa z Samym Sobą</Text>
-          <CoJakSection
-            title="Opis i instrukcja"
-            co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
-            jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
-          />
-          
-          <Text style={styles.intro}>
-            Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
-          </Text>
-
-          <View style={styles.point}>
-            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-            <Text style={styles.pointTitle}>1. Uczciwość</Text>
-            <Text style={styles.pointText}>
-              Będę szczery wobec siebie. To nie tylko prawdomówność, ale przede wszystkim spójność.
-            </Text>
-          </View>
-
-          <View style={styles.point}>
-            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-            <Text style={styles.pointTitle}>2. Otwartość</Text>
-            <Text style={styles.pointText}>
-              Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
-              zewnątrz.
-            </Text>
-          </View>
-
-          <View style={styles.point}>
-            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-            <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
-            <Text style={styles.pointText}>
-              Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
-            </Text>
-          </View>
-
-          <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
-
           {isChecked ? (
-            <View style={styles.statusBox}>
-              <Text style={styles.statusText}>Wszystko OK, kontrakt podpisany.</Text>
+            <View style={styles.statusOnlyWrap}>
+              <View style={styles.statusBox}>
+                <Text style={styles.statusText}>Kontrakt podpisany.</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.button, !signatureLoaded && styles.buttonDisabled]}
+                onPress={() => router.replace('/licznik')}
+                disabled={!signatureLoaded}
+              >
+                <Text style={styles.buttonText}>Przechodzę dalej</Text>
+              </TouchableOpacity>
             </View>
-          ) : null}
+          ) : (
+            <>
+              <CoJakSection
+                title="Opis i instrukcja"
+                co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
+                jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
+              />
+              {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
 
-          {/* Sekcja podpisu */}
-          <TouchableOpacity 
-            style={styles.checkboxContainer} 
-            onPress={handleSign}
-            activeOpacity={0.8}
-          >
-            <Checkbox
-              style={styles.checkbox}
-              value={isChecked}
-              onValueChange={handleSign}
-              color={isChecked ? '#4630EB' : undefined}
-            />
-            <Text style={styles.label}>
-              {isChecked ? 'Wszystko OK, kontrakt podpisany.' : 'Podpisuję się pod tym i zaczynam zmianę.'}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.intro}>
+                Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
+              </Text>
 
-          {/* Przycisk - teraz w pełni bezpieczny */}
-          <TouchableOpacity 
-            style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]} 
-            onPress={() => isChecked && router.replace('/')}
-            disabled={!isChecked || !signatureLoaded}
-          >
-            <Text style={styles.buttonText}>Wchodzę</Text>
-          </TouchableOpacity>
+              <View style={styles.point}>
+                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+                <Text style={styles.pointTitle}>1. Uczciwość</Text>
+                <Text style={styles.pointText}>
+                  Będę szczery wobec siebie. To nie tylko prawdomówność, ale przede wszystkim spójność.
+                </Text>
+              </View>
+
+              <View style={styles.point}>
+                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+                <Text style={styles.pointTitle}>2. Otwartość</Text>
+                <Text style={styles.pointText}>
+                  Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
+                  zewnątrz.
+                </Text>
+              </View>
+
+              <View style={styles.point}>
+                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+                <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
+                <Text style={styles.pointText}>
+                  Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
+                </Text>
+              </View>
+
+              <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
+
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={handleSign}
+                activeOpacity={0.8}
+              >
+                <Checkbox
+                  style={styles.checkbox}
+                  value={isChecked}
+                  onValueChange={handleSign}
+                  color={isChecked ? '#4630EB' : undefined}
+                />
+                <Text style={styles.label}>Podpisuję się pod tym i zaczynam zmianę.</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]}
+                onPress={() => isChecked && router.replace('/')}
+                disabled={!isChecked || !signatureLoaded}
+              >
+                <Text style={styles.buttonText}>Wchodzę</Text>
+              </TouchableOpacity>
+            </>
+          )}
           
           <View style={{ height: 40 }} /> 
         </ScrollView>
@@ -229,6 +253,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  statusOnlyWrap: {
+    marginTop: 16,
   },
   checkboxContainer: { 
     flexDirection: 'row', 

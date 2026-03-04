@@ -15,21 +15,21 @@ const Watermark = require("../assets/images/maly_aniol.png");
 const STORAGE_KEY = "@support_contacts";
 type SupportContact = { id: string; name: string; phone: string };
 type DeviceContact = { id: string; name: string; phones: string[] };
+type DeviceContactsPickResult = { items: DeviceContact[]; permissionDenied?: boolean };
 
-async function pickContactsFromDevice(): Promise<DeviceContact[]> {
+async function pickContactsFromDevice(): Promise<DeviceContactsPickResult> {
   try {
     const available = await Contacts.isAvailableAsync();
     if (!available) {
       Alert.alert("Brak dostępu", "Na tym urządzeniu API kontaktów nie jest dostępne.");
-      return [];
+      return { items: [] };
     }
 
     const currentPermission = await Contacts.getPermissionsAsync();
     const permission =
       currentPermission.status === "granted" ? currentPermission : await Contacts.requestPermissionsAsync();
     if (permission.status !== "granted") {
-      Alert.alert("Brak zgody", "Aby dodać osobę z książki adresowej, zezwól aplikacji na dostęp do kontaktów.");
-      return [];
+      return { items: [], permissionDenied: true };
     }
 
     const allRows: Contacts.ExistingContact[] = [];
@@ -68,14 +68,14 @@ async function pickContactsFromDevice(): Promise<DeviceContact[]> {
       })
       .filter(Boolean) as DeviceContact[];
 
-    return mapped.sort((a, b) => a.name.localeCompare(b.name, "pl", { sensitivity: "base" }));
+    return { items: mapped.sort((a, b) => a.name.localeCompare(b.name, "pl", { sensitivity: "base" })) };
   } catch (e) {
     console.error("Błąd dostępu do książki adresowej:", e);
     Alert.alert(
       "Błąd kontaktów",
       "Nie udało się odczytać kontaktów z telefonu. Sprawdź uprawnienia kontaktów w ustawieniach systemu i spróbuj ponownie."
     );
-    return [];
+    return { items: [] };
   }
 }
 
@@ -183,8 +183,25 @@ export default function WsparcieSiatka() {
 
   const openDevicePicker = async () => {
     setLoadingDeviceContacts(true);
-    const items = await pickContactsFromDevice();
+    const result = await pickContactsFromDevice();
     setLoadingDeviceContacts(false);
+    if (result.permissionDenied) {
+      Alert.alert(
+        "Brak zgody na kontakty",
+        "Aby dodać kontakt z książki adresowej, włącz dostęp do kontaktów w ustawieniach telefonu.",
+        [
+          { text: "Anuluj", style: "cancel" },
+          {
+            text: "Otwórz ustawienia",
+            onPress: () => {
+              void Linking.openSettings();
+            },
+          },
+        ]
+      );
+      return;
+    }
+    const items = result.items;
     if (items.length === 0) {
       Alert.alert("Brak kontaktów", "Nie znaleziono kontaktów z numerem telefonu do dodania.");
       return;
@@ -196,7 +213,11 @@ export default function WsparcieSiatka() {
     setPickerOpen(true);
   };
 
-  const addFromDeviceContact = async (candidateNameRaw: string, candidatePhoneRaw: string) => {
+  const addFromDeviceContact = async (
+    candidateNameRaw: string,
+    candidatePhoneRaw: string,
+    deviceContactId?: string
+  ) => {
     const candidateName = candidateNameRaw.trim();
     const candidatePhone = candidatePhoneRaw.trim();
     if (!candidateName || !candidatePhone) return;
@@ -220,14 +241,14 @@ export default function WsparcieSiatka() {
     const next = sortContacts([newItem, ...contacts]);
     setContacts(next);
     await saveContacts(next);
-    setPickerOpen(false);
-    setPhonePickerOpen(false);
-    setSelectedDeviceContact(null);
+    if (deviceContactId) {
+      setDeviceContacts((prev) => prev.filter((item) => item.id !== deviceContactId));
+    }
   };
 
   const handleDeviceContactPress = async (item: DeviceContact) => {
     if (item.phones.length === 1) {
-      await addFromDeviceContact(item.name, item.phones[0]);
+      await addFromDeviceContact(item.name, item.phones[0], item.id);
       return;
     }
     setPickerOpen(false);
@@ -398,7 +419,16 @@ export default function WsparcieSiatka() {
                   key={phoneItem}
                   style={styles.modalRow}
                   onPress={() =>
-                    void addFromDeviceContact(selectedDeviceContact?.name ?? "", phoneItem)
+                    void (async () => {
+                      await addFromDeviceContact(
+                        selectedDeviceContact?.name ?? "",
+                        phoneItem,
+                        selectedDeviceContact?.id
+                      );
+                      setPhonePickerOpen(false);
+                      setSelectedDeviceContact(null);
+                      setPickerOpen(true);
+                    })()
                   }
                 >
                   <Text style={styles.modalRowName}>{phoneItem}</Text>
