@@ -1,23 +1,37 @@
-import { getOnboardingStep, OnboardingStep } from '@/utils/onboarding';
 import { Redirect } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
+import { useEffect, useState } from 'react';
 
 export default function Index() {
-  const [step, setStep] = useState<OnboardingStep | null>(null);
+  const [targetRoute, setTargetRoute] = useState<'/intro' | '/kontrakt' | '/licznik' | '/ustawienia' | null>(null);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      const nextStep = await getOnboardingStep();
-      if (active) setStep(nextStep);
-    })();
+    let mounted = true;
+    const run = async () => {
+      const state = await getFirstStepsState();
+      const step = resolveFirstStepsStep(state);
+      if (mounted) {
+        if (step === 'contract') {
+          setTargetRoute('/kontrakt');
+          return;
+        }
+        if (step === 'counter') {
+          setTargetRoute('/licznik');
+          return;
+        }
+        if (step === 'consents') {
+          setTargetRoute('/ustawienia');
+          return;
+        }
+        setTargetRoute('/intro');
+      }
+    };
+    void run();
     return () => {
-      active = false;
+      mounted = false;
     };
   }, []);
 
-  if (!step) return null;
-  if (step === 'contract') return <Redirect href="/kontrakt" />;
-  if (step === 'startDate') return <Redirect href="/licznik" />;
-  return <Redirect href="/(tabs)" />;
+  if (!targetRoute) return null;
+  return <Redirect href={targetRoute} />;
 }
