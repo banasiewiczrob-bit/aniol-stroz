@@ -11,8 +11,21 @@ import { DEFAULT_APP_SETTINGS, loadAppSettings } from '@/hooks/useAppSettings';
 import { notifyDataChanged, subscribeSync } from '@/hooks/recoverySyncEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Image, LayoutAnimation, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Image,
+  KeyboardAvoidingView,
+  LayoutAnimation,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 type HaltState = {
   hungry: boolean;
@@ -362,6 +375,7 @@ function WeeklyLineChart({ points }: { points: Array<{ label: string; score: num
 }
 
 export default function PlanScreen() {
+  const scrollRef = useRef<ScrollView | null>(null);
   const { height } = useWindowDimensions();
   const compact = height <= 900;
   const [calendarNow, setCalendarNow] = useState(() => new Date());
@@ -703,7 +717,13 @@ export default function PlanScreen() {
 
   const toggleInstruction = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setInstructionOpen((prev) => !prev);
+    setInstructionOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 120);
+      }
+      return next;
+    });
   };
 
   const noScrollMode = compact && !instructionOpen && !archiveOpen && !chartOpen && !selectedDateKey;
@@ -742,16 +762,24 @@ export default function PlanScreen() {
 
   return (
     <BackgroundWrapper>
-      <ScrollView
+      <KeyboardAvoidingView
         style={styles.screen}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={!noScrollMode}
-        bounces={!noScrollMode}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
-        <View style={styles.bgOrbA} />
-        <View style={styles.bgOrbB} />
-        <Text style={styles.title}>Plan dnia</Text>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={!noScrollMode}
+          bounces={!noScrollMode}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <View style={styles.bgOrbA} />
+          <View style={styles.bgOrbB} />
+          <Text style={styles.title}>Plan dnia</Text>
         <Text style={styles.dateLabel}>Dzisiaj: {todayKey}</Text>
         <Text style={styles.dateSubLabel}>Jutro: {tomorrowKey}</Text>
 
@@ -1043,7 +1071,18 @@ export default function PlanScreen() {
           </View>
         )}
 
-        <Pressable style={styles.archiveHeader} onPress={() => setArchiveOpen((v) => !v)}>
+        <Pressable
+          style={styles.archiveHeader}
+          onPress={() =>
+            setArchiveOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+              }
+              return next;
+            })
+          }
+        >
           <Text style={styles.archiveHeaderText}>Archiwum dni ({archive.length})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
         </Pressable>
@@ -1074,12 +1113,24 @@ export default function PlanScreen() {
           </View>
         )}
 
-        <Pressable style={styles.archiveHeader} onPress={() => setChartOpen((v) => !v)}>
+        <Pressable
+          style={styles.archiveHeader}
+          onPress={() =>
+            setChartOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+              }
+              return next;
+            })
+          }
+        >
           <Text style={styles.archiveHeaderText}>Wykres tygodnia</Text>
           <Text style={styles.archiveHeaderChevron}>{chartOpen ? '▾' : '▸'}</Text>
         </Pressable>
-        {chartOpen && <WeeklyLineChart points={weekPoints} />}
-      </ScrollView>
+          {chartOpen && <WeeklyLineChart points={weekPoints} />}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <Modal visible={summaryModalOpen} transparent animationType="fade" onRequestClose={() => setSummaryModalOpen(false)}>
         <View style={styles.modalBackdrop}>

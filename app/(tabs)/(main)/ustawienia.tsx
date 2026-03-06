@@ -16,7 +16,22 @@ import Checkbox from 'expo-checkbox';
 import Constants from 'expo-constants';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Animated,
+  Easing,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const BG = '#061A2C';
 const SUB = 'rgba(232,245,255,0.84)';
@@ -630,10 +645,21 @@ export default function UstawieniaScreen() {
 
   return (
     <BackgroundWrapper showSwipeHint={false}>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.bgOrbA} />
-        <View style={styles.bgOrbB} />
-        <Text style={styles.title}>Ustawienia</Text>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <View style={styles.bgOrbA} />
+          <View style={styles.bgOrbB} />
+          <Text style={styles.title}>Ustawienia</Text>
         <Text style={styles.subtitle}>
           {onboardingSettingsRequired
             ? 'Krok 3 z 3: ustaw zgody oraz preferencje startowe (powiadomienia, badge i inteligentne wsparcie).'
@@ -1016,7 +1042,8 @@ export default function UstawieniaScreen() {
         </View>
 
         {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <Modal
         visible={fullAccessModalVisible}

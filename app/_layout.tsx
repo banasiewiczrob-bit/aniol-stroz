@@ -97,6 +97,14 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="licznik-strat"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
             name="plan-dnia"
             options={{
               gestureEnabled: true,

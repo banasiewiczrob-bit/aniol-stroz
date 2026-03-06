@@ -7,7 +7,18 @@ import {
 } from '@/hooks/useCommunityForum';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const BG = '#061A2C';
 const ACCENT_BG = 'rgba(154,199,255,0.22)';
@@ -87,8 +98,19 @@ export default function SpolecznoscGroupScreen() {
     <BackgroundWrapper>
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>{groupTitle || 'Grupa'}</Text>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <Text style={styles.title}>{groupTitle || 'Grupa'}</Text>
         <Text style={styles.subtitle}>{groupDescription}</Text>
 
         <View style={styles.formCard}>
@@ -131,21 +153,26 @@ export default function SpolecznoscGroupScreen() {
           <Text style={styles.empty}>Brak wątków. Zacznij rozmowę jako pierwszy.</Text>
         ) : null}
 
-        {threads.map((thread) => (
-          <Pressable key={thread.id} style={styles.threadCard} onPress={() => router.push(`/wsparcie-spolecznosc/watek/${thread.id}` as any)}>
-            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <Text style={styles.threadTitle}>{thread.title}</Text>
-            <Text style={styles.threadBody} numberOfLines={2}>
-              {thread.body}
-            </Text>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaText}>{thread.authorAlias}</Text>
-              <Text style={styles.metaText}>{thread.commentCount} odpowiedzi</Text>
-              <Text style={styles.metaText}>{formatDate(thread.lastActivityAt)}</Text>
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
+          {threads.map((thread) => (
+            <Pressable
+              key={thread.id}
+              style={styles.threadCard}
+              onPress={() => router.push(`/wsparcie-spolecznosc/watek/${thread.id}` as any)}
+            >
+              <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+              <Text style={styles.threadTitle}>{thread.title}</Text>
+              <Text style={styles.threadBody} numberOfLines={2}>
+                {thread.body}
+              </Text>
+              <View style={styles.metaRow}>
+                <Text style={styles.metaText}>{thread.authorAlias}</Text>
+                <Text style={styles.metaText}>{thread.commentCount} odpowiedzi</Text>
+                <Text style={styles.metaText}>{formatDate(thread.lastActivityAt)}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundWrapper>
   );
 }

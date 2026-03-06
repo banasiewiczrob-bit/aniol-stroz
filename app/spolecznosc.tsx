@@ -10,7 +10,18 @@ import {
 } from '@/hooks/useCommunityForum';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const BG = '#061A2C';
 const ACCENT = '#9AC7FF';
@@ -104,8 +115,19 @@ export default function SpolecznoscScreen() {
     <BackgroundWrapper>
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Społeczność</Text>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <Text style={styles.title}>Społeczność</Text>
         <Text style={styles.subtitle}>Pokój główny: szybka rozmowa na żywo i widoczni uczestnicy.</Text>
 
         <View style={styles.notice}>
@@ -172,17 +194,22 @@ export default function SpolecznoscScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>Grupy tematyczne</Text>
-        {groups.map((group) => (
-          <Pressable key={group.id} style={styles.groupCard} onPress={() => router.push(`/wsparcie-spolecznosc/${group.id}` as any)}>
-            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <View style={styles.groupCardHead}>
-              <Text style={styles.groupCardTitle}>{group.title}</Text>
-              <Text style={styles.countBadge}>{group.threadCount}</Text>
-            </View>
-            <Text style={styles.groupCardSubtitle}>{group.description}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+          {groups.map((group) => (
+            <Pressable
+              key={group.id}
+              style={styles.groupCard}
+              onPress={() => router.push(`/wsparcie-spolecznosc/${group.id}` as any)}
+            >
+              <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+              <View style={styles.groupCardHead}>
+                <Text style={styles.groupCardTitle}>{group.title}</Text>
+                <Text style={styles.countBadge}>{group.threadCount}</Text>
+              </View>
+              <Text style={styles.groupCardSubtitle}>{group.description}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundWrapper>
   );
 }

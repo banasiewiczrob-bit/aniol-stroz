@@ -53,6 +53,7 @@ export default function DziennikiHomeScreen() {
   const { hasPremium, source } = usePremiumAccess();
   const { isVisited, markVisited } = useVisitedTiles();
   const showEmotionLabTile = source === 'tester_preview' || __DEV__;
+  const showLossCounterTile = source === 'tester_preview' || __DEV__;
 
   return (
     <BackgroundWrapper>
@@ -121,6 +122,23 @@ export default function DziennikiHomeScreen() {
                     await markVisited('/dzienniki/uczucia-test');
                     router.push({
                       pathname: '/dziennik-uczucia-test',
+                      params: { backTo: '/obserwatorium' },
+                    });
+                  }}
+                />
+              ) : null}
+              {showLossCounterTile ? (
+                <JournalTile
+                  title="Licznik strat i odzysku (test)"
+                  subtitle="Szacunkowy bilans finansowy: straty i odzysk od startu."
+                  accent="#FFC7D9"
+                  glow="rgba(255,199,217,0.28)"
+                  compact={compact}
+                  openedToday={isVisited('/licznik-strat')}
+                  onPress={async () => {
+                    await markVisited('/licznik-strat');
+                    router.push({
+                      pathname: '/licznik-strat',
                       params: { backTo: '/obserwatorium' },
                     });
                   }}

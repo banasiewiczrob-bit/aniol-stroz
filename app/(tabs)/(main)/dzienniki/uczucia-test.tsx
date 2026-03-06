@@ -8,7 +8,18 @@ import {
   type BaseEmotion,
 } from '@/constants/journals';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const BG_CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
@@ -42,6 +53,7 @@ const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('pl-PL', { 
 const toHourKey = (iso: string) => new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
 export default function DziennikUczucTestScreen() {
+  const scrollRef = useRef<ScrollView | null>(null);
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [baseEmotion, setBaseEmotion] = useState<BaseEmotion>('Strach');
   const [detailEmotion, setDetailEmotion] = useState<string>(EMOTION_DETAILS_BY_BASE['Strach'][0]);
@@ -191,21 +203,45 @@ export default function DziennikUczucTestScreen() {
   }, [entries]);
 
   const toggleDateOpen = (dateKey: string) => {
-    setOpenDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
+    setOpenDates((prev) => {
+      const nextOpen = !prev[dateKey];
+      if (nextOpen) {
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+      }
+      return { ...prev, [dateKey]: nextOpen };
+    });
   };
 
   const toggleHourOpen = (dateKey: string, hourKey: string) => {
     const key = `${dateKey}|${hourKey}`;
-    setOpenHours((prev) => ({ ...prev, [key]: !prev[key] }));
+    setOpenHours((prev) => {
+      const nextOpen = !prev[key];
+      if (nextOpen) {
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+      }
+      return { ...prev, [key]: nextOpen };
+    });
   };
 
   return (
     <BackgroundWrapper>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.bgOrbA} />
-        <View style={styles.bgOrbB} />
-        <Text style={styles.title}>Dziennik Uczuc 2.0 (test)</Text>
-        <Text style={styles.subtitle}>Wybieraj uczucia podwojnym kliknieciem. Kazde ma osobny opis i sposob okazania.</Text>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          ref={scrollRef}
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <View style={styles.bgOrbA} />
+          <View style={styles.bgOrbB} />
+          <Text style={styles.title}>Dziennik Uczuc 2.0 (test)</Text>
+          <Text style={styles.subtitle}>Wybieraj uczucia podwojnym kliknieciem. Kazde ma osobny opis i sposob okazania.</Text>
 
         <WeekCalendar selectedDateKey={selectedDateKey} onChangeDateKey={setSelectedDateKey} title="Kalendarz testowy" />
 
@@ -302,7 +338,18 @@ export default function DziennikUczucTestScreen() {
           <Text style={styles.primaryBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis testowy'}</Text>
         </Pressable>
 
-        <Pressable style={styles.archiveHeader} onPress={() => setArchiveOpen((prev) => !prev)}>
+        <Pressable
+          style={styles.archiveHeader}
+          onPress={() =>
+            setArchiveOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+              }
+              return next;
+            })
+          }
+        >
           <Text style={styles.archiveHeaderText}>Archiwum testowe ({archiveDateCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
         </Pressable>
@@ -362,7 +409,8 @@ export default function DziennikUczucTestScreen() {
             })}
           </View>
         ) : null}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundWrapper>
   );
 }
