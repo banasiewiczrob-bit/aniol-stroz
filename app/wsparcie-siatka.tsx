@@ -3,7 +3,20 @@ import { BackButton } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import * as Contacts from "expo-contacts";
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Linking,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { TYPE } from "@/styles/typography";
 
 const BG = "#061A2C";
@@ -257,11 +270,21 @@ export default function WsparcieSiatka() {
   };
 
   return (
-    <View style={styles.screen}>
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
+    >
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+      >
         <Text style={styles.title}>Siatka wsparcia</Text>
         <CoJakSection
           title="Opis i instrukcja"
@@ -360,7 +383,11 @@ export default function WsparcieSiatka() {
 
       <Modal visible={pickerOpen} animationType="slide" transparent onRequestClose={() => setPickerOpen(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <KeyboardAvoidingView
+            style={styles.modalCard}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
+          >
             <Text style={styles.modalTitle}>Dodaj z książki adresowej</Text>
             <TextInput
               value={deviceQuery}
@@ -369,7 +396,11 @@ export default function WsparcieSiatka() {
               placeholderTextColor="rgba(255,255,255,0.35)"
               style={styles.searchInput}
             />
-            <ScrollView style={styles.modalList} contentContainerStyle={styles.modalListContent}>
+            <ScrollView
+              style={styles.modalList}
+              contentContainerStyle={styles.modalListContent}
+              keyboardShouldPersistTaps="handled"
+            >
               {deviceContacts
                 .filter((item) => {
                   const q = deviceQuery.trim().toLowerCase();
@@ -396,7 +427,7 @@ export default function WsparcieSiatka() {
             <Pressable style={styles.modalClose} onPress={() => setPickerOpen(false)}>
               <Text style={styles.modalCloseText}>Zamknij</Text>
             </Pressable>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -410,10 +441,18 @@ export default function WsparcieSiatka() {
         }}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <KeyboardAvoidingView
+            style={styles.modalCard}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
+          >
             <Text style={styles.modalTitle}>Wybierz numer telefonu</Text>
             <Text style={styles.modalHint}>{selectedDeviceContact?.name ?? ""}</Text>
-            <ScrollView style={styles.modalList} contentContainerStyle={styles.modalListContent}>
+            <ScrollView
+              style={styles.modalList}
+              contentContainerStyle={styles.modalListContent}
+              keyboardShouldPersistTaps="handled"
+            >
               {(selectedDeviceContact?.phones ?? []).map((phoneItem) => (
                 <Pressable
                   key={phoneItem}
@@ -445,10 +484,10 @@ export default function WsparcieSiatka() {
             >
               <Text style={styles.modalCloseText}>Anuluj</Text>
             </Pressable>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

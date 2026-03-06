@@ -3,8 +3,19 @@ import { WeekCalendar } from '@/components/journals/WeekCalendar';
 import { getJournalDateKey, type GratitudeJournalEntry } from '@/constants/journals';
 import { createGratitudeJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const BG_CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
@@ -23,6 +34,7 @@ function toHourKey(iso: string) {
 }
 
 export default function DziennikWdziecznosciScreen() {
+  const scrollRef = useRef<ScrollView | null>(null);
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [item, setItem] = useState('');
   const [busy, setBusy] = useState(false);
@@ -65,12 +77,24 @@ export default function DziennikWdziecznosciScreen() {
   }, [allGratitudeEntries]);
 
   const toggleDateOpen = (dateKey: string) => {
-    setOpenDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
+    setOpenDates((prev) => {
+      const nextOpen = !prev[dateKey];
+      if (nextOpen) {
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+      }
+      return { ...prev, [dateKey]: nextOpen };
+    });
   };
 
   const toggleHourOpen = (dateKey: string, hourKey: string) => {
     const key = `${dateKey}|${hourKey}`;
-    setOpenHours((prev) => ({ ...prev, [key]: !prev[key] }));
+    setOpenHours((prev) => {
+      const nextOpen = !prev[key];
+      if (nextOpen) {
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+      }
+      return { ...prev, [key]: nextOpen };
+    });
   };
 
   const onSave = async () => {
@@ -113,11 +137,23 @@ export default function DziennikWdziecznosciScreen() {
 
   return (
     <BackgroundWrapper>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.bgOrbA} />
-        <View style={styles.bgOrbB} />
-        <Text style={styles.title}>Dziennik Wdzięczności</Text>
-        <Text style={styles.subtitle}>Dodawaj tyle wpisów dziennie, ile potrzebujesz.</Text>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          ref={scrollRef}
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <View style={styles.bgOrbA} />
+          <View style={styles.bgOrbB} />
+          <Text style={styles.title}>Dziennik Wdzięczności</Text>
+          <Text style={styles.subtitle}>Dodawaj tyle wpisów dziennie, ile potrzebujesz.</Text>
 
         <WeekCalendar
           selectedDateKey={selectedDateKey}
@@ -143,7 +179,18 @@ export default function DziennikWdziecznosciScreen() {
           </Pressable>
         </View>
 
-        <Pressable style={styles.archiveHeader} onPress={() => setArchiveOpen((prev) => !prev)}>
+        <Pressable
+          style={styles.archiveHeader}
+          onPress={() =>
+            setArchiveOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+              }
+              return next;
+            })
+          }
+        >
           <Text style={styles.archiveHeaderText}>Archiwum wpisów ({archiveDateCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
         </Pressable>
@@ -195,8 +242,8 @@ export default function DziennikWdziecznosciScreen() {
             })}
           </View>
         ) : null}
-
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundWrapper>
   );
 }

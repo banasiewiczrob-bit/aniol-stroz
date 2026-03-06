@@ -9,7 +9,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Easing, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import {
+  Alert,
+  Animated,
+  Easing,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Watermark = require('../assets/images/maly_aniol.png');
@@ -234,16 +248,23 @@ export default function LicznikScreen() {
 
   return (
     <BackgroundWrapper>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          compact && styles.scrollContentCompact,
-          { paddingBottom: Math.max(140, insets.bottom + 110) },
-        ]}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled
-        bounces
+      <KeyboardAvoidingView
+        style={styles.keyboardWrap}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            compact && styles.scrollContentCompact,
+            { paddingBottom: Math.max(140, insets.bottom + 110) },
+          ]}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled
+          bounces
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
         <View style={styles.captureArea}>
@@ -401,6 +422,17 @@ export default function LicznikScreen() {
           <StatBox label="Dni" value={stats.days} compact={compact} />
         </View>
 
+        <Pressable onPress={() => router.push('/licznik-strat')} style={[styles.lossTile, compact && styles.lossTileCompact]}>
+          <Image source={Watermark} resizeMode="contain" style={styles.rewardsWatermark} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.lossTitle, compact && styles.lossTitleCompact]}>Licznik strat i odzysku (test)</Text>
+            <Text style={[styles.lossSubtitle, compact && styles.lossSubtitleCompact]}>
+              Moduł dodatkowy, poza onboardingiem.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color="#FFD18A" />
+        </Pressable>
+
         <Pressable onPress={() => router.push('/licznik-nagrody')} style={[styles.rewardsTile, compact && styles.rewardsTileCompact]}>
           <Image source={Watermark} resizeMode="contain" style={styles.rewardsWatermark} />
           <View style={{ flex: 1 }}>
@@ -415,8 +447,9 @@ export default function LicznikScreen() {
           <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>Resetuj licznik</Text>
         </Pressable>
 
-        {!compact ? <View style={{ height: 12 }} /> : null}
-      </ScrollView>
+          {!compact ? <View style={{ height: 12 }} /> : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundWrapper>
   );
 }
@@ -431,6 +464,7 @@ function StatBox({ label, value, compact }: { label: string; value: number; comp
 }
 
 const styles = StyleSheet.create({
+  keyboardWrap: { flex: 1 },
   scrollContent: { ...SCREEN_PADDING, alignItems: 'center', position: 'relative', paddingTop: 16 },
   scrollContentCompact: { paddingTop: 8, paddingBottom: 4 },
   bgOrbA: {
@@ -592,6 +626,29 @@ const styles = StyleSheet.create({
   nextStepButton: { marginTop: 8, marginBottom: 4, backgroundColor: 'rgba(120, 200, 255, 0.3)' },
   resetButton: { marginTop: 12, backgroundColor: 'rgba(255, 100, 100, 0.15)', borderColor: 'rgba(255, 100, 100, 0.5)' },
   resetButtonCompact: { marginTop: 8 },
+  lossTile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 209, 138, 0.08)',
+    width: '100%',
+    padding: 16,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 209, 138, 0.35)',
+    marginBottom: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  lossTileCompact: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  lossTitle: { ...TYPE.h3, color: 'white' },
+  lossTitleCompact: { fontSize: 18, lineHeight: 21 },
+  lossSubtitle: { ...TYPE.bodySmall, color: 'rgba(255,255,255,0.76)', marginTop: 4 },
+  lossSubtitleCompact: { fontSize: 13, lineHeight: 15, marginTop: 1 },
   rewardsTile: {
     flexDirection: 'row',
     alignItems: 'center',

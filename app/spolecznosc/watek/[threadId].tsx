@@ -8,7 +8,18 @@ import {
 } from '@/hooks/useCommunityForum';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const BG = '#061A2C';
 const ACCENT_BG = 'rgba(154,199,255,0.22)';
@@ -88,17 +99,28 @@ export default function SpolecznoscThreadScreen() {
     <BackgroundWrapper>
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {thread ? (
-          <View style={styles.threadCard}>
-            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <Text style={styles.threadTitle}>{thread.title}</Text>
-            <Text style={styles.threadBody}>{thread.body}</Text>
-            <Text style={styles.threadMeta}>
-              Autor: {thread.authorAlias} | {formatDateTime(thread.createdAt)}
-            </Text>
-          </View>
-        ) : null}
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          {thread ? (
+            <View style={styles.threadCard}>
+              <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+              <Text style={styles.threadTitle}>{thread.title}</Text>
+              <Text style={styles.threadBody}>{thread.body}</Text>
+              <Text style={styles.threadMeta}>
+                Autor: {thread.authorAlias} | {formatDateTime(thread.createdAt)}
+              </Text>
+            </View>
+          ) : null}
 
         <View style={styles.formCard}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
@@ -130,16 +152,17 @@ export default function SpolecznoscThreadScreen() {
         {loading ? <Text style={styles.loading}>Ładowanie...</Text> : null}
         {!loading && comments.length === 0 ? <Text style={styles.empty}>Brak odpowiedzi. Napisz pierwszą.</Text> : null}
 
-        {comments.map((comment) => (
-          <View key={comment.id} style={styles.commentCard}>
-            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <Text style={styles.commentBody}>{comment.body}</Text>
-            <Text style={styles.commentMeta}>
-              {comment.authorAlias} | {formatDateTime(comment.createdAt)}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
+          {comments.map((comment) => (
+            <View key={comment.id} style={styles.commentCard}>
+              <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+              <Text style={styles.commentBody}>{comment.body}</Text>
+              <Text style={styles.commentMeta}>
+                {comment.authorAlias} | {formatDateTime(comment.createdAt)}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </BackgroundWrapper>
   );
 }

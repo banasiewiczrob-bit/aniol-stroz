@@ -88,7 +88,11 @@ function HaltItem({ letter, title, description, icon }: { letter: string, title:
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { ...SCREEN_CONTAINER },
+  content: {
+    ...SCREEN_CONTAINER,
+    flex: 0,
+    flexGrow: 1,
+  },
   bgOrbA: {
     position: 'absolute',
     width: 260,
