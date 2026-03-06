@@ -13,6 +13,17 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "release-small": {
+      "autoIncrement": true,
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      },
+      "ios": {
+        "simulator": false
+      }
     }
   },
   "submit": {

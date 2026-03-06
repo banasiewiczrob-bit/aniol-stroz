@@ -41,7 +41,6 @@ app-example
 /ios
 /android
 
-# local backup artifacts
-backups/
-bugreport-*.zip
-expo-env.d.ts
+# Local backups (never commit)
+backups/*.tar.gz
+backups/*.bundle

@@ -1,0 +1,13 @@
+.git
+.expo
+node_modules
+backups
+*.log
+*.zip
+
+android/.gradle
+android/build
+android/app/build
+
+ios/Pods
+ios/build

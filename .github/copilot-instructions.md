@@ -2,12 +2,12 @@
 Provide compact, actionable guidance for AI coding agents working on this Expo + `expo-router` project.
 
 ## Big picture
-- This is an Expo (React Native) app using file-based routing via `expo-router`. The `app/` directory contains pages and layouts (e.g. [app/(tabs)/_layout.tsx](app/(tabs)/_layout.tsx)).
+- This is an Expo (React Native) app using file-based routing via `expo-router`. The `app/` directory contains pages and layouts (e.g. [app/(tabs)/_layout.tsx](../app/%28tabs%29/_layout.tsx)).
 - Entrypoint is `expo-router/entry` (see `package.json` `main`). UI is composed of small themed components (`components/themed-*.tsx`, `components/ui/`).
 
 ## Key files & patterns
 - Routing: edit files under `app/`. Folder names and parentheses (e.g. `(tabs)`) represent route groupings used by `expo-router`.
-- Layouts: add or change layout behavior in `app/_layout.tsx` or group layouts such as [app/(tabs)/_layout.tsx](app/(tabs)/_layout.tsx).
+- Layouts: add or change layout behavior in `app/_layout.tsx` or group layouts such as [app/(tabs)/_layout.tsx](../app/%28tabs%29/_layout.tsx).
 - Theming: prefer `use-theme-color.ts`, `components/themed-text.tsx`, and `components/themed-view.tsx` to ensure color-mode compatibility. See `hooks/use-color-scheme.ts` and `hooks/use-color-scheme.web.ts` for platform differences.
 - Platform variants: components like `components/ui/icon-symbol.ios.tsx` and `components/ui/icon-symbol.tsx` show platform-specific implementations—follow that pattern for native platform differences.
 - State & storage: AsyncStorage is used (`@react-native-async-storage/async-storage` in `package.json`), so persist small local data there.
@@ -37,7 +37,7 @@ Provide compact, actionable guidance for AI coding agents working on this Expo +
 - Prefer editing `components/` and `app/` files; avoid broad refactors without explicit user approval.
 
 ## Examples
-- To add a new tab: create `app/(tabs)/newTab.tsx` and add a corresponding `Tabs.Screen` in [app/(tabs)/_layout.tsx](app/(tabs)/_layout.tsx).
+- To add a new tab: create `app/(tabs)/newTab.tsx` and add a corresponding `Tabs.Screen` in [app/(tabs)/_layout.tsx](../app/%28tabs%29/_layout.tsx).
 - To add a themed text component, follow `components/themed-text.tsx` and call `use-theme-color.ts`.
 
 ## Questions for the maintainer
