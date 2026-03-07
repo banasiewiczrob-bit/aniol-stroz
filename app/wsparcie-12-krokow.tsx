@@ -4,6 +4,7 @@ import { DailyReadToggle } from '@/components/DailyReadToggle';
 import { TYPE } from '@/styles/typography';
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Watermark = require('../assets/images/maly_aniol.png');
 
@@ -121,6 +122,7 @@ const PROGRAMS: StepsProgram[] = [
 ];
 
 export default function Wsparcie12KrokowScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedProgramId, setSelectedProgramId] = useState<ProgramId>('aa');
 
   const selectedProgram = useMemo(
@@ -130,7 +132,11 @@ export default function Wsparcie12KrokowScreen() {
 
   return (
     <BackgroundWrapper>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
         <Text style={styles.title}>12 kroków</Text>

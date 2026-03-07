@@ -1,9 +1,17 @@
+import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+function isExpoGoAndroidRuntime() {
+  if (Platform.OS !== 'android') return false;
+  const appOwnership = (Constants as { appOwnership?: string | null }).appOwnership;
+  const executionEnvironment = (Constants as { executionEnvironment?: string | null }).executionEnvironment;
+  return appOwnership === 'expo' || executionEnvironment === 'storeClient';
+}
+
 export function useAppIconBadge(count: number) {
   useEffect(() => {
-    if (Platform.OS === 'web') return;
+    if (Platform.OS === 'web' || isExpoGoAndroidRuntime()) return;
 
     let active = true;
     const run = async () => {

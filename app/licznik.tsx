@@ -1,7 +1,13 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
 import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
-import { getFirstStepsState, markCounterDone, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
+import {
+  getFirstStepsState,
+  markCounterDone,
+  resolveFirstStepsStep,
+  subscribeFirstStepsChanges,
+  type FirstStepsStep,
+} from '@/hooks/useFirstSteps';
 import { SCREEN_PADDING } from '@/styles/screenStyles';
 import { TYPE } from '@/styles/typography';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,7 +38,7 @@ export default function LicznikScreen() {
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const compact = height <= 900;
-  const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
+  const [firstStepsStep, setFirstStepsStep] = useState<FirstStepsStep | 'intro' | null>(null);
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [stats, setStats] = useState({ years: 0, months: 0, days: 0, totalDays: 0 });
@@ -50,14 +56,18 @@ export default function LicznikScreen() {
 
   useEffect(() => {
     let mounted = true;
-    const loadRoadmapVisibility = async () => {
+    const refreshFirstStepsStep = async () => {
       const state = await getFirstStepsState();
-      const step = resolveFirstStepsStep(state);
-      if (mounted) setShowFirstStepsRoadmap(step !== 'done');
+      const nextStep = state.introSeen ? resolveFirstStepsStep(state) : 'intro';
+      if (mounted) setFirstStepsStep(nextStep);
     };
-    void loadRoadmapVisibility();
+    void refreshFirstStepsStep();
+    const unsubscribe = subscribeFirstStepsChanges(() => {
+      void refreshFirstStepsStep();
+    });
     return () => {
       mounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -138,6 +148,23 @@ export default function LicznikScreen() {
     }
   };
 
+  const persistStartDate = async (selectedDate: Date) => {
+    const stepBeforeSave = firstStepsStep;
+    setDate(selectedDate);
+    syncManualInputs(selectedDate);
+    calculateStats(selectedDate);
+    await AsyncStorage.setItem('startDate', selectedDate.toISOString());
+    await markCounterDone();
+
+    const state = await getFirstStepsState();
+    const nextStep = state.introSeen ? resolveFirstStepsStep(state) : 'intro';
+    setFirstStepsStep(nextStep);
+
+    if (stepBeforeSave === 'counter' && nextStep === 'consents') {
+      router.replace('/ustawienia');
+    }
+  };
+
   const syncManualInputs = (d: Date) => {
     setManualDay(String(d.getDate()).padStart(2, '0'));
     setManualMonth(String(d.getMonth() + 1).padStart(2, '0'));
@@ -168,12 +195,7 @@ export default function LicznikScreen() {
   const onChange = async (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShow(false);
     if (!selectedDate) return;
-
-    setDate(selectedDate);
-    syncManualInputs(selectedDate);
-    calculateStats(selectedDate);
-    await AsyncStorage.setItem('startDate', selectedDate.toISOString());
-    await markCounterDone();
+    await persistStartDate(selectedDate);
   };
 
   const applyManualDate = async () => {
@@ -208,11 +230,7 @@ export default function LicznikScreen() {
       return;
     }
 
-    setDate(selectedDate);
-    syncManualInputs(selectedDate);
-    calculateStats(selectedDate);
-    await AsyncStorage.setItem('startDate', selectedDate.toISOString());
-    await markCounterDone();
+    await persistStartDate(selectedDate);
   };
 
   const handleReset = () => {
@@ -234,7 +252,22 @@ export default function LicznikScreen() {
   };
 
   const handleContinueFirstSteps = async () => {
-    const step = resolveFirstStepsStep(await getFirstStepsState());
+    const state = await getFirstStepsState();
+    const step = state.introSeen ? resolveFirstStepsStep(state) : 'intro';
+    setFirstStepsStep(step);
+
+    if (step === 'intro') {
+      router.replace('/intro');
+      return;
+    }
+    if (step === 'contract') {
+      router.replace('/kontrakt');
+      return;
+    }
+    if (step === 'counter') {
+      Alert.alert('Najpierw ustaw datę startu', 'Aby przejść dalej, zapisz datę rozpoczęcia zdrowienia.');
+      return;
+    }
     if (step === 'consents') {
       router.replace('/ustawienia');
       return;
@@ -243,8 +276,10 @@ export default function LicznikScreen() {
       router.replace('/(tabs)');
       return;
     }
-    router.replace('/');
   };
+
+  const showFirstStepsRoadmap = firstStepsStep !== null && firstStepsStep !== 'done';
+  const showContinueFirstSteps = firstStepsStep === 'consents' || firstStepsStep === 'done';
 
   return (
     <BackgroundWrapper>
@@ -347,10 +382,12 @@ export default function LicznikScreen() {
           <Ionicons name="calendar-outline" size={20} color="white" style={{ marginRight: 10 }} />
           <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>{show ? 'Zwiń ustawienia' : 'Ustaw datę początkową'}</Text>
         </Pressable>
-        {showFirstStepsRoadmap ? (
+        {showContinueFirstSteps ? (
           <Pressable style={[styles.button, compact && styles.buttonCompact, styles.nextStepButton]} onPress={() => void handleContinueFirstSteps()}>
             <Ionicons name="arrow-forward" size={20} color="white" style={{ marginRight: 10 }} />
-            <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>Krok 3: zgody i ustawienia</Text>
+            <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>
+              {firstStepsStep === 'done' ? 'Wejdź do aplikacji' : 'Krok 3: zgody i ustawienia'}
+            </Text>
           </Pressable>
         ) : null}
         {showFirstStepsRoadmap && compact ? (

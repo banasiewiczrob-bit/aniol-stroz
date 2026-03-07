@@ -1,6 +1,7 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
-import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
+import { DAILY_TEXTS_STORAGE_KEY } from '@/constants/daily-texts';
+import { CONTRACT_SIGNED_STORAGE_KEY, JOURNALS_DRAFTS_STORAGE_KEY, JOURNALS_ENTRIES_STORAGE_KEY } from '@/constants/storageKeys';
 import {
   DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS,
   DailyPlanNotificationSettings,
@@ -10,7 +11,7 @@ import {
   saveDailyPlanNotificationSettings,
 } from '@/hooks/useDailyPlanNotifications';
 import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
-import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from '@/hooks/useAppSettings';
+import { APP_SETTINGS_STORAGE_KEY, AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from '@/hooks/useAppSettings';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import Constants from 'expo-constants';
@@ -38,6 +39,22 @@ const SUB = 'rgba(232,245,255,0.84)';
 const SETTINGS_SECTIONS_STORAGE_KEY = '@settings_sections_expanded';
 const START_DATE_STORAGE_KEY = 'startDate';
 const ANNIVERSARY_SEEN_STORAGE_KEY = '@anniversary_seen_once';
+const DAILY_PLAN_STORAGE_KEY = '@daily_task';
+const DAILY_PLAN_ARCHIVE_STORAGE_KEY = '@daily_task_archive';
+const MIGRATIONS_VERSION_KEY = '@migrations_version';
+const DAILY_PLAN_NOTIFICATION_IDS_STORAGE_KEY = '@daily_plan_notification_ids';
+const DAILY_PLAN_NOTIFICATION_SETTINGS_STORAGE_KEY = '@daily_plan_notification_settings';
+const INTELLIGENT_SUPPORT_STATE_KEY = '@intelligent_support_state_v1';
+const VISITED_TILES_STORAGE_KEY = '@visited_tiles_v1';
+const SUPPORT_CONTACTS_STORAGE_KEY = '@support_contacts';
+const SOS_CONTACT_STORAGE_KEY = '@sos_contact_v1';
+const LOSS_COUNTER_STORAGE_KEY = '@loss_counter_v1';
+const NOTE_STORAGE_KEY = 'single_note_v1';
+const COMMUNITY_THREADS_STORAGE_KEY = '@community_threads_v1';
+const COMMUNITY_COMMENTS_STORAGE_KEY = '@community_comments_v1';
+const COMMUNITY_MAIN_ROOM_MESSAGES_STORAGE_KEY = '@community_main_room_messages_v1';
+const COMMUNITY_SEEDED_STORAGE_KEY = '@community_seeded_v1';
+const EMOTION_JOURNAL_LAB_STORAGE_KEY = '@emotion_journal_lab_v2';
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 type ConsentKey = 'privacyConsentLocalStorage' | 'privacyConsentNotifications' | 'privacyConsentRegulations';
@@ -51,6 +68,41 @@ const DEFAULT_SECTION_EXPANDED: SectionExpandedState = {
   intelligentSupport: false,
   personalization: false,
 };
+
+const ONBOARDING_EXPANDED_STATE: SectionExpandedState = {
+  consents: true,
+  notifications: true,
+  plan: false,
+  intelligentSupport: true,
+  personalization: true,
+};
+
+const FULL_APP_RESET_STORAGE_KEYS = [
+  APP_SETTINGS_STORAGE_KEY,
+  SETTINGS_SECTIONS_STORAGE_KEY,
+  CONTRACT_SIGNED_STORAGE_KEY,
+  START_DATE_STORAGE_KEY,
+  ANNIVERSARY_SEEN_STORAGE_KEY,
+  DAILY_PLAN_STORAGE_KEY,
+  DAILY_PLAN_ARCHIVE_STORAGE_KEY,
+  DAILY_TEXTS_STORAGE_KEY,
+  JOURNALS_ENTRIES_STORAGE_KEY,
+  JOURNALS_DRAFTS_STORAGE_KEY,
+  DAILY_PLAN_NOTIFICATION_IDS_STORAGE_KEY,
+  DAILY_PLAN_NOTIFICATION_SETTINGS_STORAGE_KEY,
+  INTELLIGENT_SUPPORT_STATE_KEY,
+  VISITED_TILES_STORAGE_KEY,
+  SUPPORT_CONTACTS_STORAGE_KEY,
+  SOS_CONTACT_STORAGE_KEY,
+  LOSS_COUNTER_STORAGE_KEY,
+  NOTE_STORAGE_KEY,
+  COMMUNITY_THREADS_STORAGE_KEY,
+  COMMUNITY_COMMENTS_STORAGE_KEY,
+  COMMUNITY_MAIN_ROOM_MESSAGES_STORAGE_KEY,
+  COMMUNITY_SEEDED_STORAGE_KEY,
+  EMOTION_JOURNAL_LAB_STORAGE_KEY,
+  MIGRATIONS_VERSION_KEY,
+] as const;
 
 function normalizeSectionExpanded(value: unknown): SectionExpandedState {
   if (!value || typeof value !== 'object') {
@@ -278,17 +330,10 @@ export default function UstawieniaScreen() {
     setEveningTime(`${pad(safeNotif.eveningHour)}:${pad(safeNotif.eveningMinute)}`);
     setAppSettingsState(app);
 
-    const onboardingExpanded: SectionExpandedState = {
-      consents: true,
-      notifications: true,
-      plan: false,
-      intelligentSupport: true,
-      personalization: true,
-    };
     if (!app.firstRunSetupDone) {
       setOnboardingSettingsRequired(true);
-      setSectionExpanded(onboardingExpanded);
-      sectionExpandedRef.current = onboardingExpanded;
+      setSectionExpanded(ONBOARDING_EXPANDED_STATE);
+      sectionExpandedRef.current = ONBOARDING_EXPANDED_STATE;
       return;
     }
     setOnboardingSettingsRequired(false);
@@ -589,20 +634,57 @@ export default function UstawieniaScreen() {
               await saveAppSettings(resetSettings);
               setAppSettingsState(resetSettings);
               setOnboardingSettingsRequired(true);
-              const onboardingExpanded: SectionExpandedState = {
-                consents: true,
-                notifications: true,
-                plan: false,
-                intelligentSupport: true,
-                personalization: true,
-              };
-              setSectionExpanded(onboardingExpanded);
-              sectionExpandedRef.current = onboardingExpanded;
+              setSectionExpanded(ONBOARDING_EXPANDED_STATE);
+              sectionExpandedRef.current = ONBOARDING_EXPANDED_STATE;
               setNotice('Tryb testowy: onboarding został zresetowany.');
               router.replace('/intro');
             } catch (e) {
               console.error('Błąd resetu onboardingu:', e);
               Alert.alert('Błąd', 'Nie udało się zresetować onboardingu.');
+            } finally {
+              setBusy(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const resetAppToFactoryState = () => {
+    Alert.alert(
+      'Przywrócić aplikację do początku?',
+      'To usunie lokalne dane aplikacji na tym telefonie i uruchomi onboarding od nowa. Znikną m.in. licznik zdrowienia, plan dnia, dzienniki, Licznik kosztów kryzysu, kontakty wsparcia i zapisane ustawienia.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Przywróć',
+          style: 'destructive',
+          onPress: async () => {
+            setBusy(true);
+            setNotice('');
+            try {
+              const resetNotifications = {
+                ...DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS,
+                enabled: false,
+              };
+              await saveDailyPlanNotificationSettings(resetNotifications);
+              await ensureDailyPlanNotifications(resetNotifications);
+              await saveAppSettings(DEFAULT_APP_SETTINGS);
+              await AsyncStorage.multiRemove([...FULL_APP_RESET_STORAGE_KEYS]);
+
+              setAppSettingsState(DEFAULT_APP_SETTINGS);
+              setNotificationSettings(resetNotifications);
+              setMorningTime(`${pad(resetNotifications.morningHour)}:${pad(resetNotifications.morningMinute)}`);
+              setEveningTime(`${pad(resetNotifications.eveningHour)}:${pad(resetNotifications.eveningMinute)}`);
+              setOnboardingSettingsRequired(true);
+              setFullAccessModalVisible(false);
+              setSectionExpanded(ONBOARDING_EXPANDED_STATE);
+              sectionExpandedRef.current = ONBOARDING_EXPANDED_STATE;
+              setNotice('Aplikacja została przywrócona do początku.');
+              router.replace('/intro');
+            } catch (e) {
+              console.error('Błąd pełnego resetu aplikacji:', e);
+              Alert.alert('Błąd', 'Nie udało się przywrócić aplikacji do początku.');
             } finally {
               setBusy(false);
             }
@@ -1029,6 +1111,13 @@ export default function UstawieniaScreen() {
           </Pressable>
           <Pressable style={styles.buttonSecondary} onPress={() => router.push('/wsparcie-kontakt')}>
             <Text style={styles.buttonSecondaryText}>Kontakt i wsparcie</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.buttonSecondary, styles.buttonDanger, busy && styles.buttonDisabled]}
+            disabled={busy}
+            onPress={resetAppToFactoryState}
+          >
+            <Text style={styles.buttonSecondaryText}>Przywróć aplikację do początku</Text>
           </Pressable>
           {canSimulateOnboarding ? (
             <Pressable
