@@ -1,18 +1,17 @@
 import { Stack, router, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { getFirstStepsState, resolveFirstStepsStep, subscribeFirstStepsChanges, type FirstStepsStep } from '@/hooks/useFirstSteps';
+import { getFirstStepsState, subscribeFirstStepsChanges } from '@/hooks/useFirstSteps';
 import { markVisitedRoute } from '@/hooks/useVisitedTiles';
 
 export default function TabLayout() {
   const pathname = usePathname();
-  const [firstStepsStep, setFirstStepsStep] = useState<FirstStepsStep | null>(null);
+  const [onboardingRequired, setOnboardingRequired] = useState<boolean | null>(null);
 
   useEffect(() => {
     let mounted = true;
     const refresh = async () => {
       const state = await getFirstStepsState();
-      const step = resolveFirstStepsStep(state);
-      if (mounted) setFirstStepsStep(step);
+      if (mounted) setOnboardingRequired(!state.firstStepsDone);
     };
 
     void refresh();
@@ -30,9 +29,8 @@ export default function TabLayout() {
     let mounted = true;
     const run = async () => {
       const state = await getFirstStepsState();
-      const step = resolveFirstStepsStep(state);
       if (mounted) {
-        setFirstStepsStep(step);
+        setOnboardingRequired(!state.firstStepsDone);
       }
     };
     void run();
@@ -42,19 +40,11 @@ export default function TabLayout() {
   }, [pathname]);
 
   useEffect(() => {
-    if (__DEV__) return;
-    if (!firstStepsStep || firstStepsStep === 'done') return;
-    const requiredPath =
-      firstStepsStep === 'consents'
-        ? '/ustawienia'
-        : firstStepsStep === 'contract'
-          ? '/kontrakt'
-          : '/licznik';
-
-    if (pathname !== requiredPath) {
-      router.replace(requiredPath as any);
+    if (!onboardingRequired) return;
+    if (pathname !== '/intro') {
+      router.replace('/intro');
     }
-  }, [firstStepsStep, pathname]);
+  }, [onboardingRequired, pathname]);
 
   useEffect(() => {
     void markVisitedRoute(pathname);

@@ -3,12 +3,14 @@ import { CoJakSection } from "@/components/CoJakSection";
 import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BG = "#061A2C";
 const SUB = "rgba(245,236,216,0.9)";
 const Watermark = require("../assets/images/maly_aniol.png");
 
 export default function Wsparcie24() {
+  const insets = useSafeAreaInsets();
   const paragraphs = [
     "",
   ];
@@ -34,7 +36,10 @@ export default function Wsparcie24() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
+      >
         <Text style={styles.title}>24 godziny</Text>
         <CoJakSection
           title="Opis i instrukcja"

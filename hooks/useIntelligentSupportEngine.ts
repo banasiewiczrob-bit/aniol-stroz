@@ -4,6 +4,7 @@ import { loadAppSettings } from '@/hooks/useAppSettings';
 import { listJournalEntries } from '@/hooks/useJournals';
 import { loadRangeSnapshot, subscribeSync } from '@/hooks/useRecoveryCalendarSync';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 
@@ -58,6 +59,13 @@ const EMPTY_ENGINE_STATE: IntelligentSupportEngineState = {
 };
 
 const DIFFICULT_EMOTIONS = new Set<BaseEmotion>(['Złość', 'Wstyd', 'Strach', 'Smutek', 'Poczucie winy', 'Samotność']);
+
+function isExpoGoAndroidRuntime() {
+  if (Platform.OS !== 'android') return false;
+  const appOwnership = (Constants as { appOwnership?: string | null }).appOwnership;
+  const executionEnvironment = (Constants as { executionEnvironment?: string | null }).executionEnvironment;
+  return appOwnership === 'expo' || executionEnvironment === 'storeClient';
+}
 
 function addDays(dateKey: DateKey, delta: number): DateKey {
   const d = parseDateKey(dateKey);
@@ -160,7 +168,7 @@ async function loadPlanHaltFlagsByDate(): Promise<Map<DateKey, HaltFlags>> {
 }
 
 async function sendLocalSupportPush(title: string, body: string) {
-  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'web' || isExpoGoAndroidRuntime()) return false;
   try {
     const Notifications = await import('expo-notifications');
     const permissions = await Notifications.getPermissionsAsync();

@@ -12,7 +12,7 @@ interface BackgroundWrapperProps {
 export const BackgroundWrapper = ({ children, showSwipeHint = true }: BackgroundWrapperProps) => {
   return (
     <View style={styles.container}>
-      <View style={StyleSheet.absoluteFill}>
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Image source={Watermark} style={styles.globalWatermark} resizeMode="contain" />
       </View>
 

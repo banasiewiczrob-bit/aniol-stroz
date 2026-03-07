@@ -3,12 +3,14 @@ import { CoJakSection } from "@/components/CoJakSection";
 import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BG = "#061A2C";
 const SUB = "rgba(233,239,255,0.88)";
 const Watermark = require("../assets/images/maly_aniol.png");
 
 export default function WsparcieDesiderata() {
+  const insets = useSafeAreaInsets();
   const paragraphs = [
     "Krocz spokojnie wśród zgiełku i pośpiechu - pamiętaj jaki pokój może być w ciszy.",
     "Tak dalece jak to możliwe nie wyrzekając się siebie, bądź w dobrych stosunkach z innymi ludźmi.",
@@ -32,7 +34,10 @@ export default function WsparcieDesiderata() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
+      >
         <Text style={styles.title}>Desiderata</Text>
         <CoJakSection
           title="Opis i instrukcja"

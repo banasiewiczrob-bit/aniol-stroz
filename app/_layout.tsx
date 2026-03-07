@@ -1,18 +1,28 @@
-import { Stack } from 'expo-router';
+import Constants from 'expo-constants';
+import { router, Stack, usePathname } from 'expo-router';
 import { useDailyPlanNotifications } from '@/hooks/useDailyPlanNotifications';
 import { useIntelligentSupportEngine } from '@/hooks/useIntelligentSupportEngine';
 import { runMigrationsIfNeeded } from '@/hooks/useDataMigrations';
 import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, subscribeAppSettingsChanges } from '@/hooks/useAppSettings';
 import { useEffect, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 export const Array = {
   // To wymusza na routerze zachowanie statyczne, co często naprawia ten błąd
   initialRouteName: 'index',
 };
 
+function isExpoGoAndroidRuntime() {
+  if (Platform.OS !== 'android') return false;
+  const appOwnership = (Constants as { appOwnership?: string | null }).appOwnership;
+  const executionEnvironment = (Constants as { executionEnvironment?: string | null }).executionEnvironment;
+  return appOwnership === 'expo' || executionEnvironment === 'storeClient';
+}
+
 export default function RootLayout() {
+  const pathname = usePathname();
   const [migrationsReady, setMigrationsReady] = useState(false);
+  const [expoGoStartupRedirectDone, setExpoGoStartupRedirectDone] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings>(DEFAULT_APP_SETTINGS);
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   useDailyPlanNotifications();
@@ -49,6 +59,15 @@ export default function RootLayout() {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!migrationsReady || expoGoStartupRedirectDone) return;
+    setExpoGoStartupRedirectDone(true);
+    if (!isExpoGoAndroidRuntime()) return;
+    if (pathname !== '/intro') {
+      router.replace('/intro');
+    }
+  }, [expoGoStartupRedirectDone, migrationsReady, pathname]);
 
   if (!migrationsReady) {
     return null;

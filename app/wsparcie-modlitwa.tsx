@@ -3,12 +3,14 @@ import { CoJakSection } from "@/components/CoJakSection";
 import { DailyReadToggle } from "@/components/DailyReadToggle";
 import { TYPE } from "@/styles/typography";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BG = "#061A2C";
 const SUB = "rgba(226,248,245,0.9)";
 const Watermark = require("../assets/images/maly_aniol.png");
 
 export default function WsparcieModlitwa() {
+  const insets = useSafeAreaInsets();
   const lines = [
     "Boże, użycz mi pogody ducha,",
     "abym godził się z tym, czego nie mogę zmienić,",
@@ -21,7 +23,10 @@ export default function WsparcieModlitwa() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
+      >
         <Text style={styles.title}>Modlitwa o pogodę ducha</Text>
         <CoJakSection
           title="Opis i instrukcja"
