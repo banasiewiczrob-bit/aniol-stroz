@@ -21,15 +21,13 @@ const Watermark = require('../assets/images/maly_aniol.png');
 const STORAGE_KEY = '@loss_counter_v1';
 const START_DATE_STORAGE_KEY = 'startDate';
 
-type ConfidenceMode = 'ostrozny' | 'sredni' | 'szeroki';
 type CategoryKey =
   | 'cigarettes'
   | 'vape'
   | 'alcohol'
   | 'drugs'
-  | 'meds'
   | 'gambling'
-  | 'otherChemical';
+  | 'otherCosts';
 
 type LossInputs = {
   cigarettesMonthly: string;
@@ -46,15 +44,9 @@ type LossInputs = {
   drugsMonthly: string;
   drugsMonths: string;
   drugsYears: string;
-  medsMonthly: string;
-  medsMonths: string;
-  medsYears: string;
   gamblingMonthly: string;
   gamblingMonths: string;
   gamblingYears: string;
-  otherChemicalMonthly: string;
-  otherChemicalMonths: string;
-  otherChemicalYears: string;
   centerStaysCount: string;
   centerStayCost: string;
   detoxStaysCount: string;
@@ -63,7 +55,12 @@ type LossInputs = {
   soberingStayCost: string;
   detentionStaysCount: string;
   detentionStayCost: string;
-  confidenceMode: ConfidenceMode;
+  hospitalStaysCount: string;
+  hospitalStayCost: string;
+  medsCrisisCost: string;
+  jobLossCost: string;
+  schoolLossCost: string;
+  licenseLossCost: string;
 };
 
 const DEFAULT_INPUTS: LossInputs = {
@@ -81,15 +78,9 @@ const DEFAULT_INPUTS: LossInputs = {
   drugsMonthly: '',
   drugsMonths: '',
   drugsYears: '',
-  medsMonthly: '',
-  medsMonths: '',
-  medsYears: '',
   gamblingMonthly: '',
   gamblingMonths: '',
   gamblingYears: '',
-  otherChemicalMonthly: '',
-  otherChemicalMonths: '',
-  otherChemicalYears: '',
   centerStaysCount: '',
   centerStayCost: '',
   detoxStaysCount: '',
@@ -98,8 +89,25 @@ const DEFAULT_INPUTS: LossInputs = {
   soberingStayCost: '',
   detentionStaysCount: '',
   detentionStayCost: '',
-  confidenceMode: 'sredni',
+  hospitalStaysCount: '',
+  hospitalStayCost: '',
+  medsCrisisCost: '',
+  jobLossCost: '',
+  schoolLossCost: '',
+  licenseLossCost: '',
 };
+
+type LegacyLossInputs = Partial<
+  LossInputs & {
+    medsMonthly: string;
+    medsMonths: string;
+    medsYears: string;
+    medsCrisisCount: string;
+    jobLossCount: string;
+    schoolLossCount: string;
+    licenseLossCount: string;
+  }
+>;
 
 function parseNumber(value: string) {
   const normalized = value.replace(/\s/g, '').replace(',', '.');
@@ -115,10 +123,85 @@ function resolveMonths(monthsRaw: string, yearsRaw: string) {
   return years > 0 ? years * 12 : 0;
 }
 
-function getConfidenceRange(mode: ConfidenceMode) {
-  if (mode === 'ostrozny') return { min: 0.9, max: 1.1 };
-  if (mode === 'szeroki') return { min: 0.55, max: 1.45 };
-  return { min: 0.75, max: 1.25 };
+function asString(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function numberToInput(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return '';
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.00$/, '');
+}
+
+function resolveLegacyTotalCost({
+  totalRaw,
+  countRaw,
+  unitCostRaw,
+}: {
+  totalRaw?: string;
+  countRaw?: string;
+  unitCostRaw?: string;
+}) {
+  const count = parseNumber(countRaw ?? '');
+  const unitCost = parseNumber(unitCostRaw ?? '');
+  if (count > 0 && unitCost > 0) {
+    return numberToInput(count * unitCost);
+  }
+  return asString(totalRaw);
+}
+
+function normalizeSavedInputs(saved: LegacyLossInputs): LossInputs {
+  const legacyMedsTotal = parseNumber(asString(saved.medsMonthly)) * resolveMonths(asString(saved.medsMonths), asString(saved.medsYears));
+
+  return {
+    cigarettesMonthly: asString(saved.cigarettesMonthly),
+    cigarettesMonths: asString(saved.cigarettesMonths),
+    cigarettesYears: asString(saved.cigarettesYears),
+    cigarettesPacksPerDay: asString(saved.cigarettesPacksPerDay),
+    cigarettesPackPrice: asString(saved.cigarettesPackPrice),
+    vapeMonthly: asString(saved.vapeMonthly),
+    vapeMonths: asString(saved.vapeMonths),
+    vapeYears: asString(saved.vapeYears),
+    alcoholMonthly: asString(saved.alcoholMonthly),
+    alcoholMonths: asString(saved.alcoholMonths),
+    alcoholYears: asString(saved.alcoholYears),
+    drugsMonthly: asString(saved.drugsMonthly),
+    drugsMonths: asString(saved.drugsMonths),
+    drugsYears: asString(saved.drugsYears),
+    gamblingMonthly: asString(saved.gamblingMonthly),
+    gamblingMonths: asString(saved.gamblingMonths),
+    gamblingYears: asString(saved.gamblingYears),
+    centerStaysCount: asString(saved.centerStaysCount),
+    centerStayCost: asString(saved.centerStayCost),
+    detoxStaysCount: asString(saved.detoxStaysCount),
+    detoxStayCost: asString(saved.detoxStayCost),
+    soberingStaysCount: asString(saved.soberingStaysCount),
+    soberingStayCost: asString(saved.soberingStayCost),
+    detentionStaysCount: asString(saved.detentionStaysCount),
+    detentionStayCost: asString(saved.detentionStayCost),
+    hospitalStaysCount: asString(saved.hospitalStaysCount),
+    hospitalStayCost: asString(saved.hospitalStayCost),
+    medsCrisisCost:
+      resolveLegacyTotalCost({
+        totalRaw: asString(saved.medsCrisisCost),
+        countRaw: asString(saved.medsCrisisCount),
+        unitCostRaw: asString(saved.medsCrisisCost),
+      }) || numberToInput(legacyMedsTotal),
+    jobLossCost: resolveLegacyTotalCost({
+      totalRaw: asString(saved.jobLossCost),
+      countRaw: asString(saved.jobLossCount),
+      unitCostRaw: asString(saved.jobLossCost),
+    }),
+    schoolLossCost: resolveLegacyTotalCost({
+      totalRaw: asString(saved.schoolLossCost),
+      countRaw: asString(saved.schoolLossCount),
+      unitCostRaw: asString(saved.schoolLossCost),
+    }),
+    licenseLossCost: resolveLegacyTotalCost({
+      totalRaw: asString(saved.licenseLossCost),
+      countRaw: asString(saved.licenseLossCount),
+      unitCostRaw: asString(saved.licenseLossCost),
+    }),
+  };
 }
 
 function formatMoney(value: number) {
@@ -149,19 +232,18 @@ function ResultRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function LicznikStratScreen() {
+export default function LicznikKosztowKryzysuScreen() {
   const insets = useSafeAreaInsets();
   const [inputs, setInputs] = useState<LossInputs>(DEFAULT_INPUTS);
   const [daysFromStart, setDaysFromStart] = useState(0);
   const [busy, setBusy] = useState(false);
   const [openCategory, setOpenCategory] = useState<Record<CategoryKey, boolean>>({
-    cigarettes: true,
+    cigarettes: false,
     vape: false,
     alcohol: false,
     drugs: false,
-    meds: false,
     gambling: false,
-    otherChemical: false,
+    otherCosts: false,
   });
 
   useEffect(() => {
@@ -173,66 +255,8 @@ export default function LicznikStratScreen() {
 
       if (savedInputsRaw) {
         try {
-          const parsed = JSON.parse(savedInputsRaw) as Partial<LossInputs>;
-          const legacyParsed = parsed as Partial<LossInputs> & {
-            otherMonthly?: string;
-            otherMonths?: string;
-            otherYears?: string;
-          };
-          setInputs({
-            cigarettesMonthly: typeof parsed.cigarettesMonthly === 'string' ? parsed.cigarettesMonthly : '',
-            cigarettesMonths: typeof parsed.cigarettesMonths === 'string' ? parsed.cigarettesMonths : '',
-            cigarettesYears: typeof parsed.cigarettesYears === 'string' ? parsed.cigarettesYears : '',
-            cigarettesPacksPerDay:
-              typeof parsed.cigarettesPacksPerDay === 'string' ? parsed.cigarettesPacksPerDay : '',
-            cigarettesPackPrice:
-              typeof parsed.cigarettesPackPrice === 'string' ? parsed.cigarettesPackPrice : '',
-            vapeMonthly: typeof parsed.vapeMonthly === 'string' ? parsed.vapeMonthly : '',
-            vapeMonths: typeof parsed.vapeMonths === 'string' ? parsed.vapeMonths : '',
-            vapeYears: typeof parsed.vapeYears === 'string' ? parsed.vapeYears : '',
-            alcoholMonthly: typeof parsed.alcoholMonthly === 'string' ? parsed.alcoholMonthly : '',
-            alcoholMonths: typeof parsed.alcoholMonths === 'string' ? parsed.alcoholMonths : '',
-            alcoholYears: typeof parsed.alcoholYears === 'string' ? parsed.alcoholYears : '',
-            drugsMonthly: typeof parsed.drugsMonthly === 'string' ? parsed.drugsMonthly : '',
-            drugsMonths: typeof parsed.drugsMonths === 'string' ? parsed.drugsMonths : '',
-            drugsYears: typeof parsed.drugsYears === 'string' ? parsed.drugsYears : '',
-            medsMonthly: typeof parsed.medsMonthly === 'string' ? parsed.medsMonthly : '',
-            medsMonths: typeof parsed.medsMonths === 'string' ? parsed.medsMonths : '',
-            medsYears: typeof parsed.medsYears === 'string' ? parsed.medsYears : '',
-            gamblingMonthly: typeof parsed.gamblingMonthly === 'string' ? parsed.gamblingMonthly : '',
-            gamblingMonths: typeof parsed.gamblingMonths === 'string' ? parsed.gamblingMonths : '',
-            gamblingYears: typeof parsed.gamblingYears === 'string' ? parsed.gamblingYears : '',
-            otherChemicalMonthly:
-              typeof parsed.otherChemicalMonthly === 'string'
-                ? parsed.otherChemicalMonthly
-                : typeof legacyParsed.otherMonthly === 'string'
-                  ? legacyParsed.otherMonthly
-                  : '',
-            otherChemicalMonths:
-              typeof parsed.otherChemicalMonths === 'string'
-                ? parsed.otherChemicalMonths
-                : typeof legacyParsed.otherMonths === 'string'
-                  ? legacyParsed.otherMonths
-                  : '',
-            otherChemicalYears:
-              typeof parsed.otherChemicalYears === 'string'
-                ? parsed.otherChemicalYears
-                : typeof legacyParsed.otherYears === 'string'
-                  ? legacyParsed.otherYears
-                  : '',
-            centerStaysCount: typeof parsed.centerStaysCount === 'string' ? parsed.centerStaysCount : '',
-            centerStayCost: typeof parsed.centerStayCost === 'string' ? parsed.centerStayCost : '',
-            detoxStaysCount: typeof parsed.detoxStaysCount === 'string' ? parsed.detoxStaysCount : '',
-            detoxStayCost: typeof parsed.detoxStayCost === 'string' ? parsed.detoxStayCost : '',
-            soberingStaysCount: typeof parsed.soberingStaysCount === 'string' ? parsed.soberingStaysCount : '',
-            soberingStayCost: typeof parsed.soberingStayCost === 'string' ? parsed.soberingStayCost : '',
-            detentionStaysCount: typeof parsed.detentionStaysCount === 'string' ? parsed.detentionStaysCount : '',
-            detentionStayCost: typeof parsed.detentionStayCost === 'string' ? parsed.detentionStayCost : '',
-            confidenceMode:
-              parsed.confidenceMode === 'ostrozny' || parsed.confidenceMode === 'sredni' || parsed.confidenceMode === 'szeroki'
-                ? parsed.confidenceMode
-                : 'sredni',
-          });
+          const parsed = JSON.parse(savedInputsRaw) as LegacyLossInputs;
+          setInputs(normalizeSavedInputs(parsed));
         } catch {
           setInputs(DEFAULT_INPUTS);
         }
@@ -257,12 +281,8 @@ export default function LicznikStratScreen() {
     const alcoholMonths = resolveMonths(inputs.alcoholMonths, inputs.alcoholYears);
     const drugsMonthly = parseNumber(inputs.drugsMonthly);
     const drugsMonths = resolveMonths(inputs.drugsMonths, inputs.drugsYears);
-    const medsMonthly = parseNumber(inputs.medsMonthly);
-    const medsMonths = resolveMonths(inputs.medsMonths, inputs.medsYears);
     const gamblingMonthly = parseNumber(inputs.gamblingMonthly);
     const gamblingMonths = resolveMonths(inputs.gamblingMonths, inputs.gamblingYears);
-    const otherChemicalMonthly = parseNumber(inputs.otherChemicalMonthly);
-    const otherChemicalMonths = resolveMonths(inputs.otherChemicalMonths, inputs.otherChemicalYears);
 
     const centerStaysCount = parseNumber(inputs.centerStaysCount);
     const centerStayCost = parseNumber(inputs.centerStayCost);
@@ -272,43 +292,43 @@ export default function LicznikStratScreen() {
     const soberingStayCost = parseNumber(inputs.soberingStayCost);
     const detentionStaysCount = parseNumber(inputs.detentionStaysCount);
     const detentionStayCost = parseNumber(inputs.detentionStayCost);
+    const hospitalStaysCount = parseNumber(inputs.hospitalStaysCount);
+    const hospitalStayCost = parseNumber(inputs.hospitalStayCost);
+    const medsCrisisCost = parseNumber(inputs.medsCrisisCost);
+    const jobLossCost = parseNumber(inputs.jobLossCost);
+    const schoolLossCost = parseNumber(inputs.schoolLossCost);
+    const licenseLossCost = parseNumber(inputs.licenseLossCost);
     const interventionsTotal =
       centerStaysCount * centerStayCost +
       detoxStaysCount * detoxStayCost +
       soberingStaysCount * soberingStayCost +
-      detentionStaysCount * detentionStayCost;
+      detentionStaysCount * detentionStayCost +
+      hospitalStaysCount * hospitalStayCost;
+    const additionalCrisisCostsTotal = medsCrisisCost + jobLossCost + schoolLossCost + licenseLossCost;
 
     const monthlyTotal =
       cigarettesMonthly +
       vapeMonthly +
       alcoholMonthly +
       drugsMonthly +
-      medsMonthly +
-      gamblingMonthly +
-      otherChemicalMonthly;
+      gamblingMonthly;
     const dailyTotal = monthlyTotal / 30.4;
     const historyTypical =
       cigarettesMonthly * cigarettesMonths +
       vapeMonthly * vapeMonths +
       alcoholMonthly * alcoholMonths +
       drugsMonthly * drugsMonths +
-      medsMonthly * medsMonths +
       gamblingMonthly * gamblingMonths +
-      otherChemicalMonthly * otherChemicalMonths +
-      interventionsTotal;
+      interventionsTotal +
+      additionalCrisisCostsTotal;
     const recoveredTypical = daysFromStart * dailyTotal;
 
-    const range = getConfidenceRange(inputs.confidenceMode);
     return {
       hasAnyInput: monthlyTotal > 0 || historyTypical > 0 || interventionsTotal > 0,
       monthlyTotal,
       dailyTotal,
       historyTypical,
-      historyMin: historyTypical * range.min,
-      historyMax: historyTypical * range.max,
       recoveredTypical,
-      recoveredMin: recoveredTypical * range.min,
-      recoveredMax: recoveredTypical * range.max,
       cigarettesMonthlyAuto,
       interventionsTotal,
     };
@@ -322,8 +342,54 @@ export default function LicznikStratScreen() {
     setOpenCategory((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const renderCategory = (params: {
-    keyName: CategoryKey;
+  const renderInterventionRow = (params: {
+    label: string;
+    countKey: keyof LossInputs;
+    costKey: keyof LossInputs;
+    countPlaceholder: string;
+    costPlaceholder: string;
+  }) => (
+    <View style={styles.interventionRow} key={params.label}>
+      <Text style={[styles.inputLabel, styles.interventionAreaCol]}>{params.label}</Text>
+      <TextInput
+        value={String(inputs[params.countKey] ?? '')}
+        onChangeText={(v) => setValue(params.countKey, v)}
+        keyboardType="decimal-pad"
+        placeholder={params.countPlaceholder}
+        placeholderTextColor="rgba(255,255,255,0.45)"
+        style={styles.input}
+      />
+      <TextInput
+        value={String(inputs[params.costKey] ?? '')}
+        onChangeText={(v) => setValue(params.costKey, v)}
+        keyboardType="decimal-pad"
+        placeholder={params.costPlaceholder}
+        placeholderTextColor="rgba(255,255,255,0.45)"
+        style={styles.input}
+      />
+    </View>
+  );
+
+  const renderTotalCostRow = (params: {
+    label: string;
+    costKey: keyof LossInputs;
+    costPlaceholder: string;
+  }) => (
+    <View style={styles.singleCostRow} key={params.label}>
+      <Text style={[styles.inputLabel, styles.interventionAreaCol]}>{params.label}</Text>
+      <TextInput
+        value={String(inputs[params.costKey] ?? '')}
+        onChangeText={(v) => setValue(params.costKey, v)}
+        keyboardType="decimal-pad"
+        placeholder={params.costPlaceholder}
+        placeholderTextColor="rgba(255,255,255,0.45)"
+        style={[styles.input, styles.singleCostInput]}
+      />
+    </View>
+  );
+
+  const renderRecurringCategory = (params: {
+    keyName: Exclude<CategoryKey, 'otherCosts'>;
     title: string;
     help: string;
     monthlyKey: keyof LossInputs;
@@ -408,97 +474,104 @@ export default function LicznikStratScreen() {
               <Text style={styles.inputLabel}> </Text>
               <View style={styles.inputSpacer} />
             </View>
-            <Text style={styles.rowHint}>Jeśli podasz miesiące i lata, priorytet mają miesiące.</Text>
+            <Text style={styles.rowHint}>
+              Aby doliczyć koszt z przeszłości w tej kategorii, wpisz miesiące albo lata. Jeśli znasz tylko jedno z nich, to wystarczy.
+            </Text>
+          </>
+        ) : null}
+      </View>
+    );
+  };
 
-            {params.keyName === 'otherChemical' ? (
-              <>
-                <Text style={styles.categoryHelp}>
-                  Pobyty i interwencje: ośrodki, oddziały detoksykacyjne, izby wytrzeźwień, izby zatrzymań.
-                </Text>
-                <View style={styles.interventionGridHeader}>
-                  <Text style={[styles.interventionHeaderLabel, styles.interventionAreaCol]}>Obszar</Text>
-                  <Text style={styles.interventionHeaderLabel}>Liczba</Text>
-                  <Text style={styles.interventionHeaderLabel}>Koszt 1 pobytu</Text>
-                </View>
-                <View style={styles.interventionRow}>
-                  <Text style={[styles.inputLabel, styles.interventionAreaCol]}>Ośrodki</Text>
-                  <TextInput
-                    value={inputs.centerStaysCount}
-                    onChangeText={(v) => setValue('centerStaysCount', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 2"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={inputs.centerStayCost}
-                    onChangeText={(v) => setValue('centerStayCost', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 12000"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                </View>
-                <View style={styles.interventionRow}>
-                  <Text style={[styles.inputLabel, styles.interventionAreaCol]}>Detoks</Text>
-                  <TextInput
-                    value={inputs.detoxStaysCount}
-                    onChangeText={(v) => setValue('detoxStaysCount', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 3"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={inputs.detoxStayCost}
-                    onChangeText={(v) => setValue('detoxStayCost', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 4500"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                </View>
-                <View style={styles.interventionRow}>
-                  <Text style={[styles.inputLabel, styles.interventionAreaCol]}>Izby wytrzeźwień</Text>
-                  <TextInput
-                    value={inputs.soberingStaysCount}
-                    onChangeText={(v) => setValue('soberingStaysCount', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 4"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={inputs.soberingStayCost}
-                    onChangeText={(v) => setValue('soberingStayCost', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 450"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                </View>
-                <View style={styles.interventionRow}>
-                  <Text style={[styles.inputLabel, styles.interventionAreaCol]}>Izby zatrzymań</Text>
-                  <TextInput
-                    value={inputs.detentionStaysCount}
-                    onChangeText={(v) => setValue('detentionStaysCount', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 1"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={inputs.detentionStayCost}
-                    onChangeText={(v) => setValue('detentionStayCost', v)}
-                    keyboardType="decimal-pad"
-                    placeholder="np. 900"
-                    placeholderTextColor="rgba(255,255,255,0.45)"
-                    style={styles.input}
-                  />
-                </View>
-                <Text style={styles.rowHint}>Pobyty i interwencje wpływają na stratę historyczną, nie na dzienny odzysk.</Text>
-              </>
-            ) : null}
+  const renderOtherCostsCategory = () => {
+    const isOpen = openCategory.otherCosts;
+
+    return (
+      <View style={styles.categoryCard} key="otherCosts">
+        <Pressable style={styles.categoryHeader} onPress={() => toggleCategory('otherCosts')}>
+          <Text style={styles.categoryTitle}>Inne koszty</Text>
+          <Text style={styles.categoryChevron}>{isOpen ? '▾' : '▸'}</Text>
+        </Pressable>
+        {isOpen ? (
+          <>
+            <Text style={styles.categoryHelp}>Wpisz koszty jednorazowe, których nie było w innych kategoriach.</Text>
+
+            <Text style={styles.categoryHelp}>Pobyty i interwencje kryzysowe</Text>
+            <View style={styles.interventionGridHeader}>
+              <Text style={[styles.interventionHeaderLabel, styles.interventionAreaCol]}>Obszar</Text>
+              <Text style={styles.interventionHeaderLabel}>Liczba</Text>
+              <Text style={styles.interventionHeaderLabel}>Koszt 1 pobytu</Text>
+            </View>
+            {renderInterventionRow({
+              label: 'Ośrodki',
+              countKey: 'centerStaysCount',
+              costKey: 'centerStayCost',
+              countPlaceholder: 'np. 2',
+              costPlaceholder: 'np. 12000',
+            })}
+            {renderInterventionRow({
+              label: 'Detoksy',
+              countKey: 'detoxStaysCount',
+              costKey: 'detoxStayCost',
+              countPlaceholder: 'np. 3',
+              costPlaceholder: 'np. 4500',
+            })}
+            {renderInterventionRow({
+              label: 'Izby wytrzeźwień',
+              countKey: 'soberingStaysCount',
+              costKey: 'soberingStayCost',
+              countPlaceholder: 'np. 4',
+              costPlaceholder: 'np. 450',
+            })}
+            {renderInterventionRow({
+              label: 'Izby zatrzymań',
+              countKey: 'detentionStaysCount',
+              costKey: 'detentionStayCost',
+              countPlaceholder: 'np. 1',
+              costPlaceholder: 'np. 900',
+            })}
+            {renderInterventionRow({
+              label: 'Pobyty szpitalne',
+              countKey: 'hospitalStaysCount',
+              costKey: 'hospitalStayCost',
+              countPlaceholder: 'np. 2',
+              costPlaceholder: 'np. 8000',
+            })}
+
+            <Text style={styles.categoryHelp}>Leki</Text>
+            <View style={styles.singleCostGridHeader}>
+              <Text style={[styles.interventionHeaderLabel, styles.interventionAreaCol]}>Obszar</Text>
+              <Text style={styles.interventionHeaderLabel}>Koszt łącznie</Text>
+            </View>
+            {renderTotalCostRow({
+              label: 'Leki',
+              costKey: 'medsCrisisCost',
+              costPlaceholder: 'np. 1800',
+            })}
+
+            <Text style={styles.categoryHelp}>Koszty społeczne</Text>
+            <View style={styles.singleCostGridHeader}>
+              <Text style={[styles.interventionHeaderLabel, styles.interventionAreaCol]}>Obszar</Text>
+              <Text style={styles.interventionHeaderLabel}>Koszt łącznie</Text>
+            </View>
+            {renderTotalCostRow({
+              label: 'Strata pracy',
+              costKey: 'jobLossCost',
+              costPlaceholder: 'np. 7000',
+            })}
+            {renderTotalCostRow({
+              label: 'Usunięcie ze szkoły',
+              costKey: 'schoolLossCost',
+              costPlaceholder: 'np. 5000',
+            })}
+            {renderTotalCostRow({
+              label: 'Strata prawa jazdy',
+              costKey: 'licenseLossCost',
+              costPlaceholder: 'np. 4000',
+            })}
+            <Text style={styles.rowHint}>
+              Pobyty policz jako liczbę razy koszt jednego pobytu. Przy lekach i kosztach społecznych wpisz od razu łączną kwotę.
+            </Text>
           </>
         ) : null}
       </View>
@@ -511,7 +584,7 @@ export default function LicznikStratScreen() {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
       Alert.alert('Zapisano', 'Szacunki zostały zapisane lokalnie na tym urządzeniu.');
     } catch (e) {
-      console.error('Błąd zapisu licznika strat:', e);
+      console.error('Błąd zapisu licznika kosztów kryzysu:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać danych.');
     } finally {
       setBusy(false);
@@ -548,21 +621,20 @@ export default function LicznikStratScreen() {
         >
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
-          <Text style={styles.title}>Licznik strat i odzysku (test)</Text>
-          <Text style={styles.subtitle}>To jest bezpieczny szacunek finansowy. Najpierw odzysk, potem kontekst strat.</Text>
+          <Text style={styles.title}>Licznik kosztów kryzysu</Text>
+          <Text style={styles.subtitle}>Ten licznik pomaga orientacyjnie oszacować koszt okresu kryzysu oraz to, ile udało się odzyskać od startu zdrowienia.</Text>
 
           <CoJakSection
             title="Opis i instrukcja"
-            co="Ten moduł pomaga zobaczyć skalę wydatków związanych z używaniem oraz to, ile środków odzyskujesz od dnia startu."
-            jak="Wpisz orientacyjne koszty miesięczne i liczbę miesięcy używania. Nie musisz być precyzyjny — to ma być pomocna orientacja, a nie księgowość."
+            co="To orientacyjny szacunek kosztów kryzysu, a także kosztów poniesionych w związku z jego rozwojem w poszczególnych obszarach objawów i zachowań. Pokazuje też szacunkowe i orientacyjne rekompensaty od rozpoczęcia procesu zdrowienia, momentu podjęcia decyzji o zmianie Twojego życia. Nie jest to dokładne rozliczenie ani formalna podstawa do decyzji finansowych, prawnych czy medycznych."
+            jak="Uzupełnij tylko te obszary, które Cię dotyczą. W kategoriach miesięcznych wpisz koszt i czas trwania. Szczegółowe podpowiedzi i przykłady znajdziesz po rozwinięciu kafli."
           />
 
           <View style={styles.card}>
             <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <Text style={styles.cardTitle}>1) Źródła kosztów</Text>
-            <Text style={styles.cardHint}>Rozwiń wybraną kategorię i wpisz dane. Wystarczy jedna, żeby zobaczyć wynik.</Text>
+            <Text style={styles.cardHint}>Rozwiń tylko te kategorie, które Cię dotyczą, i wpisz wartości orientacyjne.</Text>
 
-            {renderCategory({
+            {renderRecurringCategory({
               keyName: 'cigarettes',
               title: 'Papierosy',
               help: 'Podaj koszt miesięczny i liczbę miesięcy. Możesz też użyć kalkulatora paczek.',
@@ -573,7 +645,7 @@ export default function LicznikStratScreen() {
               monthsPlaceholder: 'np. 36',
               yearsPlaceholder: 'np. 25',
             })}
-            {renderCategory({
+            {renderRecurringCategory({
               keyName: 'vape',
               title: 'E-papierosy',
               help: 'Wpisz orientacyjny koszt liquidów i sprzętu w przeliczeniu na miesiąc.',
@@ -584,7 +656,7 @@ export default function LicznikStratScreen() {
               monthsPlaceholder: 'np. 20',
               yearsPlaceholder: 'np. 2',
             })}
-            {renderCategory({
+            {renderRecurringCategory({
               keyName: 'alcohol',
               title: 'Alkohol',
               help: 'Ujmij wszystkie wydatki związane z alkoholem: zakupy, wyjścia, dowóz.',
@@ -595,7 +667,7 @@ export default function LicznikStratScreen() {
               monthsPlaceholder: 'np. 24',
               yearsPlaceholder: 'np. 3',
             })}
-            {renderCategory({
+            {renderRecurringCategory({
               keyName: 'drugs',
               title: 'Narkotyki',
               help: 'Wpisz szacunkowy miesięczny koszt i okres, w którym był aktywny.',
@@ -606,18 +678,7 @@ export default function LicznikStratScreen() {
               monthsPlaceholder: 'np. 18',
               yearsPlaceholder: 'np. 1,5',
             })}
-            {renderCategory({
-              keyName: 'meds',
-              title: 'Leczenie i leki psychiatryczne',
-              help: 'Uwzględnij koszty leków psychiatrycznych, wizyt, prywatnych konsultacji i terapii.',
-              monthlyKey: 'medsMonthly',
-              monthsKey: 'medsMonths',
-              yearsKey: 'medsYears',
-              monthlyPlaceholder: 'np. 500',
-              monthsPlaceholder: 'np. 10',
-              yearsPlaceholder: 'np. 1',
-            })}
-            {renderCategory({
+            {renderRecurringCategory({
               keyName: 'gambling',
               title: 'Hazard / zakłady',
               help: 'Podaj średnią miesięczną z przegranych i opłat.',
@@ -628,74 +689,27 @@ export default function LicznikStratScreen() {
               monthsPlaceholder: 'np. 14',
               yearsPlaceholder: 'np. 2',
             })}
-            {renderCategory({
-              keyName: 'otherChemical',
-              title: 'Inne chemiczne + pobyty/interwencje (opc.)',
-              help: 'Dodatkowe koszty związane z używaniem substancji, których nie ujęto wyżej.',
-              monthlyKey: 'otherChemicalMonthly',
-              monthsKey: 'otherChemicalMonths',
-              yearsKey: 'otherChemicalYears',
-              monthlyPlaceholder: 'np. 600',
-              monthsPlaceholder: 'np. 12',
-              yearsPlaceholder: 'np. 1',
-            })}
-          </View>
-
-          <View style={styles.card}>
-            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <Text style={styles.cardTitle}>2) Zakres szacunku</Text>
-            <Text style={styles.cardHint}>Im szerszy zakres, tym większy margines niepewności.</Text>
-            <View style={styles.segmentRow}>
-              <Pressable
-                style={[styles.segmentBtn, inputs.confidenceMode === 'ostrozny' && styles.segmentBtnActive]}
-                onPress={() => setValue('confidenceMode', 'ostrozny')}
-              >
-                <Text style={[styles.segmentText, inputs.confidenceMode === 'ostrozny' && styles.segmentTextActive]}>Wąski</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.segmentBtn, inputs.confidenceMode === 'sredni' && styles.segmentBtnActive]}
-                onPress={() => setValue('confidenceMode', 'sredni')}
-              >
-                <Text style={[styles.segmentText, inputs.confidenceMode === 'sredni' && styles.segmentTextActive]}>Średni</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.segmentBtn, inputs.confidenceMode === 'szeroki' && styles.segmentBtnActive]}
-                onPress={() => setValue('confidenceMode', 'szeroki')}
-              >
-                <Text style={[styles.segmentText, inputs.confidenceMode === 'szeroki' && styles.segmentTextActive]}>Szeroki</Text>
-              </Pressable>
-            </View>
+            {renderOtherCostsCategory()}
           </View>
 
           <View style={[styles.card, styles.resultCard]}>
             <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <Text style={styles.cardTitle}>3) Wynik</Text>
-            <Text style={styles.positiveTitle}>Odzysk od dnia startu: {daysFromStart} dni</Text>
-            <ResultRow label="Szacunek miesięczny (teraz nie wydajesz)" value={formatMoney(metrics.monthlyTotal)} />
-            <ResultRow label="Szacunek dzienny (teraz nie wydajesz)" value={formatMoney(metrics.dailyTotal)} />
-            <ResultRow label="Odzyskane (typowo)" value={formatMoney(metrics.recoveredTypical)} />
-            <ResultRow
-              label="Odzyskane (zakres)"
-              value={`${formatMoney(metrics.recoveredMin)} - ${formatMoney(metrics.recoveredMax)}`}
-            />
+            <Text style={styles.contextTitle}>Całość poniesionych kosztów</Text>
+            <ResultRow label="Razem" value={formatMoney(metrics.historyTypical)} />
 
             <View style={styles.divider} />
 
-            <Text style={styles.contextTitle}>Kontekst strat historycznych (szacunek)</Text>
-            <ResultRow label="Strata historyczna (typowo)" value={formatMoney(metrics.historyTypical)} />
-            <ResultRow
-              label="Strata historyczna (zakres)"
-              value={`${formatMoney(metrics.historyMin)} - ${formatMoney(metrics.historyMax)}`}
-            />
-            <ResultRow label="W tym pobyty i interwencje" value={formatMoney(metrics.interventionsTotal)} />
+            <Text style={styles.positiveTitle}>Do dziś, dzięki zdrowieniu udało Ci się zrekompensować</Text>
+            <ResultRow label="Razem" value={formatMoney(metrics.recoveredTypical)} />
+
+            <Text style={styles.resultNote}>
+              To są dane szacunkowe. Mają pomóc zobaczyć skalę kosztów i odzysku, ale nie są dokładnym rozliczeniem ani formalną podstawą do decyzji finansowych, prawnych czy medycznych.
+            </Text>
 
             {!metrics.hasAnyInput ? (
-              <Text style={styles.emptyHint}>Wpisz przynajmniej jeden koszt, aby zobaczyć wynik.</Text>
+              <Text style={styles.emptyHint}>Wpisz przynajmniej jeden koszt, żeby zobaczyć prosty wynik.</Text>
             ) : null}
 
-            <Text style={styles.disclaimer}>
-              To narzędzie jest orientacyjne. Jego celem jest wzmocnienie sprawczości i decyzji o zdrowieniu.
-            </Text>
           </View>
 
           <View style={styles.actions}>
@@ -761,7 +775,6 @@ const styles = StyleSheet.create({
     tintColor: 'white',
     transform: [{ rotate: '16deg' }],
   },
-  cardTitle: { color: 'white', fontSize: 17, fontWeight: '700', marginBottom: 8 },
   cardHint: { color: 'rgba(255,255,255,0.78)', fontSize: 13, lineHeight: 19, marginBottom: 10 },
   cardInlineBlock: {
     borderWidth: 1,
@@ -798,8 +811,10 @@ const styles = StyleSheet.create({
   categoryChevron: { color: '#FFD18A', fontSize: 18, fontWeight: '700' },
   categoryHelp: { color: 'rgba(255,255,255,0.72)', fontSize: 12, lineHeight: 17, marginTop: 8, marginBottom: 8 },
   interventionGridHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  singleCostGridHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   interventionHeaderLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: '700', flex: 1 },
   interventionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  singleCostRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   interventionAreaCol: { flex: 1.6 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   inputLabel: { color: 'white', fontSize: 13, fontWeight: '600', flex: 1 },
@@ -814,24 +829,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
+  singleCostInput: { flex: 1.2 },
   inputSpacer: { flex: 1 },
   rowHint: { color: 'rgba(255,255,255,0.62)', fontSize: 11, marginTop: -2, marginBottom: 8 },
-  segmentRow: { flexDirection: 'row', gap: 8 },
-  segmentBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 10,
-    paddingVertical: 9,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  segmentBtnActive: {
-    borderColor: 'rgba(255,199,217,0.7)',
-    backgroundColor: 'rgba(255,199,217,0.22)',
-  },
-  segmentText: { color: 'rgba(255,255,255,0.86)', fontSize: 13, fontWeight: '700' },
-  segmentTextActive: { color: 'white' },
   positiveTitle: { color: '#9EF3C7', fontSize: 15, fontWeight: '700', marginBottom: 8 },
   contextTitle: { color: '#FFD18A', fontSize: 14, fontWeight: '700', marginBottom: 8 },
   resultRow: {
@@ -848,8 +848,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.14)',
   },
+  resultNote: { marginTop: 8, color: 'rgba(255,255,255,0.72)', fontSize: 12, lineHeight: 17 },
   emptyHint: { marginTop: 4, color: 'rgba(255,255,255,0.7)', fontSize: 13 },
-  disclaimer: { marginTop: 10, color: 'rgba(255,255,255,0.62)', fontSize: 12, lineHeight: 18 },
   actions: { marginTop: 2, gap: 8 },
   btnPrimary: {
     backgroundColor: 'rgba(255,199,217,0.24)',
