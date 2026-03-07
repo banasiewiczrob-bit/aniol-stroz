@@ -425,7 +425,7 @@ export default function LicznikScreen() {
         <Pressable onPress={() => router.push('/licznik-strat')} style={[styles.lossTile, compact && styles.lossTileCompact]}>
           <Image source={Watermark} resizeMode="contain" style={styles.rewardsWatermark} />
           <View style={{ flex: 1 }}>
-            <Text style={[styles.lossTitle, compact && styles.lossTitleCompact]}>Licznik strat i odzysku (test)</Text>
+            <Text style={[styles.lossTitle, compact && styles.lossTitleCompact]}>Licznik kosztów kryzysu</Text>
             <Text style={[styles.lossSubtitle, compact && styles.lossSubtitleCompact]}>
               Moduł dodatkowy, poza onboardingiem.
             </Text>
