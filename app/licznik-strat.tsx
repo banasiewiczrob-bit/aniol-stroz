@@ -1,6 +1,7 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { CoJakSection } from '@/components/CoJakSection';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Checkbox from 'expo-checkbox';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -35,18 +36,28 @@ type LossInputs = {
   cigarettesYears: string;
   cigarettesPacksPerDay: string;
   cigarettesPackPrice: string;
+  cigarettesStillActive: boolean;
+  cigarettesStoppedSince: string;
   vapeMonthly: string;
   vapeMonths: string;
   vapeYears: string;
+  vapeStillActive: boolean;
+  vapeStoppedSince: string;
   alcoholMonthly: string;
   alcoholMonths: string;
   alcoholYears: string;
+  alcoholStillActive: boolean;
+  alcoholStoppedSince: string;
   drugsMonthly: string;
   drugsMonths: string;
   drugsYears: string;
+  drugsStillActive: boolean;
+  drugsStoppedSince: string;
   gamblingMonthly: string;
   gamblingMonths: string;
   gamblingYears: string;
+  gamblingStillActive: boolean;
+  gamblingStoppedSince: string;
   centerStaysCount: string;
   centerStayCost: string;
   detoxStaysCount: string;
@@ -69,18 +80,28 @@ const DEFAULT_INPUTS: LossInputs = {
   cigarettesYears: '',
   cigarettesPacksPerDay: '',
   cigarettesPackPrice: '',
+  cigarettesStillActive: false,
+  cigarettesStoppedSince: '',
   vapeMonthly: '',
   vapeMonths: '',
   vapeYears: '',
+  vapeStillActive: false,
+  vapeStoppedSince: '',
   alcoholMonthly: '',
   alcoholMonths: '',
   alcoholYears: '',
+  alcoholStillActive: false,
+  alcoholStoppedSince: '',
   drugsMonthly: '',
   drugsMonths: '',
   drugsYears: '',
+  drugsStillActive: false,
+  drugsStoppedSince: '',
   gamblingMonthly: '',
   gamblingMonths: '',
   gamblingYears: '',
+  gamblingStillActive: false,
+  gamblingStoppedSince: '',
   centerStaysCount: '',
   centerStayCost: '',
   detoxStaysCount: '',
@@ -127,6 +148,10 @@ function asString(value: unknown) {
   return typeof value === 'string' ? value : '';
 }
 
+function asBoolean(value: unknown) {
+  return value === true;
+}
+
 function numberToInput(value: number) {
   if (!Number.isFinite(value) || value <= 0) return '';
   return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.00$/, '');
@@ -158,18 +183,28 @@ function normalizeSavedInputs(saved: LegacyLossInputs): LossInputs {
     cigarettesYears: asString(saved.cigarettesYears),
     cigarettesPacksPerDay: asString(saved.cigarettesPacksPerDay),
     cigarettesPackPrice: asString(saved.cigarettesPackPrice),
+    cigarettesStillActive: asBoolean(saved.cigarettesStillActive),
+    cigarettesStoppedSince: asString(saved.cigarettesStoppedSince),
     vapeMonthly: asString(saved.vapeMonthly),
     vapeMonths: asString(saved.vapeMonths),
     vapeYears: asString(saved.vapeYears),
+    vapeStillActive: asBoolean(saved.vapeStillActive),
+    vapeStoppedSince: asString(saved.vapeStoppedSince),
     alcoholMonthly: asString(saved.alcoholMonthly),
     alcoholMonths: asString(saved.alcoholMonths),
     alcoholYears: asString(saved.alcoholYears),
+    alcoholStillActive: asBoolean(saved.alcoholStillActive),
+    alcoholStoppedSince: asString(saved.alcoholStoppedSince),
     drugsMonthly: asString(saved.drugsMonthly),
     drugsMonths: asString(saved.drugsMonths),
     drugsYears: asString(saved.drugsYears),
+    drugsStillActive: asBoolean(saved.drugsStillActive),
+    drugsStoppedSince: asString(saved.drugsStoppedSince),
     gamblingMonthly: asString(saved.gamblingMonthly),
     gamblingMonths: asString(saved.gamblingMonths),
     gamblingYears: asString(saved.gamblingYears),
+    gamblingStillActive: asBoolean(saved.gamblingStillActive),
+    gamblingStoppedSince: asString(saved.gamblingStoppedSince),
     centerStaysCount: asString(saved.centerStaysCount),
     centerStayCost: asString(saved.centerStayCost),
     detoxStaysCount: asString(saved.detoxStaysCount),
@@ -221,6 +256,58 @@ function wholeDaysSince(startDateIso: string | null) {
   const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = nowMid.getTime() - startMid.getTime();
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function parseLooseDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  const dottedMatch = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  const parts = isoMatch
+    ? { year: Number(isoMatch[1]), month: Number(isoMatch[2]), day: Number(isoMatch[3]) }
+    : dottedMatch
+      ? { year: Number(dottedMatch[3]), month: Number(dottedMatch[2]), day: Number(dottedMatch[1]) }
+      : null;
+
+  if (!parts) return null;
+  if (!Number.isFinite(parts.year) || !Number.isFinite(parts.month) || !Number.isFinite(parts.day)) return null;
+  if (parts.month < 1 || parts.month > 12) return null;
+  const lastDay = new Date(parts.year, parts.month, 0).getDate();
+  if (parts.day < 1 || parts.day > lastDay) return null;
+
+  const date = new Date(parts.year, parts.month - 1, parts.day);
+  const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const today = new Date();
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (normalized.getTime() > todayMid.getTime()) return null;
+  return normalized;
+}
+
+function wholeDaysSinceDateInput(value: string) {
+  const parsed = parseLooseDate(value);
+  if (!parsed) return null;
+  const today = new Date();
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diff = todayMid.getTime() - parsed.getTime();
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function resolveRecoveredForCategory({
+  monthlyValue,
+  stillActive,
+  stoppedSince,
+  defaultDaysFromStart,
+}: {
+  monthlyValue: number;
+  stillActive: boolean;
+  stoppedSince: string;
+  defaultDaysFromStart: number;
+}) {
+  if (monthlyValue <= 0 || stillActive) return 0;
+  const overrideDays = wholeDaysSinceDateInput(stoppedSince);
+  const recoveryDays = overrideDays ?? defaultDaysFromStart;
+  return (monthlyValue / 30.4) * recoveryDays;
 }
 
 function ResultRow({ label, value }: { label: string; value: string }) {
@@ -321,7 +408,37 @@ export default function LicznikKosztowKryzysuScreen() {
       gamblingMonthly * gamblingMonths +
       interventionsTotal +
       additionalCrisisCostsTotal;
-    const recoveredTypical = daysFromStart * dailyTotal;
+    const recoveredTypical =
+      resolveRecoveredForCategory({
+        monthlyValue: cigarettesMonthly,
+        stillActive: inputs.cigarettesStillActive,
+        stoppedSince: inputs.cigarettesStoppedSince,
+        defaultDaysFromStart: daysFromStart,
+      }) +
+      resolveRecoveredForCategory({
+        monthlyValue: vapeMonthly,
+        stillActive: inputs.vapeStillActive,
+        stoppedSince: inputs.vapeStoppedSince,
+        defaultDaysFromStart: daysFromStart,
+      }) +
+      resolveRecoveredForCategory({
+        monthlyValue: alcoholMonthly,
+        stillActive: inputs.alcoholStillActive,
+        stoppedSince: inputs.alcoholStoppedSince,
+        defaultDaysFromStart: daysFromStart,
+      }) +
+      resolveRecoveredForCategory({
+        monthlyValue: drugsMonthly,
+        stillActive: inputs.drugsStillActive,
+        stoppedSince: inputs.drugsStoppedSince,
+        defaultDaysFromStart: daysFromStart,
+      }) +
+      resolveRecoveredForCategory({
+        monthlyValue: gamblingMonthly,
+        stillActive: inputs.gamblingStillActive,
+        stoppedSince: inputs.gamblingStoppedSince,
+        defaultDaysFromStart: daysFromStart,
+      });
 
     return {
       hasAnyInput: monthlyTotal > 0 || historyTypical > 0 || interventionsTotal > 0,
@@ -334,7 +451,7 @@ export default function LicznikKosztowKryzysuScreen() {
     };
   }, [daysFromStart, inputs]);
 
-  const setValue = (key: keyof LossInputs, value: string) => {
+  const setValue = (key: keyof LossInputs, value: string | boolean) => {
     setInputs((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -395,9 +512,13 @@ export default function LicznikKosztowKryzysuScreen() {
     monthlyKey: keyof LossInputs;
     monthsKey: keyof LossInputs;
     yearsKey: keyof LossInputs;
+    stillActiveKey: keyof LossInputs;
+    stoppedSinceKey: keyof LossInputs;
     monthlyPlaceholder: string;
     monthsPlaceholder: string;
     yearsPlaceholder: string;
+    stillActiveLabel: string;
+    stoppedSinceLabel: string;
   }) => {
     const isOpen = openCategory[params.keyName];
     return (
@@ -477,6 +598,41 @@ export default function LicznikKosztowKryzysuScreen() {
             <Text style={styles.rowHint}>
               Aby doliczyć koszt z przeszłości w tej kategorii, wpisz miesiące albo lata. Jeśli znasz tylko jedno z nich, to wystarczy.
             </Text>
+            <View style={styles.recoveryControls}>
+              <Pressable
+                style={styles.recoveryCheckboxRow}
+                onPress={() => setValue(params.stillActiveKey, !Boolean(inputs[params.stillActiveKey]))}
+              >
+                <Checkbox
+                  value={Boolean(inputs[params.stillActiveKey])}
+                  onValueChange={(value) => setValue(params.stillActiveKey, value)}
+                  color={Boolean(inputs[params.stillActiveKey]) ? '#4FA8E8' : undefined}
+                  style={styles.checkbox}
+                />
+                <Text style={styles.recoveryCheckboxText}>{params.stillActiveLabel}</Text>
+              </Pressable>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>{params.stoppedSinceLabel}</Text>
+                <TextInput
+                  value={String(inputs[params.stoppedSinceKey] ?? '')}
+                  onChangeText={(v) => setValue(params.stoppedSinceKey, v)}
+                  editable={!Boolean(inputs[params.stillActiveKey])}
+                  placeholder="np. 14.03.2024"
+                  placeholderTextColor="rgba(255,255,255,0.45)"
+                  style={[
+                    styles.input,
+                    styles.recoveryDateInput,
+                    Boolean(inputs[params.stillActiveKey]) && styles.inputDisabled,
+                  ]}
+                />
+                <Text style={styles.inputLabel}> </Text>
+                <View style={styles.inputSpacer} />
+              </View>
+              <Text style={styles.rowHint}>
+                Jeśli to nadal trwa, ta kategoria nie wejdzie do odzysku. Jeśli skończyła się w innym momencie niż start zdrowienia,
+                wpisz własną datę. Gdy pole zostanie puste, odzysk liczy się od głównej daty zdrowienia.
+              </Text>
+            </View>
           </>
         ) : null}
       </View>
@@ -627,7 +783,7 @@ export default function LicznikKosztowKryzysuScreen() {
           <CoJakSection
             title="Opis i instrukcja"
             co="To orientacyjny szacunek kosztów kryzysu, a także kosztów poniesionych w związku z jego rozwojem w poszczególnych obszarach objawów i zachowań. Pokazuje też szacunkowe i orientacyjne rekompensaty od rozpoczęcia procesu zdrowienia, momentu podjęcia decyzji o zmianie Twojego życia. Nie jest to dokładne rozliczenie ani formalna podstawa do decyzji finansowych, prawnych czy medycznych."
-            jak="Uzupełnij tylko te obszary, które Cię dotyczą. W kategoriach miesięcznych wpisz koszt i czas trwania. Szczegółowe podpowiedzi i przykłady znajdziesz po rozwinięciu kafli."
+            jak="Uzupełnij tylko te obszary, które Cię dotyczą. W kategoriach miesięcznych wpisz koszt i czas trwania. Jeśli dany obszar zakończył się w innym momencie niż główna data zdrowienia, zaznacz to wewnątrz kafla. Szczegółowe podpowiedzi i przykłady znajdziesz po rozwinięciu kategorii."
           />
 
           <View style={styles.card}>
@@ -641,9 +797,13 @@ export default function LicznikKosztowKryzysuScreen() {
               monthlyKey: 'cigarettesMonthly',
               monthsKey: 'cigarettesMonths',
               yearsKey: 'cigarettesYears',
+              stillActiveKey: 'cigarettesStillActive',
+              stoppedSinceKey: 'cigarettesStoppedSince',
               monthlyPlaceholder: 'np. 900',
               monthsPlaceholder: 'np. 36',
               yearsPlaceholder: 'np. 25',
+              stillActiveLabel: 'Palę nadal',
+              stoppedSinceLabel: 'Nie palę od',
             })}
             {renderRecurringCategory({
               keyName: 'vape',
@@ -652,9 +812,13 @@ export default function LicznikKosztowKryzysuScreen() {
               monthlyKey: 'vapeMonthly',
               monthsKey: 'vapeMonths',
               yearsKey: 'vapeYears',
+              stillActiveKey: 'vapeStillActive',
+              stoppedSinceKey: 'vapeStoppedSince',
               monthlyPlaceholder: 'np. 400',
               monthsPlaceholder: 'np. 20',
               yearsPlaceholder: 'np. 2',
+              stillActiveLabel: 'Używam nadal',
+              stoppedSinceLabel: 'Nie używam od',
             })}
             {renderRecurringCategory({
               keyName: 'alcohol',
@@ -663,9 +827,13 @@ export default function LicznikKosztowKryzysuScreen() {
               monthlyKey: 'alcoholMonthly',
               monthsKey: 'alcoholMonths',
               yearsKey: 'alcoholYears',
+              stillActiveKey: 'alcoholStillActive',
+              stoppedSinceKey: 'alcoholStoppedSince',
               monthlyPlaceholder: 'np. 1200',
               monthsPlaceholder: 'np. 24',
               yearsPlaceholder: 'np. 3',
+              stillActiveLabel: 'Piję nadal',
+              stoppedSinceLabel: 'Nie piję od',
             })}
             {renderRecurringCategory({
               keyName: 'drugs',
@@ -674,9 +842,13 @@ export default function LicznikKosztowKryzysuScreen() {
               monthlyKey: 'drugsMonthly',
               monthsKey: 'drugsMonths',
               yearsKey: 'drugsYears',
+              stillActiveKey: 'drugsStillActive',
+              stoppedSinceKey: 'drugsStoppedSince',
               monthlyPlaceholder: 'np. 1800',
               monthsPlaceholder: 'np. 18',
               yearsPlaceholder: 'np. 1,5',
+              stillActiveLabel: 'Używam nadal',
+              stoppedSinceLabel: 'Nie używam od',
             })}
             {renderRecurringCategory({
               keyName: 'gambling',
@@ -685,9 +857,13 @@ export default function LicznikKosztowKryzysuScreen() {
               monthlyKey: 'gamblingMonthly',
               monthsKey: 'gamblingMonths',
               yearsKey: 'gamblingYears',
+              stillActiveKey: 'gamblingStillActive',
+              stoppedSinceKey: 'gamblingStoppedSince',
               monthlyPlaceholder: 'np. 700',
               monthsPlaceholder: 'np. 14',
               yearsPlaceholder: 'np. 2',
+              stillActiveLabel: 'Gram nadal',
+              stoppedSinceLabel: 'Nie gram od',
             })}
             {renderOtherCostsCategory()}
           </View>
@@ -818,6 +994,28 @@ const styles = StyleSheet.create({
   interventionAreaCol: { flex: 1.6 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   inputLabel: { color: 'white', fontSize: 13, fontWeight: '600', flex: 1 },
+  recoveryControls: {
+    marginTop: 2,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingTop: 10,
+  },
+  recoveryCheckboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+  },
+  recoveryCheckboxText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+  },
   input: {
     flex: 1,
     borderWidth: 1,
@@ -828,6 +1026,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  recoveryDateInput: { flex: 1.3 },
+  inputDisabled: {
+    opacity: 0.55,
   },
   singleCostInput: { flex: 1.2 },
   inputSpacer: { flex: 1 },
