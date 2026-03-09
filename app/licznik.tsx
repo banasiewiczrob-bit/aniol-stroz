@@ -279,7 +279,7 @@ export default function LicznikScreen() {
   };
 
   const showFirstStepsRoadmap = firstStepsStep !== null && firstStepsStep !== 'done';
-  const showContinueFirstSteps = firstStepsStep === 'consents' || firstStepsStep === 'done';
+  const showContinueFirstSteps = firstStepsStep === 'consents';
 
   return (
     <BackgroundWrapper>
@@ -386,7 +386,7 @@ export default function LicznikScreen() {
           <Pressable style={[styles.button, compact && styles.buttonCompact, styles.nextStepButton]} onPress={() => void handleContinueFirstSteps()}>
             <Ionicons name="arrow-forward" size={20} color="white" style={{ marginRight: 10 }} />
             <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>
-              {firstStepsStep === 'done' ? 'Wejdź do aplikacji' : 'Krok 3: zgody i ustawienia'}
+              Krok 3: zgody i ustawienia
             </Text>
           </Pressable>
         ) : null}
