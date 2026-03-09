@@ -15,6 +15,7 @@ export default function KontraktScreen() {
   const [isChecked, setChecked] = useState(false);
   const [signatureLoaded, setSignatureLoaded] = useState(false);
   const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
+  const [showSignedContractDetails, setShowSignedContractDetails] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -55,6 +56,8 @@ export default function KontraktScreen() {
     }
   };
 
+  const showSignedSummary = signatureLoaded && isChecked && !showFirstStepsRoadmap && !showSignedContractDetails;
+
   return (
     <View style={styles.screen}>
       <View style={styles.bgOrbA} />
@@ -67,65 +70,102 @@ export default function KontraktScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Moja Umowa z Samym Sobą</Text>
-          <CoJakSection
-            title="Opis i instrukcja"
-            co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
-            jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
-          />
-          {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
+          {showSignedSummary ? (
+            <>
+              <View style={styles.signedCard}>
+                <Image source={Watermark} resizeMode="contain" style={styles.signedCardWatermark} />
+                <View style={styles.signedBadge}>
+                  <Text style={styles.signedBadgeText}>Podpisano</Text>
+                </View>
+                <Text style={styles.signedTitle}>Kontrakt jest podpisany</Text>
+                <Text style={styles.signedText}>
+                  Ta decyzja już została podjęta. Możesz wracać do niej wtedy, gdy potrzebujesz przypomnieć sobie kierunek swojej zmiany.
+                </Text>
+              </View>
 
-          <Text style={styles.intro}>
-            Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
-          </Text>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() => setShowSignedContractDetails(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.secondaryButtonText}>Pokaż treść kontraktu</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <CoJakSection
+                title="Opis i instrukcja"
+                co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
+                jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
+              />
+              {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
 
-          <View style={styles.point}>
-            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-            <Text style={styles.pointTitle}>1. Uczciwość</Text>
-            <Text style={styles.pointText}>
-              Będę szczery wobec siebie. To nie tylko prawdomówność, ale przede wszystkim spójność.
-            </Text>
-          </View>
+              <Text style={styles.intro}>
+                Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
+              </Text>
 
-          <View style={styles.point}>
-            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-            <Text style={styles.pointTitle}>2. Otwartość</Text>
-            <Text style={styles.pointText}>
-              Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
-              zewnątrz.
-            </Text>
-          </View>
+              <View style={styles.point}>
+                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+                <Text style={styles.pointTitle}>1. Uczciwość</Text>
+                <Text style={styles.pointText}>
+                  Będę szczery wobec siebie. To nie tylko prawdomówność, ale przede wszystkim spójność.
+                </Text>
+              </View>
 
-          <View style={styles.point}>
-            <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
-            <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
-            <Text style={styles.pointText}>
-              Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
-            </Text>
-          </View>
+              <View style={styles.point}>
+                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+                <Text style={styles.pointTitle}>2. Otwartość</Text>
+                <Text style={styles.pointText}>
+                  Daję sobie prawo do wszystkich emocji. Nie będę przed sobą uciekać. Jestem otwarty wobec tego, co do mnie przychodzi z
+                  zewnątrz.
+                </Text>
+              </View>
 
-          <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
+              <View style={styles.point}>
+                <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />
+                <Text style={styles.pointTitle}>3. Gotowość do zmiany</Text>
+                <Text style={styles.pointText}>
+                  Zobowiązuję się do małych kroków i nowych sposobów myślenia. Za moją zmianę zapłacę całą cenę, jaka jest do zapłacenia.
+                </Text>
+              </View>
 
-          <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setChecked((prev) => !prev)}
-            activeOpacity={0.8}
-          >
-            <Checkbox
-              style={styles.checkbox}
-              value={isChecked}
-              onValueChange={setChecked}
-              color={isChecked ? '#4630EB' : undefined}
-            />
-            <Text style={styles.label}>Podpisuję się pod tym i zaczynam zmianę.</Text>
-          </TouchableOpacity>
+              <Text style={styles.footer}>Robię to, bo zasługuję na opiekę i spokój.</Text>
 
-          <TouchableOpacity
-            style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]}
-            onPress={() => void handleContinue()}
-            disabled={!isChecked || !signatureLoaded}
-          >
-            <Text style={styles.buttonText}>Wchodzę</Text>
-          </TouchableOpacity>
+              {showFirstStepsRoadmap ? (
+                <>
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => setChecked((prev) => !prev)}
+                    activeOpacity={0.8}
+                  >
+                    <Checkbox
+                      style={styles.checkbox}
+                      value={isChecked}
+                      onValueChange={setChecked}
+                      color={isChecked ? '#4630EB' : undefined}
+                    />
+                    <Text style={styles.label}>Podpisuję się pod tym i zaczynam zmianę.</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.button, (!isChecked || !signatureLoaded) && styles.buttonDisabled]}
+                    onPress={() => void handleContinue()}
+                    disabled={!isChecked || !signatureLoaded}
+                  >
+                    <Text style={styles.buttonText}>Wchodzę</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => setShowSignedContractDetails(false)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.secondaryButtonText}>Zwiń</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
           
           <View style={{ height: 40 }} /> 
         </ScrollView>
@@ -214,6 +254,56 @@ const styles = StyleSheet.create({
     color: 'rgba(232,245,255,0.84)',
     lineHeight: 22,
   },
+  signedCard: {
+    marginTop: 8,
+    marginBottom: 14,
+    backgroundColor: 'rgba(12,38,62,0.82)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(158,243,199,0.34)',
+    padding: 18,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  signedCardWatermark: {
+    position: 'absolute',
+    right: -18,
+    bottom: -20,
+    width: 120,
+    height: 120,
+    opacity: 0.12,
+    tintColor: 'white',
+    transform: [{ rotate: '16deg' }],
+  },
+  signedBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(158,243,199,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(158,243,199,0.42)',
+    marginBottom: 14,
+  },
+  signedBadgeText: {
+    color: '#B8FFD8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  signedTitle: {
+    color: 'white',
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '900',
+    marginBottom: 10,
+    maxWidth: '78%',
+  },
+  signedText: {
+    color: 'rgba(232,245,255,0.88)',
+    fontSize: 16,
+    lineHeight: 24,
+    maxWidth: '80%',
+  },
   footer: { 
     marginTop: 10, 
     fontSize: 16,
@@ -260,5 +350,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 17,
     fontWeight: 'bold' 
-  }
+  },
+  secondaryButton: {
+    backgroundColor: 'rgba(120, 200, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(120, 200, 255, 0.28)',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: 'rgba(232,245,255,0.94)',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
