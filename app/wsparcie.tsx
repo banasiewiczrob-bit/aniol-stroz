@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
 import { CoJakSection } from '@/components/CoJakSection';
 import { BackButton } from '@/components/BackButton';
+import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
+import { SECTION_TILE } from '@/styles/sectionTiles';
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
@@ -35,6 +37,7 @@ export default function WsparcieScreen() {
   const { height } = useWindowDimensions();
   const compact = height <= 900;
   const { isVisited, markVisited } = useVisitedTiles();
+  const { navigationLocked, runGuarded } = useSingleNavigationPress();
 
   return (
     <View style={styles.container}>
@@ -61,11 +64,14 @@ export default function WsparcieScreen() {
               isVisited(item.route) && { backgroundColor: item.glow },
               pressed && styles.cardPressed,
             ]}
+            disabled={navigationLocked}
             onPress={async () => {
-              await markVisited(item.route);
-              router.push({
-                pathname: item.route as any,
-                params: { backTo: '/wsparcie' },
+              await runGuarded(async () => {
+                await markVisited(item.route);
+                router.push({
+                  pathname: item.route as any,
+                  params: { backTo: '/wsparcie' },
+                });
               });
             }}
           >
@@ -120,8 +126,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(159,216,255,0.32)',
-    padding: 14,
-    marginBottom: 10,
+    minHeight: SECTION_TILE.regular.minHeight,
+    paddingVertical: SECTION_TILE.regular.paddingVertical,
+    paddingHorizontal: SECTION_TILE.regular.paddingHorizontal,
+    marginBottom: SECTION_TILE.regular.marginBottom,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -129,10 +137,10 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   cardCompact: {
-    minHeight: 92,
-    paddingVertical: 7,
-    paddingHorizontal: 9,
-    marginBottom: 6,
+    minHeight: SECTION_TILE.compact.minHeight,
+    paddingVertical: SECTION_TILE.compact.paddingVertical,
+    paddingHorizontal: SECTION_TILE.compact.paddingHorizontal,
+    marginBottom: SECTION_TILE.compact.marginBottom,
     borderRadius: 12,
   },
   cardOpened: {
@@ -142,11 +150,11 @@ const styles = StyleSheet.create({
   cardPressed: { opacity: 0.92, transform: [{ scale: 0.992 }] },
   cardGlow: {
     position: 'absolute',
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    top: -30,
-    right: -25,
+    width: SECTION_TILE.regular.glowSize,
+    height: SECTION_TILE.regular.glowSize,
+    borderRadius: SECTION_TILE.regular.glowRadius,
+    top: SECTION_TILE.regular.glowTop,
+    right: SECTION_TILE.regular.glowRight,
     opacity: 0.5,
   },
   cardAccent: {
@@ -159,18 +167,27 @@ const styles = StyleSheet.create({
   },
   cardWatermark: {
     position: 'absolute',
-    right: -18,
-    bottom: -22,
-    width: 120,
-    height: 120,
+    right: SECTION_TILE.regular.watermarkRight,
+    bottom: SECTION_TILE.regular.watermarkBottom,
+    width: SECTION_TILE.regular.watermarkWidth,
+    height: SECTION_TILE.regular.watermarkHeight,
     opacity: 0.12,
     tintColor: 'white',
     transform: [{ rotate: '16deg' }],
   },
-  cardTitle: { color: 'white', fontSize: 21, fontWeight: '700' },
-  cardTitleCompact: { fontSize: 16, lineHeight: 19 },
-  cardSubtitle: { color: 'rgba(235,245,255,0.82)', fontSize: 16, lineHeight: 22, marginTop: 8 },
-  cardSubtitleCompact: { fontSize: 11, lineHeight: 14, marginTop: 2 },
+  cardTitle: { color: 'white', fontSize: SECTION_TILE.regular.titleFontSize, lineHeight: SECTION_TILE.regular.titleLineHeight, fontWeight: '700' },
+  cardTitleCompact: { fontSize: SECTION_TILE.compact.titleFontSize, lineHeight: SECTION_TILE.compact.titleLineHeight },
+  cardSubtitle: {
+    color: 'rgba(235,245,255,0.82)',
+    fontSize: SECTION_TILE.regular.subtitleFontSize,
+    lineHeight: SECTION_TILE.regular.subtitleLineHeight,
+    marginTop: SECTION_TILE.regular.subtitleMarginTop,
+  },
+  cardSubtitleCompact: {
+    fontSize: SECTION_TILE.compact.subtitleFontSize,
+    lineHeight: SECTION_TILE.compact.subtitleLineHeight,
+    marginTop: SECTION_TILE.compact.subtitleMarginTop,
+  },
   arrow: { color: '#78C8FF', fontSize: 31, fontWeight: '700' },
   arrowCompact: { fontSize: 24 },
 });

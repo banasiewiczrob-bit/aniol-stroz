@@ -1,7 +1,9 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { CoJakSection } from '@/components/CoJakSection';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
+import { SECTION_TILE } from '@/styles/sectionTiles';
 import { router } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -19,11 +21,13 @@ type TileProps = {
   openedToday: boolean;
   onPress: () => void;
   compact: boolean;
+  disabled?: boolean;
 };
 
-function JournalTile({ title, subtitle, accent, glow, openedToday, onPress, compact }: TileProps) {
+function JournalTile({ title, subtitle, accent, glow, openedToday, onPress, compact, disabled }: TileProps) {
   return (
     <Pressable
+      disabled={disabled}
       style={({ pressed }) => [
         styles.tile,
         compact && styles.tileCompact,
@@ -52,6 +56,7 @@ export default function DziennikiHomeScreen() {
   const compact = height <= 900;
   const { hasPremium, source } = usePremiumAccess();
   const { isVisited, markVisited } = useVisitedTiles();
+  const { navigationLocked, runGuarded } = useSingleNavigationPress();
   const showEmotionLabTile = source === 'tester_preview' || __DEV__;
 
   return (
@@ -102,12 +107,15 @@ export default function DziennikiHomeScreen() {
                 compact={compact}
                 openedToday={isVisited('/dzienniki/uczucia')}
                 onPress={async () => {
-                  await markVisited('/dzienniki/uczucia');
-                  router.push({
-                    pathname: '/dziennik-uczucia',
-                    params: { backTo: '/obserwatorium' },
+                  await runGuarded(async () => {
+                    await markVisited('/dzienniki/uczucia');
+                    router.push({
+                      pathname: '/dziennik-uczucia',
+                      params: { backTo: '/obserwatorium' },
+                    });
                   });
                 }}
+                disabled={navigationLocked}
               />
               {showEmotionLabTile ? (
                 <JournalTile
@@ -118,12 +126,15 @@ export default function DziennikiHomeScreen() {
                   compact={compact}
                   openedToday={isVisited('/dzienniki/uczucia-test')}
                   onPress={async () => {
-                    await markVisited('/dzienniki/uczucia-test');
-                    router.push({
-                      pathname: '/dziennik-uczucia-test',
-                      params: { backTo: '/obserwatorium' },
+                    await runGuarded(async () => {
+                      await markVisited('/dzienniki/uczucia-test');
+                      router.push({
+                        pathname: '/dziennik-uczucia-test',
+                        params: { backTo: '/obserwatorium' },
+                      });
                     });
                   }}
+                  disabled={navigationLocked}
                 />
               ) : null}
               <JournalTile
@@ -134,12 +145,15 @@ export default function DziennikiHomeScreen() {
                 compact={compact}
                 openedToday={isVisited('/dzienniki/kryzys')}
                 onPress={async () => {
-                  await markVisited('/dzienniki/kryzys');
-                  router.push({
-                    pathname: '/dziennik-kryzysu',
-                    params: { backTo: '/obserwatorium' },
+                  await runGuarded(async () => {
+                    await markVisited('/dzienniki/kryzys');
+                    router.push({
+                      pathname: '/dziennik-kryzysu',
+                      params: { backTo: '/obserwatorium' },
+                    });
                   });
                 }}
+                disabled={navigationLocked}
               />
               <JournalTile
                 title="Dziennik Wdzięczności"
@@ -149,12 +163,15 @@ export default function DziennikiHomeScreen() {
                 compact={compact}
                 openedToday={isVisited('/dzienniki/wdziecznosc')}
                 onPress={async () => {
-                  await markVisited('/dzienniki/wdziecznosc');
-                  router.push({
-                    pathname: '/dziennik-wdziecznosci',
-                    params: { backTo: '/obserwatorium' },
+                  await runGuarded(async () => {
+                    await markVisited('/dzienniki/wdziecznosc');
+                    router.push({
+                      pathname: '/dziennik-wdziecznosci',
+                      params: { backTo: '/obserwatorium' },
+                    });
                   });
                 }}
+                disabled={navigationLocked}
               />
             </View>
 
@@ -222,17 +239,18 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(159,216,255,0.32)',
     backgroundColor: 'rgba(12,38,62,0.78)',
     borderRadius: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    marginBottom: 8,
+    minHeight: SECTION_TILE.regular.minHeight,
+    paddingVertical: SECTION_TILE.regular.paddingVertical,
+    paddingHorizontal: SECTION_TILE.regular.paddingHorizontal,
+    marginBottom: SECTION_TILE.regular.marginBottom,
     overflow: 'hidden',
     position: 'relative',
   },
   tileCompact: {
-    minHeight: 92,
-    paddingVertical: 7,
-    paddingHorizontal: 9,
-    marginBottom: 6,
+    minHeight: SECTION_TILE.compact.minHeight,
+    paddingVertical: SECTION_TILE.compact.paddingVertical,
+    paddingHorizontal: SECTION_TILE.compact.paddingHorizontal,
+    marginBottom: SECTION_TILE.compact.marginBottom,
   },
   tileOpened: {
     borderColor: 'rgba(222,244,255,0.98)',
@@ -241,11 +259,11 @@ const styles = StyleSheet.create({
   tilePressed: { opacity: 0.92, transform: [{ scale: 0.994 }] },
   tileGlow: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    top: -35,
-    right: -28,
+    width: SECTION_TILE.regular.glowSize,
+    height: SECTION_TILE.regular.glowSize,
+    borderRadius: SECTION_TILE.regular.glowRadius,
+    top: SECTION_TILE.regular.glowTop,
+    right: SECTION_TILE.regular.glowRight,
     opacity: 0.5,
   },
   tileAccent: {
@@ -256,18 +274,28 @@ const styles = StyleSheet.create({
   },
   tileWatermark: {
     position: 'absolute',
-    right: -20,
-    bottom: -24,
-    width: 125,
-    height: 125,
+    right: SECTION_TILE.regular.watermarkRight,
+    bottom: SECTION_TILE.regular.watermarkBottom,
+    width: SECTION_TILE.regular.watermarkWidth,
+    height: SECTION_TILE.regular.watermarkHeight,
     opacity: 0.12,
     tintColor: 'white',
     transform: [{ rotate: '16deg' }],
   },
-  tileTitle: { color: 'white', fontSize: 28, lineHeight: 34, fontWeight: '700' },
-  tileTitleCompact: { fontSize: 16, lineHeight: 19 },
-  tileSubtitle: { color: 'rgba(235,245,255,0.84)', fontSize: 19, lineHeight: 26, marginTop: 6, fontWeight: '500' },
-  tileSubtitleCompact: { fontSize: 11, lineHeight: 14, marginTop: 2 },
+  tileTitle: { color: 'white', fontSize: SECTION_TILE.regular.titleFontSize, lineHeight: SECTION_TILE.regular.titleLineHeight, fontWeight: '700' },
+  tileTitleCompact: { fontSize: SECTION_TILE.compact.titleFontSize, lineHeight: SECTION_TILE.compact.titleLineHeight },
+  tileSubtitle: {
+    color: 'rgba(235,245,255,0.84)',
+    fontSize: SECTION_TILE.regular.subtitleFontSize,
+    lineHeight: SECTION_TILE.regular.subtitleLineHeight,
+    marginTop: SECTION_TILE.regular.subtitleMarginTop,
+    fontWeight: '500',
+  },
+  tileSubtitleCompact: {
+    fontSize: SECTION_TILE.compact.subtitleFontSize,
+    lineHeight: SECTION_TILE.compact.subtitleLineHeight,
+    marginTop: SECTION_TILE.compact.subtitleMarginTop,
+  },
   primaryBtn: {
     marginTop: 12,
     backgroundColor: 'rgba(120,200,255,0.25)',
