@@ -1,9 +1,11 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
-import { Ionicons } from '@expo/vector-icons';
+import { SECTION_TILE } from '@/styles/sectionTiles';
 import { router } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BG_CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
@@ -23,7 +25,6 @@ type TileItem = {
   to: RoutePath;
   accent: string;
   glow: string;
-  icon: keyof typeof Ionicons.glyphMap;
 };
 
 const items: TileItem[] = [
@@ -33,7 +34,6 @@ const items: TileItem[] = [
     to: '/wsparcie-modlitwa',
     accent: '#9EE7D8',
     glow: 'rgba(158,231,216,0.28)',
-    icon: 'water-outline',
   },
   {
     title: 'Właśnie dzisiaj',
@@ -41,7 +41,6 @@ const items: TileItem[] = [
     to: '/wsparcie-24',
     accent: '#FFD18A',
     glow: 'rgba(255,209,138,0.28)',
-    icon: 'sunny-outline',
   },
   {
     title: 'HALT',
@@ -49,7 +48,6 @@ const items: TileItem[] = [
     to: '/wsparcie-halt',
     accent: '#FF9E9E',
     glow: 'rgba(255,158,158,0.28)',
-    icon: 'pulse-outline',
   },
   {
     title: '12 kroków',
@@ -57,7 +55,6 @@ const items: TileItem[] = [
     to: '/wsparcie-12-krokow',
     accent: '#8FAFD3',
     glow: 'rgba(143,175,211,0.28)',
-    icon: 'library-outline',
   },
   {
     title: 'Desiderata',
@@ -65,7 +62,6 @@ const items: TileItem[] = [
     to: '/wsparcie-desiderata',
     accent: '#B8C6FF',
     glow: 'rgba(184,198,255,0.28)',
-    icon: 'moon-outline',
   },
 ];
 
@@ -75,13 +71,14 @@ function SectionTile({
   to,
   accent,
   glow,
-  icon,
   openedToday,
   onOpen,
   compact,
-}: TileItem & { openedToday: boolean; onOpen: (to: RoutePath) => void; compact: boolean }) {
+  disabled,
+}: TileItem & { openedToday: boolean; onOpen: (to: RoutePath) => void; compact: boolean; disabled?: boolean }) {
   return (
     <Pressable
+      disabled={disabled}
       style={({ pressed }) => [
         styles.tile,
         compact && styles.tileCompact,
@@ -94,12 +91,7 @@ function SectionTile({
     >
       <View style={[styles.tileGlow, { backgroundColor: glow }]} />
       <Image source={Watermark} resizeMode="contain" style={styles.tileWatermark} />
-      <View style={styles.tileTopRow}>
-        <View style={[styles.tileAccent, { backgroundColor: accent }]} />
-        <View style={[styles.iconBadge, compact && styles.iconBadgeCompact, { borderColor: accent, backgroundColor: glow }]}>
-          <Ionicons name={icon} size={compact ? 16 : 18} color={accent} />
-        </View>
-      </View>
+      <View style={[styles.tileAccent, { backgroundColor: accent }]} />
       <Text style={[styles.tileTitle, compact && styles.tileTitleCompact]} numberOfLines={2}>
         {title}
       </Text>
@@ -112,12 +104,22 @@ function SectionTile({
 
 export default function TekstyCodzienneScreen() {
   const { isVisited, markVisited } = useVisitedTiles();
+  const { navigationLocked, runGuarded } = useSingleNavigationPress();
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const compact = height <= 900;
 
   return (
     <BackgroundWrapper>
-      <ScrollView style={styles.screen} contentContainerStyle={[styles.content, compact && styles.contentCompact]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[
+          styles.content,
+          compact && styles.contentCompact,
+          { paddingBottom: Math.max(140, insets.bottom + 110) },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
         <Text style={[styles.title, compact && styles.titleCompact]}>Teksty codzienne</Text>
@@ -131,12 +133,15 @@ export default function TekstyCodzienneScreen() {
               compact={compact}
               openedToday={isVisited(item.to)}
               onOpen={async (to) => {
-                await markVisited(to);
-                router.push({
-                  pathname: to as any,
-                  params: { backTo: '/teksty-codzienne' },
+                await runGuarded(async () => {
+                  await markVisited(to);
+                  router.push({
+                    pathname: to as any,
+                    params: { backTo: '/teksty-codzienne' },
+                  });
                 });
               }}
+              disabled={navigationLocked}
             />
           ))}
         </View>
@@ -176,29 +181,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: BORDER,
     borderRadius: 14,
-    padding: 12,
+    padding: 14,
   },
   cardCompact: {
-    padding: 6,
-    gap: 6,
+    padding: 8,
   },
   tile: {
     borderWidth: 1,
     borderColor: 'rgba(159,216,255,0.32)',
     backgroundColor: 'rgba(12,38,62,0.78)',
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 12,
+    minHeight: SECTION_TILE.regular.minHeight,
+    paddingVertical: SECTION_TILE.regular.paddingVertical,
+    paddingHorizontal: SECTION_TILE.regular.paddingHorizontal,
+    marginBottom: SECTION_TILE.regular.marginBottom,
     overflow: 'hidden',
     position: 'relative',
   },
   tileCompact: {
     width: '100%',
-    minHeight: 92,
-    paddingVertical: 7,
-    paddingHorizontal: 9,
-    marginBottom: 0,
+    minHeight: SECTION_TILE.compact.minHeight,
+    paddingVertical: SECTION_TILE.compact.paddingVertical,
+    paddingHorizontal: SECTION_TILE.compact.paddingHorizontal,
+    marginBottom: SECTION_TILE.compact.marginBottom,
   },
   tileOpened: {
     borderColor: 'rgba(222,244,255,0.98)',
@@ -207,49 +212,41 @@ const styles = StyleSheet.create({
   tilePressed: { opacity: 0.92, transform: [{ scale: 0.994 }] },
   tileGlow: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    top: -35,
-    right: -28,
+    width: SECTION_TILE.regular.glowSize,
+    height: SECTION_TILE.regular.glowSize,
+    borderRadius: SECTION_TILE.regular.glowRadius,
+    top: SECTION_TILE.regular.glowTop,
+    right: SECTION_TILE.regular.glowRight,
     opacity: 0.5,
   },
   tileAccent: {
     width: 42,
     height: 3,
     borderRadius: 999,
-  },
-  tileTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 8,
-  },
-  iconBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBadgeCompact: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
   },
   tileWatermark: {
     position: 'absolute',
-    right: -20,
-    bottom: -24,
-    width: 125,
-    height: 125,
+    right: SECTION_TILE.regular.watermarkRight,
+    bottom: SECTION_TILE.regular.watermarkBottom,
+    width: SECTION_TILE.regular.watermarkWidth,
+    height: SECTION_TILE.regular.watermarkHeight,
     opacity: 0.12,
     tintColor: 'white',
     transform: [{ rotate: '16deg' }],
   },
-  tileTitle: { color: 'white', fontSize: 28, lineHeight: 34, fontWeight: '700' },
-  tileSubtitle: { color: 'rgba(235,245,255,0.84)', fontSize: 19, lineHeight: 26, marginTop: 6, fontWeight: '500' },
-  tileTitleCompact: { fontSize: 16, lineHeight: 19 },
-  tileSubtitleCompact: { fontSize: 11, lineHeight: 14, marginTop: 2 },
+  tileTitle: { color: 'white', fontSize: SECTION_TILE.regular.titleFontSize, lineHeight: SECTION_TILE.regular.titleLineHeight, fontWeight: '700' },
+  tileSubtitle: {
+    color: 'rgba(235,245,255,0.82)',
+    fontSize: SECTION_TILE.regular.subtitleFontSize,
+    lineHeight: SECTION_TILE.regular.subtitleLineHeight,
+    marginTop: SECTION_TILE.regular.subtitleMarginTop,
+    fontWeight: '500',
+  },
+  tileTitleCompact: { fontSize: SECTION_TILE.compact.titleFontSize, lineHeight: SECTION_TILE.compact.titleLineHeight },
+  tileSubtitleCompact: {
+    fontSize: SECTION_TILE.compact.subtitleFontSize,
+    lineHeight: SECTION_TILE.compact.subtitleLineHeight,
+    marginTop: SECTION_TILE.compact.subtitleMarginTop,
+  },
 });

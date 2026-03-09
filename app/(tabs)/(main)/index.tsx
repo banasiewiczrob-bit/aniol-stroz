@@ -6,6 +6,7 @@ import {
   type IntelligentSupportSuggestion,
 } from '@/hooks/useIntelligentSupportEngine';
 import { usePendingTasksBadge } from '@/hooks/usePendingTasksBadge';
+import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -52,9 +53,11 @@ function SquareTile({
   openedToday,
   onOpen,
   badgeCount,
-}: DashboardTile & { openedToday: boolean; onOpen: (to: RoutePath) => void; badgeCount?: number }) {
+  disabled,
+}: DashboardTile & { openedToday: boolean; onOpen: (to: RoutePath) => void; badgeCount?: number; disabled?: boolean }) {
   return (
     <Pressable
+      disabled={disabled}
       onPress={() => onOpen(to)}
       style={({ pressed }) => [
         styles.squareTile,
@@ -96,6 +99,7 @@ function SquareTile({
 
 export default function Dom() {
   const { isVisited, markVisited } = useVisitedTiles();
+  const { navigationLocked, runGuarded } = useSingleNavigationPress();
   const [badgeIndicatorsEnabled, setBadgeIndicatorsEnabled] = useState(false);
   const pendingTasksBadge = usePendingTasksBadge(badgeIndicatorsEnabled);
   const { height } = useWindowDimensions();
@@ -198,20 +202,22 @@ export default function Dom() {
   }, []);
 
   const handleOpenTile = useCallback(async (to: RoutePath) => {
-    await markVisited(to);
-    const swipeRoutes: RoutePath[] = ['/kontrakt', '/licznik', '/plan-dnia', '/teksty-codzienne', '/obserwatorium', '/wsparcie'];
-    const navTarget = {
-      pathname: to as any,
-      params: { backTo: '/(tabs)' },
-    };
+    await runGuarded(async () => {
+      await markVisited(to);
+      const swipeRoutes: RoutePath[] = ['/kontrakt', '/licznik', '/plan-dnia', '/teksty-codzienne', '/obserwatorium', '/wsparcie'];
+      const navTarget = {
+        pathname: to as any,
+        params: { backTo: '/(tabs)' },
+      };
 
-    if (swipeRoutes.includes(to)) {
-      router.push(navTarget);
-      return;
-    }
+      if (swipeRoutes.includes(to)) {
+        router.push(navTarget);
+        return;
+      }
 
-    router.replace(navTarget);
-  }, [markVisited]);
+      router.replace(navTarget);
+    });
+  }, [markVisited, runGuarded]);
 
   const handleSupportNudgeDone = useCallback(async () => {
     if (!supportNudge) return;
@@ -267,6 +273,7 @@ export default function Dom() {
               {...item}
               openedToday={isVisited(item.to)}
               onOpen={handleOpenTile}
+              disabled={navigationLocked}
               badgeCount={
                 !badgeIndicatorsEnabled
                   ? 0
