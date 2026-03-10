@@ -726,8 +726,6 @@ export default function PlanScreen() {
     });
   };
 
-  const noScrollMode = compact && !instructionOpen && !archiveOpen && !chartOpen && !selectedDateKey;
-
   const renderPlanForm = (params: {
     dateKey: DateKey;
     plan: DailyPlan;
@@ -772,8 +770,6 @@ export default function PlanScreen() {
           style={styles.screen}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={!noScrollMode}
-          bounces={!noScrollMode}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         >
