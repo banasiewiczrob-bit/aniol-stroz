@@ -2,7 +2,7 @@
   "expo": {
     "name": "aniol-stroz",
     "slug": "aniol-stroz",
-    "icon": "./assets/images/ikona-aplikacji.png",
+    "icon": "./assets/images/ikona-aplikacji-ios.png",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
