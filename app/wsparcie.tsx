@@ -30,7 +30,7 @@ const ITEMS: SupportRoute[] = [
   { title: 'Siatka wsparcia', subtitle: 'Twoje kontakty pomocowe', accent: '#9EF3C7', glow: 'rgba(158,243,199,0.28)', route: '/wsparcie-siatka' },
   { title: 'Społeczność', subtitle: 'Discord i grupy wsparcia', accent: '#9AC7FF', glow: 'rgba(154,199,255,0.28)', route: '/wsparcie-spolecznosc' },
   { title: 'Kontakt', subtitle: 'Numery i szybkie akcje', accent: '#FFD18A', glow: 'rgba(255,209,138,0.28)', route: '/wsparcie-kontakt' },
-  { title: 'Napisz, co Ci pomaga', subtitle: 'Zapisz, co dziś przeżyłeś', accent: '#FFC7D9', glow: 'rgba(255,199,217,0.28)', route: '/moje-doswiadczenie' },
+  { title: 'Napisz, co Ci pomaga', subtitle: 'Twoja lista sprawdzonych sposobów', accent: '#FFC7D9', glow: 'rgba(255,199,217,0.28)', route: '/moje-doswiadczenie' },
 ];
 
 export default function WsparcieScreen() {

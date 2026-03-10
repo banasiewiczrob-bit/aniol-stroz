@@ -977,7 +977,7 @@ export default function PlanScreen() {
                 </View>
 
                 <Pressable style={styles.primaryButton} onPress={closeDayView}>
-                  <Text style={styles.primaryButtonText}>Zamknij edycję dnia</Text>
+                  <Text style={styles.primaryButtonText}>Mam plan na dziś</Text>
                 </Pressable>
 
                 {selectedDateKey === todayKey && selectedHasPlan && !selectedArchiveEntry && (
