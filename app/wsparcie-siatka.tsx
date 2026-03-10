@@ -5,6 +5,7 @@ import * as Contacts from "expo-contacts";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  FlatList,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -269,6 +270,12 @@ export default function WsparcieSiatka() {
     setPhonePickerOpen(true);
   };
 
+  const filteredDeviceContacts = deviceContacts.filter((item) => {
+    const q = deviceQuery.trim().toLowerCase();
+    if (!q) return true;
+    return item.name.toLowerCase().includes(q) || item.phones.some((phoneItem) => phoneItem.toLowerCase().includes(q));
+  });
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
@@ -396,22 +403,13 @@ export default function WsparcieSiatka() {
               placeholderTextColor="rgba(255,255,255,0.35)"
               style={styles.searchInput}
             />
-            <ScrollView
+            <FlatList
               style={styles.modalList}
               contentContainerStyle={styles.modalListContent}
+              data={filteredDeviceContacts}
+              keyExtractor={(item) => item.id}
               keyboardShouldPersistTaps="handled"
-            >
-              {deviceContacts
-                .filter((item) => {
-                  const q = deviceQuery.trim().toLowerCase();
-                  if (!q) return true;
-                  return (
-                    item.name.toLowerCase().includes(q) ||
-                    item.phones.some((phoneItem) => phoneItem.toLowerCase().includes(q))
-                  );
-                })
-                .slice(0, 120)
-                .map((item) => (
+              renderItem={({ item }) => (
                   <Pressable key={item.id} style={styles.modalRow} onPress={() => void handleDeviceContactPress(item)}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.modalRowName}>{item.name}</Text>
@@ -422,8 +420,9 @@ export default function WsparcieSiatka() {
                     </View>
                     <Text style={styles.modalAdd}>Dodaj</Text>
                   </Pressable>
-                ))}
-            </ScrollView>
+              )}
+              ListEmptyComponent={<Text style={styles.emptyText}>Brak kontaktów pasujących do wyszukiwania.</Text>}
+            />
             <Pressable style={styles.modalClose} onPress={() => setPickerOpen(false)}>
               <Text style={styles.modalCloseText}>Zamknij</Text>
             </Pressable>
