@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BackButton } from "@/components/BackButton";
+import { BackButton, useSwipeHintInset } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import * as Contacts from "expo-contacts";
 import React, { useEffect, useState } from "react";
@@ -94,6 +94,7 @@ async function pickContactsFromDevice(): Promise<DeviceContactsPickResult> {
 }
 
 export default function WsparcieSiatka() {
+  const { swipeHintInset } = useSwipeHintInset();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [contacts, setContacts] = useState<SupportContact[]>([]);
@@ -287,7 +288,7 @@ export default function WsparcieSiatka() {
       <BackButton />
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(56, swipeHintInset + 18) }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}

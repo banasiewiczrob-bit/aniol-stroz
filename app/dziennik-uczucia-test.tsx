@@ -1,3 +1,3 @@
-import DziennikUczucTestScreen from './(tabs)/(main)/dzienniki/uczucia-test';
+import DziennikUczucScreen from './(tabs)/(main)/dzienniki/uczucia';
 
-export default DziennikUczucTestScreen;
+export default DziennikUczucScreen;

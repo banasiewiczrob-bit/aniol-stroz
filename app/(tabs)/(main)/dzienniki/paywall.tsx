@@ -18,6 +18,7 @@ export default function DziennikiPaywallScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Co odblokowuje premium</Text>
           <Text style={styles.cardText}>• Dziennik uczuć</Text>
+          <Text style={styles.cardText}>• Lista wyzwalaczy</Text>
           <Text style={styles.cardText}>• Dziennik głodu/kryzysu</Text>
           <Text style={styles.cardText}>• Dziennik wdzięczności</Text>
           <Text style={styles.cardText}>• Historia i insighty 7/30 dni</Text>

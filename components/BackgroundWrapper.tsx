@@ -1,4 +1,4 @@
-import { BackButton } from '@/components/BackButton';
+import { BackButton, useSwipeHintInset } from '@/components/BackButton';
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
@@ -10,6 +10,8 @@ interface BackgroundWrapperProps {
 }
 
 export const BackgroundWrapper = ({ children, showSwipeHint = true }: BackgroundWrapperProps) => {
+  const { swipeHintInset } = useSwipeHintInset(showSwipeHint);
+
   return (
     <View style={styles.container}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -17,7 +19,7 @@ export const BackgroundWrapper = ({ children, showSwipeHint = true }: Background
       </View>
 
       <BackButton showSwipeHint={showSwipeHint} />
-      <View style={styles.contentLayer}>{children}</View>
+      <View style={[styles.contentLayer, swipeHintInset > 0 && { paddingBottom: swipeHintInset }]}>{children}</View>
     </View>
   );
 };

@@ -8,11 +8,22 @@ type BackButtonProps = {
   showSwipeHint?: boolean;
 };
 
-export function BackButton({ showTopBar = true, showSwipeHint = true }: BackButtonProps) {
+export function useSwipeHintInset(showSwipeHint = true) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const canShowSwipeHint = showSwipeHint && navigation.canGoBack();
   const swipeHintPaddingBottom = Platform.OS === 'android' ? Math.max(insets.bottom, 10) : Math.max(insets.bottom, 8);
+
+  return {
+    canShowSwipeHint,
+    swipeHintPaddingBottom,
+    swipeHintInset: canShowSwipeHint ? 30 + swipeHintPaddingBottom : 0,
+  };
+}
+
+export function BackButton({ showTopBar = true, showSwipeHint = true }: BackButtonProps) {
+  const insets = useSafeAreaInsets();
+  const { canShowSwipeHint, swipeHintPaddingBottom } = useSwipeHintInset(showSwipeHint);
 
   return (
     <>

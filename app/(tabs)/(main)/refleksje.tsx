@@ -1,6 +1,8 @@
 import { BackButton } from '@/components/BackButton';
+import { DailyReadToggle } from '@/components/DailyReadToggle';
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BG = '#061A2C';
 const CARD = 'rgba(12,38,62,0.78)';
@@ -9,12 +11,18 @@ const SUB = 'rgba(232,245,255,0.84)';
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 export default function RefleksjeScreen() {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
-      <BackButton showSwipeHint={false} />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <BackButton />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Codzienne refleksje</Text>
         <Text style={styles.subtitle}>
           Jedna refleksja na każdy dzień kalendarzowy. Wszyscy uczestnicy danego dnia słuchają tego samego nagrania.
@@ -36,6 +44,8 @@ export default function RefleksjeScreen() {
           <Text style={styles.cardTitle}>Archiwum 365</Text>
           <Text style={styles.cardText}>Tu pojawi się kalendarz refleksji z podziałem na daty i odsłuch nagrań.</Text>
         </View>
+
+        <DailyReadToggle id="refleksje" />
       </ScrollView>
     </View>
   );

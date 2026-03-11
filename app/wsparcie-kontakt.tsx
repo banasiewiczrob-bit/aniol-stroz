@@ -1,4 +1,4 @@
-import { BackButton } from "@/components/BackButton";
+import { BackButton, useSwipeHintInset } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import { TYPE } from "@/styles/typography";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -69,6 +69,7 @@ const HOTLINES = [
 ] as const;
 
 export default function WsparcieKontakt() {
+  const { swipeHintInset } = useSwipeHintInset();
   const [sosName, setSosName] = useState("");
   const [sosPhone, setSosPhone] = useState("");
   const [sosFormOpen, setSosFormOpen] = useState(false);
@@ -234,7 +235,7 @@ export default function WsparcieKontakt() {
       <BackButton />
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(56, swipeHintInset + 18) }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}

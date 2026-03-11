@@ -8,10 +8,11 @@ import {
   type DailyTextsStore,
 } from '@/constants/daily-texts';
 import { DEFAULT_APP_SETTINGS, loadAppSettings } from '@/hooks/useAppSettings';
+import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import { notifyDataChanged, subscribeSync } from '@/hooks/recoverySyncEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -375,7 +376,7 @@ function WeeklyLineChart({ points }: { points: Array<{ label: string; score: num
 }
 
 export default function PlanScreen() {
-  const scrollRef = useRef<ScrollView | null>(null);
+  const { scrollRef, setAnchor, scrollToAnchor, clearPendingScroll, scrollToTop } = useScrollAnchors<'day-view' | 'archive-section'>();
   const { height } = useWindowDimensions();
   const compact = height <= 900;
   const [calendarNow, setCalendarNow] = useState(() => new Date());
@@ -654,24 +655,19 @@ export default function PlanScreen() {
     const archived = Boolean(archiveMap.get(dateKey)) || dayPlan.summarized;
     const evening = calendarNow.getHours() >= 19;
     const canOpenSummary = hasPlanContent(dayPlan) && !archived;
+    let nextMode: DayViewMode = 'plan';
 
     setSelectedDateKey(dateKey);
     if (archived) {
-      setDayViewMode('summary');
-      return;
+      nextMode = 'summary';
+    } else if (dateKey === todayKey && canOpenSummary && evening && appSettings.planAutoSwitchToSummaryEvening) {
+      nextMode = 'summary';
+    } else if (appSettings.planDefaultDayOpenMode === 'summary' && canOpenSummary) {
+      nextMode = 'summary';
     }
 
-    if (dateKey === todayKey && canOpenSummary && evening && appSettings.planAutoSwitchToSummaryEvening) {
-      setDayViewMode('summary');
-      return;
-    }
-
-    if (appSettings.planDefaultDayOpenMode === 'summary' && canOpenSummary) {
-      setDayViewMode('summary');
-      return;
-    }
-
-    setDayViewMode('plan');
+    setDayViewMode(nextMode);
+    scrollToAnchor('day-view', { offset: 12 });
   };
 
   const shiftMonth = (delta: number) => {
@@ -695,6 +691,7 @@ export default function PlanScreen() {
   };
 
   const closeDayView = () => {
+    clearPendingScroll('day-view');
     setSelectedDateKey(null);
     setDayViewMode('plan');
   };
@@ -720,7 +717,7 @@ export default function PlanScreen() {
     setInstructionOpen((prev) => {
       const next = !prev;
       if (next) {
-        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 120);
+        scrollToTop();
       }
       return next;
     });
@@ -934,7 +931,7 @@ export default function PlanScreen() {
         )}
 
         {selectedDateKey && selectedPlan && (
-          <View style={styles.dayViewCard}>
+          <View style={styles.dayViewCard} onLayout={setAnchor('day-view')}>
             <View style={styles.dayViewHeader}>
               <Text style={styles.dayViewTitle}>Dzień: {selectedDateKey}</Text>
               <Pressable onPress={closeDayView} style={styles.dayCloseBtn}>
@@ -1069,11 +1066,12 @@ export default function PlanScreen() {
 
         <Pressable
           style={styles.archiveHeader}
+          onLayout={setAnchor('archive-section')}
           onPress={() =>
             setArchiveOpen((prev) => {
               const next = !prev;
               if (next) {
-                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+                scrollToAnchor('archive-section', { offset: 12 });
               }
               return next;
             })
