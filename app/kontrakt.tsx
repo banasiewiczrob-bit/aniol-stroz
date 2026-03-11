@@ -1,5 +1,5 @@
+import { BackButton, useSwipeHintInset } from '@/components/BackButton';
 import { CoJakSection } from '@/components/CoJakSection';
-import { BackButton } from '@/components/BackButton';
 import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
 import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
 import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Watermark = require('../assets/images/maly_aniol.png');
 export default function KontraktScreen() {
+  const { swipeHintInset } = useSwipeHintInset();
   const [isChecked, setChecked] = useState(false);
   const [signatureLoaded, setSignatureLoaded] = useState(false);
   const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
@@ -66,7 +67,7 @@ export default function KontraktScreen() {
       <SafeAreaView style={styles.mainContainer}>
         <ScrollView 
           style={styles.container} 
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: Math.max(56, swipeHintInset + 18) }]}
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Moja Umowa z Samym Sobą</Text>

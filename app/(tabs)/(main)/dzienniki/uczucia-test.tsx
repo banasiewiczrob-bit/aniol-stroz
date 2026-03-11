@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { WeekCalendar } from '@/components/journals/WeekCalendar';
 import {
@@ -6,8 +5,12 @@ import {
   EMOTION_DETAILS_BY_BASE,
   getJournalDateKey,
   type BaseEmotion,
+  type EmotionJournalEntry,
 } from '@/constants/journals';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createEmotionJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
+import { useScrollAnchors } from '@/hooks/useScrollAnchors';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -20,6 +23,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BG_CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
@@ -28,17 +32,6 @@ const ACCENT = '#7ED8BE';
 const ACCENT_BG = 'rgba(126,216,190,0.23)';
 const ACCENT_BORDER = 'rgba(126,216,190,0.58)';
 const Watermark = require('../../../../assets/images/maly_aniol.png');
-const LAB_STORAGE_KEY = '@emotion_journal_lab_v2';
-
-type EmotionLabEntry = {
-  id: string;
-  dateKey: string;
-  createdAt: string;
-  baseEmotion: BaseEmotion;
-  detailEmotion: string;
-  situation: string;
-  expression: string;
-};
 
 type DraftFeeling = {
   key: string;
@@ -53,7 +46,9 @@ const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('pl-PL', { 
 const toHourKey = (iso: string) => new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
 export default function DziennikUczucTestScreen() {
-  const scrollRef = useRef<ScrollView | null>(null);
+  const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
+    useScrollAnchors<'detail-card' | 'archive-section'>();
+  const insets = useSafeAreaInsets();
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [baseEmotion, setBaseEmotion] = useState<BaseEmotion>('Strach');
   const [detailEmotion, setDetailEmotion] = useState<string>(EMOTION_DETAILS_BY_BASE['Strach'][0]);
@@ -61,10 +56,9 @@ export default function DziennikUczucTestScreen() {
   const [lastTapKey, setLastTapKey] = useState<string | null>(null);
   const [lastTapAt, setLastTapAt] = useState(0);
   const [draftFeelings, setDraftFeelings] = useState<DraftFeeling[]>([]);
-  const [entries, setEntries] = useState<EmotionLabEntry[]>([]);
+  const [entries, setEntries] = useState<EmotionJournalEntry[]>([]);
   const [busy, setBusy] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [archiveDateCount, setArchiveDateCount] = useState(0);
   const [openDates, setOpenDates] = useState<Record<string, boolean>>({});
   const [openHours, setOpenHours] = useState<Record<string, boolean>>({});
 
@@ -81,32 +75,21 @@ export default function DziennikUczucTestScreen() {
     }
   };
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     try {
-      const raw = await AsyncStorage.getItem(LAB_STORAGE_KEY);
-      if (!raw) {
-        setEntries([]);
-        setArchiveDateCount(0);
-        return;
-      }
-      const parsed = JSON.parse(raw) as EmotionLabEntry[];
-      const sorted = [...parsed].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-      setEntries(sorted);
-      const uniqueDates = new Set(sorted.map((item) => item.dateKey));
-      setArchiveDateCount(uniqueDates.size);
+      const all = (await listJournalEntries('emotion')) as EmotionJournalEntry[];
+      setEntries(all);
     } catch (e) {
-      console.error('Blad odczytu testowego dziennika uczuc:', e);
-      Alert.alert('Blad', 'Nie udalo sie odczytac wpisow testowych.');
+      console.error('Blad odczytu dziennika uczuc:', e);
+      Alert.alert('Blad', 'Nie udalo sie odczytac wpisow.');
     }
-  };
-
-  useEffect(() => {
-    void loadEntries();
   }, []);
 
-  const saveEntries = async (next: EmotionLabEntry[]) => {
-    await AsyncStorage.setItem(LAB_STORAGE_KEY, JSON.stringify(next));
-  };
+  useFocusEffect(
+    useCallback(() => {
+      void loadEntries();
+    }, [loadEntries])
+  );
 
   const addDraftFeeling = (base: BaseEmotion, detail: string) => {
     const cleanDetail = detail.trim();
@@ -136,8 +119,15 @@ export default function DziennikUczucTestScreen() {
     setDraftFeelings((prev) => prev.filter((item) => item.key !== key));
   };
 
+  const focusBaseEmotion = (emotion: BaseEmotion) => {
+    setBaseEmotion(emotion);
+    baseEmotionRef.current = emotion;
+    setDetailEmotion(EMOTION_DETAILS_BY_BASE[emotion][0]);
+  };
+
   const onSave = async () => {
-    if (draftFeelings.length === 0) {
+    const itemsToSave = draftFeelings;
+    if (itemsToSave.length === 0) {
       Alert.alert('Brak wyboru', 'Wybierz przynajmniej jedno uczucie do zapisu.');
       return;
     }
@@ -145,24 +135,25 @@ export default function DziennikUczucTestScreen() {
     setBusy(true);
     try {
       const createdAt = new Date().toISOString();
-      const newRows: EmotionLabEntry[] = draftFeelings.map((item) => ({
-        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        dateKey: selectedDateKey,
-        createdAt,
-        baseEmotion: item.baseEmotion,
-        detailEmotion: item.detailEmotion,
-        situation: item.situation.trim(),
-        expression: item.expression.trim(),
-      }));
+      for (const item of itemsToSave) {
+        await createEmotionJournalEntry({
+          dateKey: selectedDateKey,
+          createdAt,
+          baseEmotion: item.baseEmotion,
+          detailEmotion: item.detailEmotion,
+          intensity: 0,
+          triggerNote: item.situation.trim(),
+          needNote: '',
+          actionNote: item.expression.trim(),
+        });
+      }
 
-      const next = [...newRows, ...entries];
-      setEntries(next);
-      await saveEntries(next);
       setDraftFeelings([]);
-      Alert.alert('Zapisano', 'Zapisano wpisy testowe Dziennika Uczuć 2.0.');
+      await loadEntries();
+      Alert.alert('Zapisano', 'Zapisano wpisy Dziennika Uczuć.');
     } catch (e) {
-      console.error('Blad zapisu testowego dziennika uczuc:', e);
-      Alert.alert('Blad', 'Nie udalo sie zapisac wpisu testowego.');
+      console.error('Blad zapisu dziennika uczuc:', e);
+      Alert.alert('Blad', 'Nie udalo sie zapisac wpisu.');
     } finally {
       setBusy(false);
     }
@@ -175,18 +166,17 @@ export default function DziennikUczucTestScreen() {
         text: 'Usun',
         style: 'destructive',
         onPress: async () => {
-          const next = entries.filter((item) => item.id !== id);
-          setEntries(next);
-          await saveEntries(next);
+          await deleteJournalEntry(id);
+          await loadEntries();
         },
       },
     ]);
   };
 
   const archiveByDate = useMemo(() => {
-    const dates = new Map<string, Map<string, EmotionLabEntry[]>>();
+    const dates = new Map<string, Map<string, EmotionJournalEntry[]>>();
     entries.forEach((entry) => {
-      const byHour = dates.get(entry.dateKey) ?? new Map<string, EmotionLabEntry[]>();
+      const byHour = dates.get(entry.dateKey) ?? new Map<string, EmotionJournalEntry[]>();
       const hourKey = toHourKey(entry.createdAt);
       const rows = byHour.get(hourKey) ?? [];
       rows.push(entry);
@@ -201,6 +191,8 @@ export default function DziennikUczucTestScreen() {
         hours: Array.from(byHour.entries()).sort(([a], [b]) => (a < b ? 1 : -1)),
       }));
   }, [entries]);
+
+  const archiveEntryCount = useMemo(() => new Set(entries.map((entry) => entry.createdAt)).size, [entries]);
 
   const toggleDateOpen = (dateKey: string) => {
     setOpenDates((prev) => {
@@ -229,21 +221,24 @@ export default function DziennikUczucTestScreen() {
         style={styles.screen}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        onLayout={onViewportLayout}
       >
         <ScrollView
           ref={scrollRef}
           style={styles.screen}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: Math.max(72, insets.bottom + 44) }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
-          <Text style={styles.title}>Dziennik Uczuc 2.0 (test)</Text>
-          <Text style={styles.subtitle}>Wybieraj uczucia podwojnym kliknieciem. Kazde ma osobny opis i sposob okazania.</Text>
+          <Text style={styles.title}>Dziennik Uczuc</Text>
+          <Text style={styles.subtitle}>Wybieraj uczucia podwojnym kliknieciem i dopisz sytuacje oraz sposob okazania.</Text>
 
-        <WeekCalendar selectedDateKey={selectedDateKey} onChangeDateKey={setSelectedDateKey} title="Kalendarz testowy" />
+        <WeekCalendar selectedDateKey={selectedDateKey} onChangeDateKey={setSelectedDateKey} title="Kalendarz uczuć" />
 
         <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
@@ -253,36 +248,49 @@ export default function DziennikUczucTestScreen() {
             {BASE_EMOTIONS.map((emotion) => (
               <Pressable
                 key={emotion}
-                style={[styles.chip, baseEmotion === emotion && styles.chipActive]}
+                style={[
+                  styles.chip,
+                  (baseEmotion === emotion || draftFeelings.some((item) => item.baseEmotion === emotion)) && styles.chipActive,
+                ]}
                 onPress={() =>
                   void onChipTap(
                     `base:${emotion}`,
-                    () => {
-                      setBaseEmotion(emotion);
-                      baseEmotionRef.current = emotion;
-                      setDetailEmotion(EMOTION_DETAILS_BY_BASE[emotion][0]);
-                    },
-                    async () => addDraftFeeling(emotion, '')
+                    () => focusBaseEmotion(emotion),
+                    async () => {
+                      addDraftFeeling(emotion, '');
+                      scrollToAnchor('detail-card', { offset: 10, onlyIfNeeded: true });
+                    }
                   )
                 }
               >
-                <Text style={[styles.chipText, baseEmotion === emotion && styles.chipTextActive]}>{emotion}</Text>
+                <Text
+                  style={[
+                    styles.chipText,
+                    (baseEmotion === emotion || draftFeelings.some((item) => item.baseEmotion === emotion)) &&
+                      styles.chipTextActive,
+                  ]}
+                >
+                  {emotion}
+                </Text>
               </Pressable>
             ))}
           </View>
         </View>
 
-        <View style={styles.card}>
+        <View style={styles.card} onLayout={setAnchor('detail-card')}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>2. Odcien emocji</Text>
           <Text style={styles.helper}>Jedno klikniecie podswietla odcien, podwojne klikniecie dodaje go do wpisu.</Text>
           <View style={styles.chipWrap}>
             {detailOptions.map((detail) => {
               const active = detailEmotion === detail;
+              const selectedForBase = draftFeelings.some(
+                (item) => item.baseEmotion === baseEmotion && item.detailEmotion === detail
+              );
               return (
                 <Pressable
                   key={detail}
-                  style={[styles.chip, active && styles.chipActive]}
+                  style={[styles.chip, (active || selectedForBase) && styles.chipActive]}
                   onPress={() =>
                     void onChipTap(
                       `detail:${baseEmotion}:${detail}`,
@@ -293,7 +301,7 @@ export default function DziennikUczucTestScreen() {
                     )
                   }
                 >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{detail}</Text>
+                  <Text style={[styles.chipText, (active || selectedForBase) && styles.chipTextActive]}>{detail}</Text>
                 </Pressable>
               );
             })}
@@ -335,22 +343,23 @@ export default function DziennikUczucTestScreen() {
         </View>
 
         <Pressable style={[styles.primaryBtn, busy && styles.btnDisabled]} onPress={() => void onSave()} disabled={busy}>
-          <Text style={styles.primaryBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis testowy'}</Text>
+          <Text style={styles.primaryBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>
         </Pressable>
 
         <Pressable
           style={styles.archiveHeader}
+          onLayout={setAnchor('archive-section')}
           onPress={() =>
             setArchiveOpen((prev) => {
               const next = !prev;
               if (next) {
-                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
+                scrollToAnchor('archive-section', { offset: 12 });
               }
               return next;
             })
           }
         >
-          <Text style={styles.archiveHeaderText}>Archiwum testowe ({archiveDateCount})</Text>
+          <Text style={styles.archiveHeaderText}>Archiwum wpisow ({archiveEntryCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
         </Pressable>
 
@@ -386,11 +395,11 @@ export default function DziennikUczucTestScreen() {
                                       <Text style={styles.entryTitle}>
                                         {entry.detailEmotion.trim().length > 0 ? entry.detailEmotion : entry.baseEmotion}
                                       </Text>
-                                      {entry.situation.trim().length > 0 ? (
-                                        <Text style={styles.helpText}>Sytuacja: {entry.situation}</Text>
+                                      {entry.triggerNote.trim().length > 0 ? (
+                                        <Text style={styles.helpText}>Sytuacja: {entry.triggerNote}</Text>
                                       ) : null}
-                                      {entry.expression.trim().length > 0 ? (
-                                        <Text style={styles.helpText}>Wyrazenie: {entry.expression}</Text>
+                                      {entry.actionNote.trim().length > 0 ? (
+                                        <Text style={styles.helpText}>Wyrazenie: {entry.actionNote}</Text>
                                       ) : null}
                                       <Text style={styles.helpText}>{formatTime(entry.createdAt)}</Text>
                                     </View>

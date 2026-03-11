@@ -103,7 +103,7 @@ export default function MainTabsLayout() {
         name="refleksje"
         options={{
           title: 'Codzienne refleksje',
-          href: firstStepsDone ? undefined : null,
+          href: null,
           tabBarIcon: ({ color }) => <Ionicons name="mic-outline" size={26} color={color} />,
         }}
       />

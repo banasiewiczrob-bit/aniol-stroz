@@ -1,13 +1,12 @@
 import { router } from 'expo-router';
-import { CoJakSection } from '@/components/CoJakSection';
-import { BackButton } from '@/components/BackButton';
+import { BackButton, useSwipeHintInset } from '@/components/BackButton';
+import { MenuSquareTile } from '@/components/MenuSquareTile';
 import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
-import { SECTION_TILE } from '@/styles/sectionTiles';
 import React from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
-const Watermark = require('../assets/images/maly_aniol.png');
+const SUB = 'rgba(255,255,255,0.88)';
 
 type SupportRoute = {
   title: string;
@@ -36,6 +35,7 @@ const ITEMS: SupportRoute[] = [
 export default function WsparcieScreen() {
   const { height } = useWindowDimensions();
   const compact = height <= 900;
+  const { swipeHintInset } = useSwipeHintInset();
   const { isVisited, markVisited } = useVisitedTiles();
   const { navigationLocked, runGuarded } = useSingleNavigationPress();
 
@@ -44,51 +44,44 @@ export default function WsparcieScreen() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, compact && styles.contentCompact]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          compact && styles.contentCompact,
+          { paddingBottom: compact ? Math.max(48, swipeHintInset + 12) : Math.max(56, swipeHintInset + 18) },
+        ]}
+      >
         <Text style={[styles.title, compact && styles.titleCompact]}>Wsparcie</Text>
-        <CoJakSection
-          title="Opis i instrukcja"
-          co="To baza treści i narzędzi pomocowych, do których możesz wracać codziennie."
-          jak="Wybierz materiał, który teraz najbardziej Cię wspiera. Pracuj krok po kroku, bez pośpiechu."
-        />
-        <Text style={[styles.subtext, compact && styles.subtextCompact]}>Wybierz materiał, z którego chcesz teraz skorzystać.</Text>
+        <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>To miejsce, do którego wracasz po wsparcie.</Text>
+        <View style={styles.instructionsCompact}>
+          <Text style={styles.instructionsCompactTitle}>Opis i instrukcja</Text>
+          <Text style={styles.instructionsCompactText}>Wybierz materiał, z którego chcesz teraz skorzystać.</Text>
+        </View>
+        <Text style={styles.focusLine}>Co teraz najbardziej Ci pomoże?</Text>
 
-        {ITEMS.map((item) => (
-          <Pressable
-            key={item.route}
-            style={({ pressed }) => [
-              styles.card,
-              compact && styles.cardCompact,
-              { borderColor: item.accent },
-              isVisited(item.route) && styles.cardOpened,
-              isVisited(item.route) && { backgroundColor: item.glow },
-              pressed && styles.cardPressed,
-            ]}
-            disabled={navigationLocked}
-            onPress={async () => {
-              await runGuarded(async () => {
-                await markVisited(item.route);
-                router.push({
-                  pathname: item.route as any,
-                  params: { backTo: '/wsparcie' },
+        <View style={[styles.grid, styles.gridRaised]}>
+          {ITEMS.map((item) => (
+            <MenuSquareTile
+              key={item.route}
+              title={item.title}
+              subtitle={item.subtitle}
+              accent={item.accent}
+              glow={item.glow}
+              openedToday={isVisited(item.route)}
+              disabled={navigationLocked}
+              onPress={async () => {
+                await runGuarded(async () => {
+                  await markVisited(item.route);
+                  router.push({
+                    pathname: item.route as any,
+                    params: { backTo: '/wsparcie' },
+                  });
                 });
-              });
-            }}
-          >
-            <View style={[styles.cardGlow, { backgroundColor: item.glow }]} />
-            <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-            <View style={[styles.cardAccent, { backgroundColor: item.accent }]} />
-            <View>
-              <Text style={[styles.cardTitle, compact && styles.cardTitleCompact]} numberOfLines={2}>
-                {item.title}
-              </Text>
-              <Text style={[styles.cardSubtitle, compact && styles.cardSubtitleCompact]} numberOfLines={1}>
-                {item.subtitle}
-              </Text>
-            </View>
-            <Text style={[styles.arrow, compact && styles.arrowCompact]}>›</Text>
-          </Pressable>
-        ))}
+              }}
+            />
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
@@ -115,79 +108,55 @@ const styles = StyleSheet.create({
     left: -80,
   },
   scroll: { flex: 1 },
-  content: { padding: 18, paddingTop: 18, paddingBottom: 30 },
-  contentCompact: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8 },
-  title: { color: 'white', fontSize: 39, fontWeight: '900', marginBottom: 10 },
-  titleCompact: { fontSize: 34, marginBottom: 6 },
-  subtext: { color: 'rgba(232,245,255,0.84)', fontSize: 18, lineHeight: 26, marginBottom: 20 },
-  subtextCompact: { fontSize: 13, lineHeight: 18, marginBottom: 8 },
-  card: {
-    backgroundColor: 'rgba(12,38,62,0.78)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(159,216,255,0.32)',
-    minHeight: SECTION_TILE.regular.minHeight,
-    paddingVertical: SECTION_TILE.regular.paddingVertical,
-    paddingHorizontal: SECTION_TILE.regular.paddingHorizontal,
-    marginBottom: SECTION_TILE.regular.marginBottom,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    overflow: 'hidden',
-    position: 'relative',
+  content: {
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
-  cardCompact: {
-    minHeight: SECTION_TILE.compact.minHeight,
-    paddingVertical: SECTION_TILE.compact.paddingVertical,
-    paddingHorizontal: SECTION_TILE.compact.paddingHorizontal,
-    marginBottom: SECTION_TILE.compact.marginBottom,
+  contentCompact: {
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  title: { color: 'white', fontSize: 34, fontWeight: '900', marginBottom: 4, letterSpacing: 0.2 },
+  titleCompact: { fontSize: 30 },
+  subtitle: {
+    color: 'rgba(232,245,255,0.86)',
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '400',
+    marginBottom: 8,
+  },
+  subtitleCompact: {
+    fontSize: 14,
+    lineHeight: 19,
+    marginBottom: 6,
+  },
+  instructionsCompact: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(120,200,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
-  cardOpened: {
-    borderColor: 'rgba(222,244,255,0.98)',
-    borderWidth: 2,
+  instructionsCompactTitle: { color: 'white', fontSize: 14, fontWeight: '800', marginBottom: 2 },
+  instructionsCompactText: { color: 'rgba(232,245,255,0.82)', fontSize: 13, lineHeight: 18 },
+  focusLine: {
+    color: 'rgba(222,240,255,0.92)',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 2,
+    marginBottom: 6,
   },
-  cardPressed: { opacity: 0.92, transform: [{ scale: 0.992 }] },
-  cardGlow: {
-    position: 'absolute',
-    width: SECTION_TILE.regular.glowSize,
-    height: SECTION_TILE.regular.glowSize,
-    borderRadius: SECTION_TILE.regular.glowRadius,
-    top: SECTION_TILE.regular.glowTop,
-    right: SECTION_TILE.regular.glowRight,
-    opacity: 0.5,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 8,
   },
-  cardAccent: {
-    position: 'absolute',
-    left: 14,
-    top: 12,
-    width: 36,
-    height: 3,
-    borderRadius: 999,
+  gridRaised: {
+    marginTop: 4,
   },
-  cardWatermark: {
-    position: 'absolute',
-    right: SECTION_TILE.regular.watermarkRight,
-    bottom: SECTION_TILE.regular.watermarkBottom,
-    width: SECTION_TILE.regular.watermarkWidth,
-    height: SECTION_TILE.regular.watermarkHeight,
-    opacity: 0.12,
-    tintColor: 'white',
-    transform: [{ rotate: '16deg' }],
-  },
-  cardTitle: { color: 'white', fontSize: SECTION_TILE.regular.titleFontSize, lineHeight: SECTION_TILE.regular.titleLineHeight, fontWeight: '700' },
-  cardTitleCompact: { fontSize: SECTION_TILE.compact.titleFontSize, lineHeight: SECTION_TILE.compact.titleLineHeight },
-  cardSubtitle: {
-    color: 'rgba(235,245,255,0.82)',
-    fontSize: SECTION_TILE.regular.subtitleFontSize,
-    lineHeight: SECTION_TILE.regular.subtitleLineHeight,
-    marginTop: SECTION_TILE.regular.subtitleMarginTop,
-  },
-  cardSubtitleCompact: {
-    fontSize: SECTION_TILE.compact.subtitleFontSize,
-    lineHeight: SECTION_TILE.compact.subtitleLineHeight,
-    marginTop: SECTION_TILE.compact.subtitleMarginTop,
-  },
-  arrow: { color: '#78C8FF', fontSize: 31, fontWeight: '700' },
-  arrowCompact: { fontSize: 24 },
 });

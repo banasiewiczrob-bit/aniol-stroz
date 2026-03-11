@@ -187,6 +187,14 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="codzienne-refleksje"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
             name="wsparcie-kontakt"
             options={{
               gestureEnabled: true,
@@ -236,6 +244,22 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="dziennik-uczucia"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="dziennik-mysli"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="lista-wyzwalaczy"
             options={{
               gestureEnabled: true,
               fullScreenGestureEnabled: true,

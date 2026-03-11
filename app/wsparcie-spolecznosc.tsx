@@ -1,4 +1,4 @@
-import { BackButton } from '@/components/BackButton';
+import { BackButton, useSwipeHintInset } from '@/components/BackButton';
 import { DISCORD_INVITE_URL } from '@/constants/community';
 import React, { useMemo } from 'react';
 import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -22,6 +22,7 @@ function normalizeDiscordLink(raw: string) {
 
 export default function WsparcieSpolecznoscDiscordScreen() {
   const link = useMemo(() => normalizeDiscordLink(DISCORD_INVITE_URL), []);
+  const { swipeHintInset } = useSwipeHintInset();
 
   const openDiscord = async () => {
     if (!link) {
@@ -50,7 +51,11 @@ export default function WsparcieSpolecznoscDiscordScreen() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(56, swipeHintInset + 18) }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Społeczność</Text>
         <Text style={styles.subtitle}>
           Społeczność Anioł Stróż działa na Discordzie. 

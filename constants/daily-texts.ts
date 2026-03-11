@@ -2,7 +2,7 @@ import { getLocalDateKey, isValidDateKey, type DateKey } from '@/constants/calen
 
 export const DAILY_TEXTS_STORAGE_KEY = '@daily_texts_done';
 
-export type DailyTextId = 'wsparcie24' | 'halt' | 'modlitwa' | 'desiderata' | 'kroki12';
+export type DailyTextId = 'wsparcie24' | 'halt' | 'modlitwa' | 'desiderata' | 'kroki12' | 'refleksje';
 
 export type DailyTextsState = Record<DailyTextId, boolean>;
 
@@ -22,6 +22,7 @@ export const EMPTY_DAILY_TEXTS: DailyTextsState = Object.freeze({
   modlitwa: false,
   desiderata: false,
   kroki12: false,
+  refleksje: false,
 });
 
 export function emptyDailyTextsState(): DailyTextsState {
@@ -34,13 +35,14 @@ export function getDateKey(date = new Date()) {
 
 export function normalizeDailyTextsState(value: unknown): DailyTextsState {
   if (!value || typeof value !== 'object') return emptyDailyTextsState();
-  const parsed = value as Partial<Record<DailyTextId, unknown>>;
+  const parsed = value as Record<string, unknown>;
   return {
     wsparcie24: parsed.wsparcie24 === true,
     halt: parsed.halt === true,
     modlitwa: parsed.modlitwa === true,
     desiderata: parsed.desiderata === true,
     kroki12: parsed.kroki12 === true,
+    refleksje: parsed.refleksje === true || parsed.krotkaPauza === true,
   };
 }
 
