@@ -6,6 +6,7 @@ backups
 *.zip
 
 android/.gradle
+android/.gradle-user
 android/build
 android/app/build
 

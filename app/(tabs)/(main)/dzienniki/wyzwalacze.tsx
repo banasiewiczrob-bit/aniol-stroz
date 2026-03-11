@@ -18,20 +18,60 @@ import { BackButton } from '@/components/BackButton';
 
 const DRAFT_KEY = '@trigger_list_draft_v1';
 const ITEMS_KEY = '@trigger_list_items_v1';
-const CATEGORY_KEY = '@trigger_list_category_v1';
+const KIND_KEY = '@trigger_list_kind_v2';
+const LEGACY_CATEGORY_KEY = '@trigger_list_category_v1';
 const ACCENT = '#C6D7FF';
 const ACCENT_BG = 'rgba(198,215,255,0.22)';
 const ACCENT_BORDER = 'rgba(198,215,255,0.55)';
 const SUB = 'rgba(233,239,255,0.88)';
 
-const QUICK_CATEGORIES = ['Wieczór', 'Samotność', 'Zmęczenie', 'Konflikt', 'Miejsce', 'Telefon'];
+const INTERNAL_SUGGESTIONS = ['Samotność', 'Zmęczenie', 'Głód', 'Nuda', 'Lęk', 'Wstyd'];
+const EXTERNAL_SUGGESTIONS = ['Wieczór', 'Konflikt', 'Telefon', 'Miejsce', 'Powrót do domu', 'Media społecznościowe'];
+
+type TriggerKind = 'internal' | 'external';
 
 type TriggerItem = {
   id: string;
   text: string;
-  category: string | null;
+  kind: TriggerKind;
   createdAt: string;
 };
+
+type PendingQuickAdd = {
+  label: string;
+  kind: TriggerKind;
+};
+
+function isTriggerKind(value: unknown): value is TriggerKind {
+  return value === 'internal' || value === 'external';
+}
+
+function normalizeComparableText(value: string) {
+  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pl-PL');
+}
+
+function inferLegacyKind(rawCategory: unknown, rawText: unknown): TriggerKind {
+  const source = [rawCategory, rawText]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pl-PL');
+
+  if (
+    source.includes('samotn') ||
+    source.includes('zmeczen') ||
+    source.includes('glod') ||
+    source.includes('lek') ||
+    source.includes('nuda') ||
+    source.includes('wstyd') ||
+    source.includes('zlosc')
+  ) {
+    return 'internal';
+  }
+
+  return 'external';
+}
 
 function parseItems(raw: string | null): TriggerItem[] {
   if (!raw) return [];
@@ -44,14 +84,21 @@ function parseItems(raw: string | null): TriggerItem[] {
       .flatMap((item) => {
         if (!item || typeof item !== 'object') return [];
         const entry = item as Partial<TriggerItem>;
-        if (typeof entry.id !== 'string' || typeof entry.text !== 'string' || typeof entry.createdAt !== 'string') {
+        if (
+          typeof entry.id !== 'string' ||
+          typeof entry.text !== 'string' ||
+          entry.text.trim().length === 0 ||
+          typeof entry.createdAt !== 'string'
+        ) {
           return [];
         }
         return [
           {
             id: entry.id,
             text: entry.text,
-            category: typeof entry.category === 'string' && entry.category.trim().length > 0 ? entry.category : null,
+            kind: isTriggerKind((entry as { kind?: unknown }).kind)
+              ? (entry as { kind: TriggerKind }).kind
+              : inferLegacyKind((entry as { category?: unknown }).category, entry.text),
             createdAt: entry.createdAt,
           },
         ];
@@ -80,28 +127,36 @@ function getCountLabel(count: number) {
   return `${count} zapisanych wyzwalaczy`;
 }
 
+function getKindLabel(kind: TriggerKind) {
+  return kind === 'internal' ? 'Wewnętrzne' : 'Zewnętrzne';
+}
+
 export default function ListaWyzwalaczyScreen() {
   const insets = useSafeAreaInsets();
   const [text, setText] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedKind, setSelectedKind] = useState<TriggerKind | null>(null);
   const [items, setItems] = useState<TriggerItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [pendingQuickAdd, setPendingQuickAdd] = useState<PendingQuickAdd | null>(null);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const [externalExpanded, setExternalExpanded] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaved = useRef('');
-  const lastSavedCategory = useRef<string | null>(null);
+  const lastSavedKind = useRef<TriggerKind | null>(null);
 
   useEffect(() => {
     let active = true;
 
     void (async () => {
       try {
-        const [savedDraft, savedItems, savedCategory] = await Promise.all([
+        const [savedDraft, savedItems, savedKind, savedLegacyCategory] = await Promise.all([
           AsyncStorage.getItem(DRAFT_KEY),
           AsyncStorage.getItem(ITEMS_KEY),
-          AsyncStorage.getItem(CATEGORY_KEY),
+          AsyncStorage.getItem(KIND_KEY),
+          AsyncStorage.getItem(LEGACY_CATEGORY_KEY),
         ]);
 
         if (!active) return;
@@ -110,9 +165,13 @@ export default function ListaWyzwalaczyScreen() {
           setText(savedDraft);
           lastSaved.current = savedDraft;
         }
-        if (savedCategory && QUICK_CATEGORIES.includes(savedCategory)) {
-          setSelectedCategory(savedCategory);
-          lastSavedCategory.current = savedCategory;
+        if (isTriggerKind(savedKind)) {
+          setSelectedKind(savedKind);
+          lastSavedKind.current = savedKind;
+        } else if (savedLegacyCategory) {
+          const inferredKind = inferLegacyKind(savedLegacyCategory, savedDraft ?? '');
+          setSelectedKind(inferredKind);
+          lastSavedKind.current = inferredKind;
         }
         setItems(parseItems(savedItems));
       } finally {
@@ -135,17 +194,18 @@ export default function ListaWyzwalaczyScreen() {
     }, 2800);
   };
 
-  const saveDraftNow = async (value: string, category: string | null) => {
+  const saveDraftNow = async (value: string, kind: TriggerKind | null) => {
     if (!loaded) return;
-    if (value === lastSaved.current && category === lastSavedCategory.current) return;
+    if (value === lastSaved.current && kind === lastSavedKind.current) return;
 
     try {
       await Promise.all([
         AsyncStorage.setItem(DRAFT_KEY, value),
-        category ? AsyncStorage.setItem(CATEGORY_KEY, category) : AsyncStorage.removeItem(CATEGORY_KEY),
+        kind ? AsyncStorage.setItem(KIND_KEY, kind) : AsyncStorage.removeItem(KIND_KEY),
+        AsyncStorage.removeItem(LEGACY_CATEGORY_KEY),
       ]);
       lastSaved.current = value;
-      lastSavedCategory.current = category;
+      lastSavedKind.current = kind;
     } catch {
       // no-op
     }
@@ -156,20 +216,83 @@ export default function ListaWyzwalaczyScreen() {
 
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      void saveDraftNow(text, selectedCategory);
+      void saveDraftNow(text, selectedKind);
     }, 300);
 
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [loaded, selectedCategory, text]);
+  }, [loaded, selectedKind, text]);
 
   useEffect(() => {
     const sub = Keyboard.addListener('keyboardDidHide', () => {
-      void saveDraftNow(text, selectedCategory);
+      void saveDraftNow(text, selectedKind);
     });
     return () => sub.remove();
-  }, [loaded, selectedCategory, text]);
+  }, [loaded, selectedKind, text]);
+
+  const persistItems = async (nextItems: TriggerItem[]) => {
+    await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems));
+  };
+
+  const addItem = async (nextText: string, nextKind: TriggerKind, options?: { clearDraft?: boolean; success?: string }) => {
+    const trimmed = nextText.trim();
+    if (!trimmed) return;
+
+    const duplicate = items.some(
+      (item) => item.kind === nextKind && normalizeComparableText(item.text) === normalizeComparableText(trimmed),
+    );
+
+    if (duplicate) {
+      setPendingQuickAdd(null);
+      setSelectedKind(nextKind);
+      showFeedback('To już jest na Twojej liście.');
+      return;
+    }
+
+    const nextItem: TriggerItem = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      text: trimmed,
+      kind: nextKind,
+      createdAt: new Date().toISOString(),
+    };
+
+    const previousItems = items;
+    const previousText = text;
+    const previousKind = selectedKind;
+    const nextItems = [nextItem, ...items];
+    const clearDraft = options?.clearDraft === true;
+
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+
+    setItems(nextItems);
+    if (clearDraft) {
+      setText('');
+      setSelectedKind(null);
+    } else {
+      setSelectedKind(nextKind);
+    }
+    setPendingQuickAdd(null);
+
+    try {
+      await persistItems(nextItems);
+      if (clearDraft) {
+        await Promise.all([AsyncStorage.setItem(DRAFT_KEY, ''), AsyncStorage.removeItem(KIND_KEY), AsyncStorage.removeItem(LEGACY_CATEGORY_KEY)]);
+        lastSaved.current = '';
+        lastSavedKind.current = null;
+      }
+
+      showFeedback(
+        options?.success ??
+          'Wyzwalacz dodany do listy.',
+      );
+    } catch {
+      setItems(previousItems);
+      setText(previousText);
+      setSelectedKind(previousKind);
+      Alert.alert('Błąd zapisu', 'Nie udało się zapisać tej pozycji. Spróbuj ponownie.');
+    }
+  };
 
   const handleSave = async () => {
     const trimmed = text.trim();
@@ -177,43 +300,25 @@ export default function ListaWyzwalaczyScreen() {
       Alert.alert('Brak treści', 'Najpierw zapisz jedną konkretną sytuację albo stan, który chcesz rozpoznawać wcześniej.');
       return;
     }
-
-    const nextItem: TriggerItem = {
-      id: `${Date.now()}`,
-      text: trimmed,
-      category: selectedCategory,
-      createdAt: new Date().toISOString(),
-    };
-    const previousItems = items;
-    const previousText = text;
-    const previousCategory = selectedCategory;
-    const nextItems = [nextItem, ...items];
-
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-
-    setItems(nextItems);
-    setText('');
-    setSelectedCategory(null);
-
-    try {
-      await Promise.all([
-        AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems)),
-        AsyncStorage.setItem(DRAFT_KEY, ''),
-        AsyncStorage.removeItem(CATEGORY_KEY),
-      ]);
-      lastSaved.current = '';
-      lastSavedCategory.current = null;
-      showFeedback(
-        nextItems.length === 1
-          ? 'Zapisane. To jest początek Twojej prywatnej listy ostrzegawczej.'
-          : `Zapisane. Masz już ${getCountLabel(nextItems.length)}.`,
-      );
-    } catch {
-      setItems(previousItems);
-      setText(previousText);
-      setSelectedCategory(previousCategory);
-      Alert.alert('Błąd zapisu', 'Nie udało się zapisać tej pozycji. Spróbuj ponownie.');
+    if (!selectedKind) {
+      Alert.alert('Wybierz rodzaj', 'Najpierw zaznacz, czy to jest wyzwalacz wewnętrzny czy zewnętrzny.');
+      return;
     }
+
+    await addItem(trimmed, selectedKind, { clearDraft: true });
+  };
+
+  const handleQuickAdd = async (label: string, kind: TriggerKind) => {
+    const isSecondTap = pendingQuickAdd?.label === label && pendingQuickAdd.kind === kind;
+
+    if (!isSecondTap) {
+      setSelectedKind(kind);
+      setPendingQuickAdd({ label, kind });
+      showFeedback('Dotknij jeszcze raz, aby dodać ten wyzwalacz.');
+      return;
+    }
+
+    await addItem(label, kind, { success: 'Wyzwalacz dodany do listy.' });
   };
 
   const handleDelete = (id: string) => {
@@ -232,7 +337,7 @@ export default function ListaWyzwalaczyScreen() {
             setItems(nextItems);
 
             try {
-              await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems));
+              await persistItems(nextItems);
               showFeedback('Usunięto wpis z Twojej listy.');
             } catch {
               setItems(previousItems);
@@ -246,8 +351,17 @@ export default function ListaWyzwalaczyScreen() {
 
   const summaryText =
     items.length === 0
-      ? 'Na początek zapisz 2-3 rzeczy, po których zwykle czujesz, że ryzyko rośnie.'
-      : `Masz już ${getCountLabel(items.length)}. Dzięki temu łatwiej zauważysz sygnał zanim Cię zaleje.`;
+      ? 'Na początek zapisz po 2-3 rzeczy z obu stron: co dzieje się w Tobie i co dzieje się wokół Ciebie.'
+      : `Masz już ${getCountLabel(items.length)}. Dzięki temu łatwiej zauważysz sygnał wcześniej i odróżnisz stan w środku od sytuacji z zewnątrz.`;
+
+  const internalItems = items.filter((item) => item.kind === 'internal');
+  const externalItems = items.filter((item) => item.kind === 'external');
+  const placeholder =
+    selectedKind === 'internal'
+      ? 'Np. zmęczenie po pracy, samotność, głód, nuda po 21:00'
+      : selectedKind === 'external'
+        ? 'Np. wieczór sam w domu, konflikt, telefon od tej osoby, konkretne miejsce'
+        : 'Np. samotność, zmęczenie, wieczór sam w domu, konflikt, telefon od tej osoby';
 
   return (
     <KeyboardAvoidingView
@@ -281,36 +395,85 @@ export default function ListaWyzwalaczyScreen() {
           <View style={styles.cardAccent} />
           <Text style={styles.sectionTitle}>Dodaj nowy wyzwalacz</Text>
           <Text style={styles.sectionText}>
-            Wpisz konkretnie, co zwykle podnosi ryzyko. Na przykład: wieczór sam w domu, zmęczenie po pracy, kłótnia, scrollowanie.
+            Podziel to na dwie grupy: wyzwalacze wewnętrzne, czyli stan w Tobie, i zewnętrzne, czyli sytuacje, ludzie, miejsca albo pory.
           </Text>
 
-          <View style={styles.chipsRow}>
-            {QUICK_CATEGORIES.map((category) => {
-              const active = selectedCategory === category;
+          <View style={styles.kindRow}>
+            {(['internal', 'external'] as TriggerKind[]).map((kind) => {
+              const active = selectedKind === kind;
               return (
                 <Pressable
-                  key={category}
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setSelectedCategory((prev) => (prev === category ? null : category))}
+                  key={kind}
+                  style={[styles.kindButton, active && styles.kindButtonActive]}
+                  onPress={() => {
+                    setPendingQuickAdd(null);
+                    setSelectedKind((prev) => (prev === kind ? null : kind));
+                  }}
                 >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{category}</Text>
+                  <Text style={[styles.kindButtonTitle, active && styles.kindButtonTitleActive]}>{getKindLabel(kind)}</Text>
+                  <Text style={[styles.kindButtonText, active && styles.kindButtonTextActive]}>
+                    {kind === 'internal' ? 'stany, emocje, napięcie' : 'osoby, miejsca, pory, sytuacje'}
+                  </Text>
                 </Pressable>
               );
             })}
           </View>
 
+          <View style={styles.suggestionsBlock}>
+            <Text style={styles.suggestionsTitle}>Szybkie dodanie</Text>
+
+            <Text style={styles.suggestionsLabel}>Wewnętrzne</Text>
+            <View style={styles.chipsRow}>
+              {INTERNAL_SUGGESTIONS.map((label) => {
+                const active = pendingQuickAdd?.label === label && pendingQuickAdd.kind === 'internal';
+                return (
+                  <Pressable
+                    key={label}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => void handleQuickAdd(label, 'internal')}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.suggestionsLabel}>Zewnętrzne</Text>
+            <View style={styles.chipsRow}>
+              {EXTERNAL_SUGGESTIONS.map((label) => {
+                const active = pendingQuickAdd?.label === label && pendingQuickAdd.kind === 'external';
+                return (
+                  <Pressable
+                    key={label}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => void handleQuickAdd(label, 'external')}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           <TextInput
             value={text}
-            onChangeText={setText}
-            onBlur={() => void saveDraftNow(text, selectedCategory)}
-            placeholder="Np. samotny powrót do domu, telefon od tej osoby, nuda po 21:00"
+            onChangeText={(value) => {
+              setPendingQuickAdd(null);
+              setText(value);
+            }}
+            onBlur={() => void saveDraftNow(text, selectedKind)}
+            placeholder={placeholder}
             placeholderTextColor="rgba(255,255,255,0.45)"
             multiline
             textAlignVertical="top"
             style={styles.input}
           />
 
-          {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
+          {feedback ? (
+            <View style={styles.feedbackCard}>
+              <Text style={styles.feedback}>{feedback}</Text>
+            </View>
+          ) : null}
 
           <Pressable style={styles.primaryButton} onPress={handleSave}>
             <Text style={styles.primaryButtonText}>Dodaj do listy</Text>
@@ -322,24 +485,73 @@ export default function ListaWyzwalaczyScreen() {
           {items.length === 0 ? (
             <Text style={styles.emptyText}>Na razie nic tu nie ma. Zacznij od pierwszej konkretnej rzeczy, która zwykle poprzedza gorszy moment.</Text>
           ) : (
-            items.map((item) => (
-              <View key={item.id} style={styles.itemCard}>
-                <View style={styles.itemHeader}>
-                  <View style={styles.itemMeta}>
-                    {item.category ? (
-                      <View style={styles.itemCategory}>
-                        <Text style={styles.itemCategoryText}>{item.category}</Text>
-                      </View>
-                    ) : null}
-                    <Text style={styles.itemDate}>{formatSavedDate(item.createdAt)}</Text>
-                  </View>
-                  <Pressable style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
-                    <Text style={styles.deleteButtonText}>Usuń</Text>
+            <>
+              <View style={styles.archiveSection}>
+                <View style={styles.archiveSectionHeader}>
+                  <Text style={styles.archiveSectionTitle}>Wewnętrzne ({internalItems.length})</Text>
+                  <Pressable style={styles.archiveToggleButton} onPress={() => setInternalExpanded((prev) => !prev)}>
+                    <Text style={styles.archiveToggleButtonText}>{internalExpanded ? 'Ukryj listę' : 'Pokaż listę'}</Text>
                   </Pressable>
                 </View>
-                <Text style={styles.itemText}>{item.text}</Text>
+                {internalExpanded ? (
+                  internalItems.length === 0 ? (
+                    <Text style={styles.sectionEmptyText}>Na razie nic tu nie ma.</Text>
+                  ) : (
+                    internalItems.map((item) => (
+                      <View key={item.id} style={styles.itemCard}>
+                        <View style={styles.itemHeader}>
+                          <View style={styles.itemMeta}>
+                            <View style={styles.itemCategory}>
+                              <Text style={styles.itemCategoryText}>Wewnętrzne</Text>
+                            </View>
+                            <Text style={styles.itemDate}>{formatSavedDate(item.createdAt)}</Text>
+                          </View>
+                          <Pressable style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+                            <Text style={styles.deleteButtonText}>Usuń</Text>
+                          </Pressable>
+                        </View>
+                        <Text style={styles.itemText}>{item.text}</Text>
+                      </View>
+                    ))
+                  )
+                ) : (
+                  <Text style={styles.sectionClosedText}>Lista ukryta.</Text>
+                )}
               </View>
-            ))
+
+              <View style={styles.archiveSection}>
+                <View style={styles.archiveSectionHeader}>
+                  <Text style={styles.archiveSectionTitle}>Zewnętrzne ({externalItems.length})</Text>
+                  <Pressable style={styles.archiveToggleButton} onPress={() => setExternalExpanded((prev) => !prev)}>
+                    <Text style={styles.archiveToggleButtonText}>{externalExpanded ? 'Ukryj listę' : 'Pokaż listę'}</Text>
+                  </Pressable>
+                </View>
+                {externalExpanded ? (
+                  externalItems.length === 0 ? (
+                    <Text style={styles.sectionEmptyText}>Na razie nic tu nie ma.</Text>
+                  ) : (
+                    externalItems.map((item) => (
+                      <View key={item.id} style={styles.itemCard}>
+                        <View style={styles.itemHeader}>
+                          <View style={styles.itemMeta}>
+                            <View style={styles.itemCategory}>
+                              <Text style={styles.itemCategoryText}>Zewnętrzne</Text>
+                            </View>
+                            <Text style={styles.itemDate}>{formatSavedDate(item.createdAt)}</Text>
+                          </View>
+                          <Pressable style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+                            <Text style={styles.deleteButtonText}>Usuń</Text>
+                          </Pressable>
+                        </View>
+                        <Text style={styles.itemText}>{item.text}</Text>
+                      </View>
+                    ))
+                  )
+                ) : (
+                  <Text style={styles.sectionClosedText}>Lista ukryta.</Text>
+                )}
+              </View>
+            </>
           )}
         </View>
       </ScrollView>
@@ -437,6 +649,59 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 12,
   },
+  kindRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+  },
+  kindButton: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(198,215,255,0.35)',
+    backgroundColor: 'rgba(7,24,38,0.32)',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  kindButtonActive: {
+    borderColor: 'rgba(226,244,255,0.95)',
+    backgroundColor: 'rgba(198,215,255,0.26)',
+  },
+  kindButtonTitle: {
+    color: 'white',
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  kindButtonTitleActive: {
+    color: 'white',
+  },
+  kindButtonText: {
+    color: 'rgba(240,248,255,0.74)',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  kindButtonTextActive: {
+    color: 'rgba(255,255,255,0.9)',
+  },
+  suggestionsBlock: {
+    marginBottom: 12,
+  },
+  suggestionsTitle: {
+    color: 'white',
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  suggestionsLabel: {
+    color: 'rgba(232,245,255,0.74)',
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
   chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -475,11 +740,21 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 24,
   },
+  feedbackCard: {
+    marginTop: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(176,236,201,0.55)',
+    backgroundColor: 'rgba(74,139,105,0.22)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   feedback: {
-    color: '#D9EAFF',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 10,
+    color: '#F3FFF8',
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   primaryButton: {
     marginTop: 12,
@@ -513,6 +788,46 @@ const styles = StyleSheet.create({
     color: SUB,
     fontSize: 15,
     lineHeight: 22,
+  },
+  archiveSection: {
+    marginTop: 10,
+  },
+  archiveSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  archiveSectionTitle: {
+    color: 'white',
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '700',
+  },
+  archiveToggleButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(198,215,255,0.4)',
+    backgroundColor: 'rgba(198,215,255,0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  archiveToggleButtonText: {
+    color: '#E4F0FF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  sectionClosedText: {
+    color: 'rgba(232,245,255,0.62)',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  sectionEmptyText: {
+    color: SUB,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
   },
   itemCard: {
     borderRadius: 14,
