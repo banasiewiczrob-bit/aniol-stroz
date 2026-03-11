@@ -41,7 +41,7 @@ export default function TabLayout() {
 
   useEffect(() => {
     if (!onboardingRequired) return;
-    if (pathname !== '/intro') {
+    if (pathname !== '/intro' && pathname !== '/ustawienia') {
       router.replace('/intro');
     }
   }, [onboardingRequired, pathname]);
