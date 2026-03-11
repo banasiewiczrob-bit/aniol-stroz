@@ -40,6 +40,7 @@ export default function LicznikScreen() {
   const compact = height <= 900;
   const [firstStepsStep, setFirstStepsStep] = useState<FirstStepsStep | 'intro' | null>(null);
   const [date, setDate] = useState(new Date());
+  const [pickerDraftDate, setPickerDraftDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [stats, setStats] = useState({ years: 0, months: 0, days: 0, totalDays: 0 });
   const [manualDay, setManualDay] = useState('');
@@ -134,12 +135,14 @@ export default function LicznikScreen() {
       if (savedDate) {
         const d = new Date(savedDate);
         setDate(d);
+        setPickerDraftDate(d);
         syncManualInputs(d);
         calculateStats(d);
         await markCounterDone();
       } else {
         const now = new Date();
         setDate(now);
+        setPickerDraftDate(now);
         syncManualInputs(now);
         calculateStats(now);
       }
@@ -193,9 +196,20 @@ export default function LicznikScreen() {
   };
 
   const onChange = async (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') setShow(false);
     if (!selectedDate) return;
+
+    if (Platform.OS === 'ios') {
+      setPickerDraftDate(selectedDate);
+      return;
+    }
+
+    setShow(false);
     await persistStartDate(selectedDate);
+  };
+
+  const applyPickerDate = async () => {
+    await persistStartDate(pickerDraftDate);
+    setShow(false);
   };
 
   const applyManualDate = async () => {
@@ -321,7 +335,7 @@ export default function LicznikScreen() {
             </View>
           ) : null}
 
-          <View style={[styles.counterWrap, compact && styles.counterWrapCompact]}>
+        <View style={[styles.counterWrap, compact && styles.counterWrapCompact]}>
             <Animated.View
               style={[
                 styles.counterGlow,
@@ -378,7 +392,15 @@ export default function LicznikScreen() {
           </View>
         </View>
 
-        <Pressable style={[styles.button, compact && styles.buttonCompact]} onPress={() => setShow(!show)}>
+        <Pressable
+          style={[styles.button, compact && styles.buttonCompact]}
+          onPress={() => {
+            if (!show) {
+              setPickerDraftDate(date);
+            }
+            setShow((prev) => !prev);
+          }}
+        >
           <Ionicons name="calendar-outline" size={20} color="white" style={{ marginRight: 10 }} />
           <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>{show ? 'Zwiń ustawienia' : 'Ustaw datę początkową'}</Text>
         </Pressable>
@@ -401,7 +423,7 @@ export default function LicznikScreen() {
             {Platform.OS === 'ios' ? (
               <>
                 <DateTimePicker
-                  value={date}
+                  value={pickerDraftDate}
                   mode="date"
                   display="spinner"
                   onChange={onChange}
@@ -409,9 +431,20 @@ export default function LicznikScreen() {
                   textColor="white"
                   locale="pl-PL"
                 />
-                <Pressable style={styles.closeBtn} onPress={() => setShow(false)}>
-                  <Text style={styles.closeBtnText}>Gotowe</Text>
-                </Pressable>
+                <View style={styles.closeBtnRow}>
+                  <Pressable
+                    style={[styles.closeBtn, styles.closeBtnSecondary]}
+                    onPress={() => {
+                      setPickerDraftDate(date);
+                      setShow(false);
+                    }}
+                  >
+                    <Text style={[styles.closeBtnText, styles.closeBtnTextSecondary]}>Anuluj</Text>
+                  </Pressable>
+                  <Pressable style={styles.closeBtn} onPress={() => void applyPickerDate()}>
+                    <Text style={styles.closeBtnText}>Ustaw datę</Text>
+                  </Pressable>
+                </View>
               </>
             ) : (
               <View style={styles.quickSet}>
@@ -728,8 +761,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(120, 200, 255, 0.1)',
   },
-  closeBtn: { padding: 10, alignItems: 'center', marginTop: 5, backgroundColor: 'rgba(120, 200, 255, 0.1)', borderRadius: 10 },
+  closeBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 6,
+  },
+  closeBtn: {
+    flex: 1,
+    padding: 10,
+    alignItems: 'center',
+    backgroundColor: 'rgba(120, 200, 255, 0.16)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(120, 200, 255, 0.35)',
+  },
+  closeBtnSecondary: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
   closeBtnText: { ...TYPE.bodyStrong, color: '#78C8FF' },
+  closeBtnTextSecondary: { color: 'rgba(255,255,255,0.76)' },
   quickSet: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(120, 200, 255, 0.12)' },
   quickTitle: { ...TYPE.bodySmall, color: 'rgba(255,255,255,0.7)', marginBottom: 8 },
   quickRow: { flexDirection: 'row', gap: 8 },

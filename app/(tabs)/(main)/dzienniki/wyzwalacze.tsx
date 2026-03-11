@@ -352,7 +352,7 @@ export default function ListaWyzwalaczyScreen() {
   const summaryText =
     items.length === 0
       ? 'Na początek zapisz po 2-3 rzeczy z obu stron: co dzieje się w Tobie i co dzieje się wokół Ciebie.'
-      : `Masz już ${getCountLabel(items.length)}. Dzięki temu łatwiej zauważysz sygnał wcześniej i odróżnisz stan w środku od sytuacji z zewnątrz.`;
+      : `Masz już ${getCountLabel(items.length)}. Dzięki temu wiesz więcej o sobie. Dobra robota!`;
 
   const internalItems = items.filter((item) => item.kind === 'internal');
   const externalItems = items.filter((item) => item.kind === 'external');
@@ -380,13 +380,15 @@ export default function ListaWyzwalaczyScreen() {
 
         <Text style={styles.title}>Lista wyzwalaczy</Text>
         <Text style={styles.subtitle}>
-          Zapisuj sytuacje, miejsca i stany, po których zwykle rośnie napięcie albo chęć ucieczki.
+          Czym są tak zwane 'wyzwalacze' zapewne ju wiesz. To wewnetrzne i zewnętrzne czynniki uruchamiające 'automatyzacje',
+          często prowadzące do sytuacji nawrotowych. 
+          Ta lista to miejsce, gdzie możesz je zapisywać, żeby łatwiej było je zauważyć wcześniej i mieć plan, jak reagować.
         </Text>
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Po co to dla Ciebie</Text>
+          <Text style={styles.infoTitle}>To ważne dla Ciebie</Text>
           <Text style={styles.infoText}>
-            Kiedy wyzwalacz jest nazwany wcześniej, łatwiej nie dać się zaskoczyć i szybciej wrócić do planu albo wsparcia.
+            Kiedy wyzwalacz jest nazwany, łatwiej nie dać się zaskoczyć.
           </Text>
           <Text style={styles.infoText}>{summaryText}</Text>
         </View>
