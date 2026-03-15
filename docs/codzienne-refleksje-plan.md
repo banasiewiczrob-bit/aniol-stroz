@@ -28,418 +28,418 @@ Szablon roboczy:
 ```text
 [Tytul]
 
-Dzis zatrzymaj sie przy jednej rzeczy: [mysl przewodnia].
+Dzis zatrzymuje sie przy jednej rzeczy: [mysl przewodnia].
 
 [Krotka refleksja: 3-5 zdan. Prosto, bez patosu. Jedna mysl, jeden sens.]
 
-Zapytaj siebie: [jedno krotkie pytanie].
+Pytam siebie: [jedno krotkie pytanie].
 
-Na dzis wystarczy jeden krok: [jedno konkretne dzialanie].
+Na dzis wystarczy mi jeden krok: [jedno konkretne dzialanie].
 
 To wystarczy na ten dzien.
 ```
 
 ## Styczen - Zatrzymanie
 
-1. Moment, w ktorym przestajesz uciekac
-2. Cisza, ktora zaczyna mowic
-3. Pierwsza uczciwosc wobec siebie
-4. Kiedy juz nie da sie udawac
-5. Zmeczenie zyciem w napieciu
-6. Prawda pojawia sie powoli
-7. Zatrzymac sie, zeby zobaczyc
-8. Dzien, w ktorym cos peka
-9. Kiedy przestajesz walczyc z rzeczywistoscia
-10. Pierwszy oddech bez iluzji
-11. Pomiedzy chaosem a nadzieja
-12. Nie wiem co dalej
-13. Przyznanie sie do bezradnosci
-14. Punkt, w ktorym koncza sie wymowki
-15. Kiedy zaczynasz slyszec siebie
-16. Zatrzymanie to nie porazka
-17. Prawda o zmeczeniu
-18. Spotkanie z wlasnym zyciem
-19. Przestac udawac sile
-20. Poczatek drogi zaczyna sie od prawdy
-21. Gdy cisza staje sie lustrem
-22. Nie wszystko da sie kontrolowac
-23. Moment, w ktorym pojawia sie pokora
-24. Zgoda na to, ze potrzebuje pomocy
-25. Wreszcie przestac udowadniac
-26. Pierwsza szczelina w murze
-27. Prawda nie musi byc wygodna
-28. Kiedy zaczynasz widziec konsekwencje
-29. Uznanie wlasnej kruchosci
-30. Poczatek odpowiedzialnosci
-31. Nowy rok w prawdzie
+1. Przestaje uciekac
+2. W ciszy zaczynam slyszec
+3. Mowie sobie prawde
+4. Przestaje udawac
+5. Rozpoznaje swoje zmeczenie
+6. Daje sobie czas
+7. Zatrzymuje sie, zeby zobaczyc
+8. Widze, ze cos we mnie peka
+9. Przestaje walczyc z rzeczywistoscia
+10. Biore pierwszy oddech bez iluzji
+11. Jestem pomiedzy chaosem a nadzieja
+12. Nie wiem jeszcze co dalej
+13. Przyznaje sie do bezradnosci
+14. Dochodze do punktu, w ktorym koncza sie wymowki
+15. Zaczynam slyszec siebie
+16. Widze, ze zatrzymanie to nie porazka
+17. Widze prawde o swoim zmeczeniu
+18. Spotykam sie z wlasnym zyciem
+19. Przestaje udawac sile
+20. Zaczynam droge od prawdy
+21. W ciszy widze siebie jak w lustrze
+22. Przyjmuje, ze nie wszystko moge kontrolowac
+23. Ucze sie pokory
+24. Zgadzam sie na to, ze potrzebuje pomocy
+25. Wreszcie przestaje udowadniac
+26. Widze pierwsza szczeline w murze
+27. Przyjmuje, ze prawda nie musi byc wygodna
+28. Zaczynam widziec konsekwencje
+29. Uznaje wlasna kruchosc
+30. Zaczynam brac odpowiedzialnosc
+31. Wchodze w nowy rok w prawdzie
 
 ## Luty - Uczucia
 
-1. Emocje, ktore wracaja
-2. Zlosc, ktora chce byc uslyszana
-3. Smutek, ktory potrzebuje miejsca
-4. Strach, ktory probuje cie chronic
-5. Wstyd, ktory zamyka drzwi
-6. Poczucie winy i odpowiedzialnosc
-7. Samotnosc w tlumie
-8. Radosc, ktora czasem oniesmiela
-9. Emocje sa informacja
-10. Kiedy uczucia zaczynaja wracac
-11. Zlosc nie jest wrogiem
-12. Strach nie musi prowadzic
-13. Smutek potrafi leczyc
-14. Wstyd chce zostac zobaczony
-15. Poczucie winy moze prowadzic do zmiany
-16. Samotnosc moze byc poczatkiem spotkania
-17. Radosc jako odwaga zycia
-18. Emocje sa drogowskazem
-19. Uczucia nie sa problemem
-20. Kiedy uczucia przestaja byc zagrozeniem
-21. Nauka nazywania emocji
-22. Kiedy przestajesz sie ich bac
-23. Uczucia jako jezyk zycia
-24. Zlosc mowi o granicach
-25. Smutek mowi o stracie
-26. Strach mowi o niepewnosci
-27. Wstyd mowi o ukrywaniu
-28. Poczucie winy mowi o odpowiedzialnosci
+1. Emocje do mnie wracaja
+2. Slucham swojej zlosci
+3. Daje miejsce swojemu smutkowi
+4. Widze strach, ktory probuje mnie chronic
+5. Widze wstyd, ktory zamyka mnie od srodka
+6. Rozrozniam poczucie winy i odpowiedzialnosc
+7. Czuje samotnosc w tlumie
+8. Otwieram sie na radosc
+9. Traktuje emocje jak informacje
+10. Czuje, jak uczucia zaczynaja wracac
+11. Przestaje walczyc ze swoja zloscia
+12. Nie pozwalam, by strach mnie prowadzil
+13. Pozwalam smutkowi leczyc
+14. Pozwalam zobaczyc swoj wstyd
+15. Pozwalam, by poczucie winy prowadzilo mnie do zmiany
+16. Odkrywam, ze samotnosc moze byc poczatkiem spotkania
+17. Traktuje radosc jak odwage zycia
+18. Odczytuje emocje jak drogowskaz
+19. Przestaje traktowac uczucia jak problem
+20. Uczucia przestaja byc dla mnie zagrozeniem
+21. Ucze sie nazywac emocje
+22. Przestaje sie ich bac
+23. Odczytuje uczucia jak jezyk zycia
+24. Slysze, co moja zlosc mowi o granicach
+25. Slysze, co moj smutek mowi o stracie
+26. Slysze, co moj strach mowi o niepewnosci
+27. Slysze, co moj wstyd mowi o ukrywaniu
+28. Slysze, co moje poczucie winy mowi o odpowiedzialnosci
 
 ### Bonus 29.02
 
-Dzien dodatkowy: lagodnosc wobec siebie
+Dzien dodatkowy: Ucze sie lagodnosci wobec siebie
 
 ## Marzec - Iluzje
 
-1. Historia, ktora sobie opowiadalem
-2. Mechanizmy obronne
-3. Racjonalizacje
-4. Zaprzeczanie
-5. Minimalizowanie
-6. Przerzucanie winy
-7. Ucieczka w kontrole
-8. Ucieczka w chaos
-9. Iluzja sily
-10. Iluzja wyjatkowosci
-11. Iluzja niewinnosci
-12. Kiedy zaczynasz widziec schemat
-13. Odkrywanie wlasnych manipulacji
-14. Historia, ktora budowalem o sobie
-15. Prawda o mojej roli
-16. Mechanizmy, ktore mnie chronily
-17. Kiedy obrona staje sie wiezieniem
-18. Zobaczyc swoje strategie
-19. Przestac walczyc z rzeczywistoscia
-20. Zrozumiec wlasne klamstwa
-21. Kiedy zaczyna sie uczciwosc
-22. Widziec bez usprawiedliwien
-23. Konfrontacja z prawda
-24. Iluzja kontroli
-25. Iluzja bezpieczenstwa
-26. Iluzja samotnosci
-27. Iluzja samowystarczalnosci
-28. Iluzja niezaleznosci
-29. Iluzja wyjatkowego cierpienia
-30. Iluzja, ze jestem inny
-31. Poczatek trzezwego widzenia
+1. Widze historie, ktora sobie opowiadam
+2. Rozpoznaje swoje mechanizmy obronne
+3. Rozpoznaje swoje racjonalizacje
+4. Widze swoje zaprzeczanie
+5. Widze, jak minimalizuje
+6. Przestaje przerzucac wine
+7. Uciekam w kontrole
+8. Uciekam w chaos
+9. Widze iluzje swojej sily
+10. Widze iluzje swojej wyjatkowosci
+11. Widze iluzje swojej niewinnosci
+12. Zaczynam widziec schemat
+13. Odkrywam swoje manipulacje
+14. Widze historie, ktora buduje o sobie
+15. Widze prawde o swojej roli
+16. Widze mechanizmy, ktore mnie chronily
+17. Widze, kiedy obrona staje sie wiezieniem
+18. Zaczynam widziec swoje strategie
+19. Przestaje walczyc z rzeczywistoscia
+20. Zaczynam rozumiec swoje klamstwa
+21. Zaczynam byc uczciwy
+22. Widze bez usprawiedliwien
+23. Konfrontuje sie z prawda
+24. Widze iluzje kontroli
+25. Widze iluzje bezpieczenstwa
+26. Widze iluzje samotnosci
+27. Widze iluzje samowystarczalnosci
+28. Widze iluzje niezaleznosci
+29. Widze iluzje wyjatkowego cierpienia
+30. Przestaje wierzyc, ze jestem inny
+31. Zaczynam widziec trzezwo
 
 ## Kwiecien - Odpowiedzialnosc
 
-1. Odpowiedzialnosc za swoje zycie
-2. Odpowiedzialnosc za swoje decyzje
-3. Odpowiedzialnosc za swoje emocje
-4. Odpowiedzialnosc za swoje slowa
-5. Odpowiedzialnosc za relacje
-6. Odpowiedzialnosc za granice
-7. Odpowiedzialnosc za zmiany
-8. Odpowiedzialnosc za prawde
-9. Odpowiedzialnosc za konsekwencje
-10. Odpowiedzialnosc za wybory
-11. Odpowiedzialnosc za przeszlosc
-12. Odpowiedzialnosc za przyszlosc
-13. Odpowiedzialnosc za dzien dzisiejszy
-14. Odpowiedzialnosc za uczciwosc
-15. Odpowiedzialnosc za bledy
-16. Odpowiedzialnosc za naprawe
-17. Odpowiedzialnosc za sluchanie
-18. Odpowiedzialnosc za milczenie
-19. Odpowiedzialnosc za dzialanie
-20. Odpowiedzialnosc za relacje z samym soba
-21. Odpowiedzialnosc za cialo
-22. Odpowiedzialnosc za czas
-23. Odpowiedzialnosc za rozwoj
-24. Odpowiedzialnosc za pomoc
-25. Odpowiedzialnosc za przyjecie pomocy
-26. Odpowiedzialnosc za zmiane
-27. Odpowiedzialnosc za prawde o sobie
-28. Odpowiedzialnosc za terazniejszosc
-29. Odpowiedzialnosc za droge
-30. Odpowiedzialnosc jako wolnosc
+1. Biore odpowiedzialnosc za swoje zycie
+2. Biore odpowiedzialnosc za swoje decyzje
+3. Biore odpowiedzialnosc za swoje emocje
+4. Biore odpowiedzialnosc za swoje slowa
+5. Biore odpowiedzialnosc za relacje
+6. Biore odpowiedzialnosc za granice
+7. Biore odpowiedzialnosc za zmiany
+8. Biore odpowiedzialnosc za prawde
+9. Biore odpowiedzialnosc za konsekwencje
+10. Biore odpowiedzialnosc za wybory
+11. Biore odpowiedzialnosc za przeszlosc
+12. Biore odpowiedzialnosc za przyszlosc
+13. Biore odpowiedzialnosc za dzien dzisiejszy
+14. Biore odpowiedzialnosc za uczciwosc
+15. Biore odpowiedzialnosc za bledy
+16. Biore odpowiedzialnosc za naprawe
+17. Biore odpowiedzialnosc za sluchanie
+18. Biore odpowiedzialnosc za milczenie
+19. Biore odpowiedzialnosc za dzialanie
+20. Biore odpowiedzialnosc za relacje z samym soba
+21. Biore odpowiedzialnosc za cialo
+22. Biore odpowiedzialnosc za czas
+23. Biore odpowiedzialnosc za rozwoj
+24. Biore odpowiedzialnosc za pomoc
+25. Biore odpowiedzialnosc za przyjecie pomocy
+26. Biore odpowiedzialnosc za zmiane
+27. Biore odpowiedzialnosc za prawde o sobie
+28. Biore odpowiedzialnosc za terazniejszosc
+29. Biore odpowiedzialnosc za droge
+30. Odkrywam odpowiedzialnosc jako wolnosc
 
 ## Maj - Relacje
 
-1. Relacje zaczynaja sie od prawdy
-2. Spotkanie dwoch swiatow
-3. Kiedy zaczynam sluchac
-4. Relacja to nie kontrola
-5. Bliskosc bez udawania
-6. Uwaznosc na drugiego czlowieka
-7. Mowic i byc slyszanym
-8. Sluchac bez obrony
-9. Relacje potrzebuja czasu
-10. Zaufanie rodzi sie powoli
-11. Uczciwosc w rozmowie
-12. Bliskosc bez manipulacji
-13. Spotkanie zamiast walki
-14. Kiedy przestaje udowadniac racje
-15. Byc obecnym
-16. Relacja jako przestrzen rozwoju
-17. Otworzyc sie na drugiego
-18. Sluchac takze tego, co trudne
-19. Kiedy pojawia sie zrozumienie
-20. Budowanie zaufania
-21. Odpowiedzialnosc w relacji
-22. Przyjecie drugiego czlowieka
-23. Roznice miedzy nami
-24. Szacunek w rozmowie
-25. Miejsce na emocje w relacji
-26. Relacje ucza cierpliwosci
-27. Uczyc sie byc razem
-28. Spotkanie bez masek
-29. Bliskosc i granice
-30. Relacje jako droga
-31. Czlowiek potrzebuje czlowieka
+1. Zaczynam relacje od prawdy
+2. Spotykam drugi swiat
+3. Zaczynam sluchac
+4. Widze, ze relacja to nie kontrola
+5. Ucze sie bliskosci bez udawania
+6. Uwazam na drugiego czlowieka
+7. Mowie i daje sie uslyszec
+8. Slucham bez obrony
+9. Daje relacjom czas
+10. Pozwalam, by zaufanie rodzilo sie powoli
+11. Ucze sie uczciwosci w rozmowie
+12. Ucze sie bliskosci bez manipulacji
+13. Wybieram spotkanie zamiast walki
+14. Przestaje udowadniac racje
+15. Ucze sie byc obecnym
+16. Traktuje relacje jak przestrzen rozwoju
+17. Otwieram sie na drugiego
+18. Slucham takze tego, co trudne
+19. Otwieram sie na zrozumienie
+20. Buduje zaufanie
+21. Biore odpowiedzialnosc w relacji
+22. Ucze sie przyjmowac drugiego czlowieka
+23. Przyjmuje roznice miedzy nami
+24. Ucze sie szacunku w rozmowie
+25. Robie miejsce na emocje w relacji
+26. Relacje ucza mnie cierpliwosci
+27. Ucze sie byc razem
+28. Spotykam bez masek
+29. Ucze sie bliskosci i granic
+30. Traktuje relacje jak droge
+31. Potrzebuje drugiego czlowieka
 
 ## Czerwiec - Granice
 
-1. Granice zaczynaja sie od swiadomosci
-2. Mowic "nie" bez poczucia winy
-3. Granice chronia relacje
-4. Kiedy ucze sie siebie szanowac
-5. Odpowiedzialnosc za wlasne zycie
-6. Granice to nie mur
-7. Granice jako przestrzen wolnosci
-8. Odrozniac pomoc od ratowania
-9. Zauwazyc wlasne potrzeby
-10. Granice wobec przeszlosci
-11. Granice wobec manipulacji
-12. Uczyc sie odmawiac
-13. Granice wobec chaosu
-14. Granice wobec przemocy
-15. Granice wobec wlasnych impulsow
-16. Granice wobec leku
-17. Granice wobec oczekiwan innych
-18. Granice w relacjach rodzinnych
-19. Granice wobec pracy
-20. Granice wobec zmeczenia
-21. Granice jako akt odwagi
-22. Granice wobec nalogu
-23. Granice wobec destrukcji
-24. Granice wobec iluzji
-25. Granice wobec manipulacji emocjonalnej
-26. Granice wobec chaosu w glowie
-27. Granice jako troska o siebie
-28. Granice jako wyraz szacunku
-29. Granice jako warunek zdrowia
-30. Granice buduja bezpieczenstwo
+1. Zaczynam od swiadomosci swoich granic
+2. Mowie "nie" bez poczucia winy
+3. Widze, ze granice chronia relacje
+4. Ucze sie siebie szanowac
+5. Biore odpowiedzialnosc za wlasne zycie
+6. Widze, ze granice to nie mur
+7. Widze w granicach przestrzen wolnosci
+8. Odrozniam pomoc od ratowania
+9. Zauwazam wlasne potrzeby
+10. Stawiam granice wobec przeszlosci
+11. Stawiam granice wobec manipulacji
+12. Ucze sie odmawiac
+13. Stawiam granice wobec chaosu
+14. Stawiam granice wobec przemocy
+15. Stawiam granice wobec wlasnych impulsow
+16. Stawiam granice wobec leku
+17. Stawiam granice wobec oczekiwan innych
+18. Stawiam granice w relacjach rodzinnych
+19. Stawiam granice wobec pracy
+20. Stawiam granice wobec zmeczenia
+21. Stawiam granice jako akt odwagi
+22. Stawiam granice wobec nalogu
+23. Stawiam granice wobec destrukcji
+24. Stawiam granice wobec iluzji
+25. Stawiam granice wobec manipulacji emocjonalnej
+26. Stawiam granice wobec chaosu w glowie
+27. Traktuje granice jak troske o siebie
+28. Traktuje granice jak wyraz szacunku
+29. Traktuje granice jak warunek zdrowia
+30. Widze, jak granice buduja bezpieczenstwo
 
 ## Lipiec - Wspolnota
 
-1. Czlowiek zdrowieje miedzy ludzmi
-2. Sila wspolnoty
-3. Wspolnota jako lustro
-4. Spotkanie w prawdzie
-5. Wspolnota bez masek
-6. Dzielenie sie doswiadczeniem
-7. Sluchanie historii innych
-8. Wspolnota daje nadzieje
-9. Wspolnota jako przestrzen zmiany
-10. Uczyc sie byc razem
-11. Wspolnota bez oceniania
-12. Wspolnota jako wsparcie
-13. Kazdy wnosi swoja historie
-14. Wspolnota jako szkola relacji
-15. Wspolnota i odpowiedzialnosc
-16. Wspolnota jako droga
-17. Sila bycia razem
-18. Wspolnota i zaufanie
-19. Wspolnota i szczerosc
-20. Wspolnota i odwaga
-21. Wspolnota i pokora
-22. Wspolnota jako miejsce zdrowienia
-23. Wspolnota daje perspektywe
-24. Wspolnota i nadzieja
-25. Wspolnota jako dom
-26. Wspolnota i codziennosc
-27. Wspolnota i rozmowa
-28. Wspolnota i obecnosc
-29. Wspolnota i wzrost
-30. Wspolnota i odpowiedzialnosc
-31. Wspolnota jako droga powrotu
+1. Zdrowieje miedzy ludzmi
+2. Czerpie sile ze wspolnoty
+3. Wspolnota staje sie dla mnie lustrem
+4. Spotykam sie w prawdzie
+5. Ucze sie wspolnoty bez masek
+6. Dziele sie doswiadczeniem
+7. Slucham historii innych
+8. Wspolnota daje mi nadzieje
+9. Wspolnota staje sie dla mnie przestrzenia zmiany
+10. Ucze sie byc razem
+11. Ucze sie wspolnoty bez oceniania
+12. Wspolnota staje sie dla mnie wsparciem
+13. Wnosze swoja historie
+14. Wspolnota staje sie dla mnie szkola relacji
+15. Ucze sie wspolnoty i odpowiedzialnosci
+16. Wspolnota staje sie dla mnie droga
+17. Odkrywam sile bycia razem
+18. Ucze sie wspolnoty i zaufania
+19. Ucze sie wspolnoty i szczerosci
+20. Ucze sie wspolnoty i odwagi
+21. Ucze sie wspolnoty i pokory
+22. Wspolnota staje sie dla mnie miejscem zdrowienia
+23. Wspolnota daje mi perspektywe
+24. Widze nadzieje we wspolnocie
+25. Wspolnota staje sie dla mnie domem
+26. Ucze sie wspolnoty w codziennosci
+27. Ucze sie wspolnoty w rozmowie
+28. Ucze sie wspolnoty w obecnosci
+29. Ucze sie wspolnoty we wzroscie
+30. Biore odpowiedzialnosc we wspolnocie
+31. Wspolnota staje sie moja droga powrotu
 
 ## Sierpien - Pokora
 
-1. Pokora zaczyna sie od prawdy
-2. Pokora wobec zycia
-3. Pokora wobec wlasnych bledow
-4. Pokora wobec innych ludzi
-5. Pokora wobec procesu
-6. Pokora wobec emocji
-7. Pokora wobec zmiany
-8. Pokora wobec czasu
-9. Pokora wobec doswiadczenia
-10. Pokora wobec wiedzy
-11. Pokora wobec wlasnych ograniczen
-12. Pokora wobec relacji
-13. Pokora wobec przeszlosci
-14. Pokora wobec terazniejszosci
-15. Pokora wobec przyszlosci
-16. Pokora jako sila
-17. Pokora jako uczciwosc
-18. Pokora jako odwaga
-19. Pokora wobec prawdy
-20. Pokora wobec zycia codziennego
-21. Pokora wobec pracy nad soba
-22. Pokora wobec wspolnoty
-23. Pokora wobec slabosci
-24. Pokora wobec cierpienia
-25. Pokora wobec radosci
-26. Pokora wobec zmeczenia
-27. Pokora wobec nadziei
-28. Pokora wobec milosci
-29. Pokora wobec drogi
-30. Pokora wobec sensu
-31. Pokora jako wolnosc
+1. Ucze sie pokory zaczynajac od prawdy
+2. Ucze sie pokory wobec zycia
+3. Ucze sie pokory wobec wlasnych bledow
+4. Ucze sie pokory wobec innych ludzi
+5. Ucze sie pokory wobec procesu
+6. Ucze sie pokory wobec emocji
+7. Ucze sie pokory wobec zmiany
+8. Ucze sie pokory wobec czasu
+9. Ucze sie pokory wobec doswiadczenia
+10. Ucze sie pokory wobec wiedzy
+11. Ucze sie pokory wobec wlasnych ograniczen
+12. Ucze sie pokory wobec relacji
+13. Ucze sie pokory wobec przeszlosci
+14. Ucze sie pokory wobec terazniejszosci
+15. Ucze sie pokory wobec przyszlosci
+16. Odkrywam, ze pokora jest sila
+17. Odkrywam, ze pokora jest uczciwoscia
+18. Odkrywam, ze pokora jest odwaga
+19. Ucze sie pokory wobec prawdy
+20. Ucze sie pokory wobec zycia codziennego
+21. Ucze sie pokory wobec pracy nad soba
+22. Ucze sie pokory wobec wspolnoty
+23. Ucze sie pokory wobec slabosci
+24. Ucze sie pokory wobec cierpienia
+25. Ucze sie pokory wobec radosci
+26. Ucze sie pokory wobec zmeczenia
+27. Ucze sie pokory wobec nadziei
+28. Ucze sie pokory wobec milosci
+29. Ucze sie pokory wobec drogi
+30. Ucze sie pokory wobec sensu
+31. Odkrywam, ze pokora jest wolnoscia
 
 ## Wrzesien - Zmiana
 
-1. Zmiana zaczyna sie w srodku
-2. Zmiana wymaga odwagi
-3. Zmiana zaczyna sie od decyzji
-4. Zmiana potrzebuje czasu
-5. Zmiana nie jest linia prosta
-6. Jeden dzien tez jest zmiana
-7. Zmiana jako droga
-8. Zmiana zaczyna sie od powrotu
-9. Nawyk buduje przyszlosc
-10. Male kroki tez maja znaczenie
-11. Zmiana i lek przed nawrotem
-12. Dzien po potknieciu
-13. Nie przekreslac wszystkiego
-14. Wracac do rytmu
-15. Cialo tez potrzebuje zmiany
-16. Sen, jedzenie i spokoj
-17. Wieczor bywa trudny
-18. Zmiana potrzebuje planu
-19. Prosic o pomoc wczesniej
-20. Zmiana i cierpliwosc
-21. Zmiana jako praktyka
-22. Powtarzac to, co dziala
-23. Zmiana w relacjach
-24. Nie wracac do starych wymowek
-25. Zmiana i odpowiedzialnosc
-26. Zmiana i codzienna rutyna
-27. Zmiana jako wybor na dzis
-28. Zmiana jako wytrwalosc
-29. Zmiana jako nadzieja
-30. Zmiana jako nowe zycie
+1. Zmiana zaczyna sie we mnie
+2. Wchodze w zmiane z odwaga
+3. Zmiane zaczynam od decyzji
+4. Daje zmianie czas
+5. Widze, ze zmiana nie jest linia prosta
+6. Jeden moj dzien tez jest zmiana
+7. Traktuje zmiane jak droge
+8. Zmiane zaczynam od powrotu
+9. Widze, jak nawyk buduje moja przyszlosc
+10. Wierze, ze male kroki tez maja znaczenie
+11. Widze zmiane i lek przed nawrotem
+12. Wracam po potknieciu
+13. Nie przekreslam wszystkiego
+14. Wracam do rytmu
+15. Widze, ze moje cialo tez potrzebuje zmiany
+16. Dbam o sen, jedzenie i spokoj
+17. Widze, ze wieczor bywa trudny
+18. Daje zmianie plan
+19. Prosze o pomoc wczesniej
+20. Daje zmianie cierpliwosc
+21. Traktuje zmiane jak praktyke
+22. Powtarzam to, co dziala
+23. Widze zmiane w relacjach
+24. Nie wracam do starych wymowek
+25. Biore odpowiedzialnosc za zmiane
+26. Ukladam zmiane w codziennej rutynie
+27. Wybieram zmiane na dzis
+28. Trwam w zmianie
+29. Widze w zmianie nadzieje
+30. Wchodze w nowe zycie
 
 ## Pazdziernik - Sens
 
-1. Po co sie dzis zatrzymac
-2. Sens jednego uczciwego dnia
-3. Sens malego kroku
-4. Sens trzymania granic
-5. Sens proszenia o pomoc
-6. Sens planu dnia
-7. Sens nazywania uczuc
-8. Sens powiedzenia prawdy
-9. Sens zwyklej obecnosci
-10. Sens wyjscia z samotnosci
-11. Sens rozmowy zamiast ucieczki
-12. Sens odpoczynku
-13. Sens dbania o cialo
-14. Sens wytrwania w kryzysie
-15. Sens zaczynania od nowa
-16. Sens przyjecia wlasnej historii
-17. Sens naprawiania szkod
-18. Sens codziennych decyzji
-19. Sens wspolnoty
-20. Sens cierpliwosci
-21. Sens pokory
-22. Sens wytrwalosci
-23. Sens pracy nad soba
-24. Sens przebaczenia
-25. Sens przyjmowania dobra
-26. Sens wdziecznosci
-27. Sens dawania innym
-28. Sens zwyczajnosci
-29. Sens nadziei
-30. Sens dalszej drogi
-31. Sens bycia tu dzisiaj
+1. Szukam sensu tego zatrzymania
+2. Widze sens jednego uczciwego dnia
+3. Widze sens malego kroku
+4. Widze sens trzymania granic
+5. Widze sens proszenia o pomoc
+6. Widze sens planu dnia
+7. Widze sens nazywania uczuc
+8. Widze sens powiedzenia prawdy
+9. Widze sens zwyklej obecnosci
+10. Widze sens wyjscia z samotnosci
+11. Widze sens rozmowy zamiast ucieczki
+12. Widze sens odpoczynku
+13. Widze sens dbania o cialo
+14. Widze sens wytrwania w kryzysie
+15. Widze sens zaczynania od nowa
+16. Widze sens przyjecia wlasnej historii
+17. Widze sens naprawiania szkod
+18. Widze sens codziennych decyzji
+19. Widze sens wspolnoty
+20. Widze sens cierpliwosci
+21. Widze sens pokory
+22. Widze sens wytrwalosci
+23. Widze sens pracy nad soba
+24. Widze sens przebaczenia
+25. Widze sens przyjmowania dobra
+26. Widze sens wdziecznosci
+27. Widze sens dawania innym
+28. Widze sens zwyczajnosci
+29. Widze sens nadziei
+30. Widze sens dalszej drogi
+31. Widze sens bycia tu dzisiaj
 
 ## Listopad - Wdziecznosc
 
-1. Wdziecznosc za to, ze zyje
-2. Wdziecznosc za dzien bez ucieczki
-3. Wdziecznosc za ludzi obok
-4. Wdziecznosc za telefon, ktory wykonalem
-5. Wdziecznosc za pomoc, ktora przyjalem
-6. Wdziecznosc za zwykly spokoj
-7. Wdziecznosc za cialo, ktore niesie
-8. Wdziecznosc za sen
-9. Wdziecznosc za posilek
-10. Wdziecznosc za dom
-11. Wdziecznosc za rozmowe
-12. Wdziecznosc za obecnosc
-13. Wdziecznosc za plan na dzis
-14. Wdziecznosc za granice
-15. Wdziecznosc za odwage powiedzenia prawdy
-16. Wdziecznosc za zatrzymanie
-17. Wdziecznosc za cierpliwosc
-18. Wdziecznosc za ludzi, ktorzy nie odpuscili
-19. Wdziecznosc za wspolnote
-20. Wdziecznosc za male zwyciestwa
-21. Wdziecznosc za dzien dzisiejszy
-22. Wdziecznosc za nauke z potkniec
-23. Wdziecznosc za zmiane, ktora rosnie powoli
-24. Wdziecznosc za nadzieje
-25. Wdziecznosc za sens
-26. Wdziecznosc za mozliwosc naprawy
-27. Wdziecznosc za prawde
-28. Wdziecznosc za nowe spojrzenie
-29. Wdziecznosc za przyszlosc
-30. Wdziecznosc za terazniejszosc
+1. Jestem wdzieczny za to, ze zyje
+2. Jestem wdzieczny za dzien bez ucieczki
+3. Jestem wdzieczny za ludzi obok
+4. Jestem wdzieczny za telefon, ktory wykonalem
+5. Jestem wdzieczny za pomoc, ktora przyjalem
+6. Jestem wdzieczny za zwykly spokoj
+7. Jestem wdzieczny za cialo, ktore mnie niesie
+8. Jestem wdzieczny za sen
+9. Jestem wdzieczny za posilek
+10. Jestem wdzieczny za dom
+11. Jestem wdzieczny za rozmowe
+12. Jestem wdzieczny za obecnosc
+13. Jestem wdzieczny za plan na dzis
+14. Jestem wdzieczny za granice
+15. Jestem wdzieczny za odwage powiedzenia prawdy
+16. Jestem wdzieczny za zatrzymanie
+17. Jestem wdzieczny za cierpliwosc
+18. Jestem wdzieczny za ludzi, ktorzy nie odpuscili
+19. Jestem wdzieczny za wspolnote
+20. Jestem wdzieczny za male zwyciestwa
+21. Jestem wdzieczny za dzien dzisiejszy
+22. Jestem wdzieczny za nauke z potkniec
+23. Jestem wdzieczny za zmiane, ktora rosnie powoli
+24. Jestem wdzieczny za nadzieje
+25. Jestem wdzieczny za sens
+26. Jestem wdzieczny za mozliwosc naprawy
+27. Jestem wdzieczny za prawde
+28. Jestem wdzieczny za nowe spojrzenie
+29. Jestem wdzieczny za przyszlosc
+30. Jestem wdzieczny za terazniejszosc
 
 ## Grudzien - Dzielenie sie
 
-1. Dac to, co dostalem
-2. Obecnosc tez jest darem
-3. Sluchac zamiast pouczac
-4. Opowiedziec prawde o swojej drodze
-5. Zadzwonic do kogos, kto moze potrzebowac glosu
-6. Dzielic sie nadzieja, nie presja
-7. Dzielic sie spokojem
-8. Dzielic sie uwaga
-9. Dzielic sie czasem
-10. Dzielic sie doswiadczeniem kryzysu i powrotu
-11. Dzielic sie tym, co dziala
-12. Dzielic sie bez udawania mocnego
-13. Dzielic sie wlasna kruchoscia
-14. Dzielic sie wdziecznoscia
-15. Dzielic sie wspolnota
-16. Dzielic sie slowem otuchy
-17. Dzielic sie obecnoscia przy trudnym dniu
-18. Dzielic sie odpowiedzialnoscia
-19. Dzielic sie dobrem w malej formie
-20. Dzielic sie cierpliwoscia
-21. Dzielic sie tym, co sam chcialem uslyszec
-22. Dzielic sie w prawdzie
-23. Dzielic sie, nie ratujac
-24. Dzielic sie pokojem
-25. Dzielic sie swiatlem
-26. Dzielic sie nadzieja po ciemnym czasie
-27. Dzielic sie sensem
-28. Dzielic sie droga zdrowienia
-29. Dzielic sie zyciem codziennym
-30. Dzielic sie tym, co najprostsze
-31. Dzielic sie zyciem
+1. Przekazuje dalej to, co sam otrzymuje
+2. Wiem, ze moja obecnosc tez jest darem
+3. Slucham zamiast pouczac
+4. Opowiadam prawde o swojej drodze
+5. Dzwonie do kogos, kto moze potrzebowac glosu
+6. Dziele sie nadzieja, nie presja
+7. Dziele sie spokojem
+8. Dziele sie uwaga
+9. Dziele sie czasem
+10. Dziele sie doswiadczeniem kryzysu i powrotu
+11. Dziele sie tym, co dziala
+12. Dziele sie bez udawania mocnego
+13. Dziele sie wlasna kruchoscia
+14. Dziele sie wdziecznoscia
+15. Dziele sie wspolnota
+16. Dziele sie slowem otuchy
+17. Dziele sie obecnoscia przy trudnym dniu
+18. Dziele sie odpowiedzialnoscia
+19. Dziele sie dobrem w malej formie
+20. Dziele sie cierpliwoscia
+21. Dziele sie tym, co sam chcialbym uslyszec
+22. Dziele sie w prawdzie
+23. Dziele sie, nie ratujac
+24. Dziele sie pokojem
+25. Dziele sie swiatlem
+26. Dziele sie nadzieja po ciemnym czasie
+27. Dziele sie sensem
+28. Dziele sie droga zdrowienia
+29. Dziele sie zyciem codziennym
+30. Dziele sie tym, co najprostsze
+31. Dziele sie zyciem

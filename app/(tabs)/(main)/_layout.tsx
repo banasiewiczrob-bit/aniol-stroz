@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SOFT_BADGE_BG, SOFT_BADGE_TEXT } from '@/constants/ui';
 import { getFirstStepsState, resolveFirstStepsStep, subscribeFirstStepsChanges } from '@/hooks/useFirstSteps';
 import { useAppIconBadge } from '@/hooks/useAppIconBadge';
 import { usePendingTasksBadge } from '@/hooks/usePendingTasksBadge';
@@ -85,8 +86,8 @@ export default function MainTabsLayout() {
                 : pendingTasksBadge.total
               : undefined,
           tabBarBadgeStyle: {
-            backgroundColor: '#D73D4A',
-            color: 'white',
+            backgroundColor: SOFT_BADGE_BG,
+            color: SOFT_BADGE_TEXT,
             fontSize: 11,
             fontWeight: '800',
           },

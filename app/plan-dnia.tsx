@@ -94,9 +94,9 @@ const DEFAULT_PLAN_PLACEHOLDERS = ['Dla siebie', 'Obowiązki', 'Dla relacji'];
 const PLAN_INSTRUCTION_CO =
   'Wybierasz dzień z kalendarza i tworzysz plan z oddzielnych elementów. Elementy możesz nazwać dowolnie i dopasować do siebie.';
 const PLAN_INSTRUCTION_JAK =
-  'Kliknij datę, dodaj elementy planu i zapisz. Wieczorem wróć do tego samego dnia, zaznacz które elementy zrobiłeś, uzupełnij HALT i zapisz do archiwum.';
+  'Kliknij datę, dodaj elementy planu i zapisz. Wieczorem wróć do tego samego dnia, zaznacz co było możliwe i sprawdź HALT.';
 const PLAN_INSTRUCTION_SHORT =
-  'Zaplanuj dzień, wykonaj plan, podsumuj i ucz się na przyszłość. To prosta praktyka, która może pomóc Ci lepiej rozumieć siebie i swoje nawyki.';
+  'To proste miejsce do złapania kierunku rano i spokojnego domknięcia dnia wieczorem.';
 
 function addDays(date: Date, days: number) {
   const next = new Date(date);
@@ -293,10 +293,10 @@ function parsePlanStore(raw: unknown, fallbackDateKey: DateKey): PlanStore {
 
 function evaluateDay(completedCount: number, readCount: number, haltCount: number) {
   const score = completedCount + readCount - haltCount * 2;
-  if (score >= 6) return { score, emoji: '😁', message: 'Dobra robota! Świetnie domknąłeś dzień.' };
-  if (score >= 3) return { score, emoji: '😊', message: 'Dobra robota. To był solidny dzień.' };
-  if (score === 1) return { score, emoji: '🙂', message: 'Jest progres. Krok po kroku.' };
-  return { score, emoji: '🤔', message: 'Hmmm... no cóż, czasem tak bywa.' };
+  if (score >= 6) return { score, emoji: '😁', message: 'W tym dniu było sporo oparcia i domknięć.' };
+  if (score >= 3) return { score, emoji: '😊', message: 'To był dzień, do którego udało Ci się wrócić.' };
+  if (score === 1) return { score, emoji: '🙂', message: 'Choćby jedna rzecz została dziś zauważona.' };
+  return { score, emoji: '🤔', message: 'Ten dzień mógł być trudny. Zatrzymaj z niego tylko to, co ważne.' };
 }
 
 function weekDates(today = new Date()) {
@@ -438,10 +438,10 @@ export default function PlanScreen() {
   );
 
   const summaryTone = useMemo(() => {
-    if (summary.score >= 4) return { accent: '#69D26D', label: 'Dobra robota' };
-    if (summary.score >= 2) return { accent: '#78C8FF', label: 'Solidny dzień' };
-    if (summary.score >= 1) return { accent: '#FFC966', label: 'Jest progres' };
-    return { accent: '#FF8B8B', label: 'Jutro nowa próba' };
+    if (summary.score >= 4) return { accent: '#69D26D', label: 'Więcej oparcia' };
+    if (summary.score >= 2) return { accent: '#78C8FF', label: 'Spokojniejszy rytm' };
+    if (summary.score >= 1) return { accent: '#FFC966', label: 'Jedna rzecz uchwycona' };
+    return { accent: '#FF8B8B', label: 'Trudniejszy dzień' };
   }, [summary.score]);
 
   const loadDailyTexts = async () => {
@@ -964,22 +964,22 @@ export default function PlanScreen() {
                 {renderPlanForm({
                   dateKey: selectedDateKey,
                   plan: selectedPlan,
-                  title: selectedHasPlan ? 'PLAN DNIA' : 'USTAW PLAN DNIA',
-                  subtitle: 'Dodaj własny plan lub posiłkuj się propozycjami obszarów.',
+                  title: selectedHasPlan ? 'PLAN DNIA' : 'PLAN NA DZIŚ',
+                  subtitle: 'Dodaj własny plan albo zacznij od prostych obszarów.',
                 })}
 
                 <View style={styles.reminderCard}>
-                  <Text style={styles.reminderTitle}>Po zaplanowaniu dnia</Text>
-                  <Text style={styles.reminderText}>Plan zapisuje się automatycznie. Wieczorem wróć do podsumowania.</Text>
+                  <Text style={styles.reminderTitle}>Plan zapisuje się automatycznie</Text>
+                  <Text style={styles.reminderText}>Możesz wrócić tutaj później. Wieczorem możesz też przejść do podsumowania dnia.</Text>
                 </View>
 
                 <Pressable style={styles.primaryButton} onPress={closeDayView}>
-                  <Text style={styles.primaryButtonText}>Mam plan na dziś</Text>
+                  <Text style={styles.primaryButtonText}>Zapisz swój plan</Text>
                 </Pressable>
 
                 {selectedDateKey === todayKey && selectedHasPlan && !selectedArchiveEntry && (
                   <Pressable style={styles.secondaryButton} onPress={() => setDayViewMode('summary')}>
-                    <Text style={styles.secondaryButtonText}>Przejdź do wieczornego podsumowania</Text>
+                    <Text style={styles.secondaryButtonText}>Otwórz podsumowanie dnia</Text>
                   </Pressable>
                 )}
               </>
@@ -993,13 +993,13 @@ export default function PlanScreen() {
                       <Text style={styles.archiveDate}>{selectedArchiveEntry.dateKey}</Text>
                       <Text style={styles.archiveEmoji}>{selectedArchiveEntry.emoji}</Text>
                     </View>
-                    <Text style={styles.archiveScore}>Bilans: {selectedArchiveEntry.score}</Text>
+                    <Text style={styles.archiveScore}>Obraz dnia: {selectedArchiveEntry.score}</Text>
                     <Text style={styles.archiveMsg}>{selectedArchiveEntry.message}</Text>
                   </View>
                 ) : (
                   <>
                     <View style={styles.previewCard}>
-                      <Text style={styles.previewTitle}>Potwierdź wykonanie</Text>
+                      <Text style={styles.previewTitle}>Zaznacz, co dziś było możliwe</Text>
                       {selectedPlan.items.filter((item) => item.text.trim().length > 0).length === 0 ? (
                         <Text style={styles.previewPlanText}>Brak wpisanych elementów planu.</Text>
                       ) : (
@@ -1017,7 +1017,7 @@ export default function PlanScreen() {
                     </View>
 
                     <View style={styles.haltCard}>
-                      <Text style={styles.sectionTitle}>HALT - rozliczenie dnia</Text>
+                      <Text style={styles.sectionTitle}>HALT na koniec dnia</Text>
                       <Text style={styles.haltIntro}>Dziś byłem:</Text>
 
                       <Pressable style={styles.haltItem} onPress={() => toggleHalt(selectedDateKey, 'hungry')}>
@@ -1041,13 +1041,13 @@ export default function PlanScreen() {
                     {selectedDateKey === todayKey && (
                       <View style={styles.reminderCard}>
                         <Text style={styles.reminderTitle}>Teksty codzienne</Text>
-                        <Text style={styles.reminderText}>Dziś przeczytane: {readCountToday}/4 (każde daje +1 do bilansu).</Text>
+                        <Text style={styles.reminderText}>Dziś wróciłeś do: {readCountToday}/4 tekstów.</Text>
                       </View>
                     )}
 
                     <View style={styles.reminderCard}>
                       <Text style={styles.reminderTitle}>Przypomnienie</Text>
-                      <Text style={styles.reminderText}>Warto ustawić wieczorne przypomnienie o podsumowaniu dnia.</Text>
+                      <Text style={styles.reminderText}>Możesz ustawić wieczorne przypomnienie, jeśli pomaga Ci wracać do podsumowania dnia.</Text>
                     </View>
 
                     <Pressable
@@ -1055,7 +1055,7 @@ export default function PlanScreen() {
                       onPress={() => summarizeDay(selectedDateKey)}
                       disabled={!selectedCanSummarize}
                     >
-                      <Text style={styles.primaryButtonText}>Zapisz dzień do archiwum</Text>
+                      <Text style={styles.primaryButtonText}>Zapisz ten dzień</Text>
                     </Pressable>
                   </>
                 )}
@@ -1099,7 +1099,7 @@ export default function PlanScreen() {
                     <Text style={styles.archiveDate}>{item.dateKey}</Text>
                     <Text style={styles.archiveEmoji}>{item.emoji}</Text>
                   </View>
-                  <Text style={styles.archiveScore}>Bilans: {item.score}</Text>
+                  <Text style={styles.archiveScore}>Obraz dnia: {item.score}</Text>
                   <Text style={styles.archiveMsg}>{item.message}</Text>
                 </Pressable>
               ))
@@ -1141,7 +1141,7 @@ export default function PlanScreen() {
 
             <View style={styles.modalStatsRow}>
               <View style={styles.modalStatCard}>
-                <Text style={styles.modalStatLabel}>Wykonane</Text>
+                <Text style={styles.modalStatLabel}>Plan</Text>
                 <Text style={styles.modalStatValue}>{summary.completedCount}</Text>
               </View>
               <View style={styles.modalStatCard}>
@@ -1153,13 +1153,11 @@ export default function PlanScreen() {
                 <Text style={styles.modalStatValue}>{summary.haltCount}</Text>
               </View>
               <View style={[styles.modalStatCard, styles.modalScoreCard, { borderColor: summaryTone.accent }]}> 
-                <Text style={styles.modalStatLabel}>Bilans</Text>
+                <Text style={styles.modalStatLabel}>Obraz dnia</Text>
                 <Text style={[styles.modalScoreValue, { color: summaryTone.accent }]}>{summary.score}</Text>
               </View>
             </View>
-            <Text style={styles.modalFormula}>
-              Bilans: {summary.completedCount} (plan) + {summary.readCount} (teksty) - {summary.haltCount * 2} (HALT)
-            </Text>
+            <Text style={styles.modalFormula}>To pomocniczy wynik oparty na planie, tekstach i HALT.</Text>
 
             <Pressable style={styles.modalBtn} onPress={() => setSummaryModalOpen(false)}>
               <Text style={styles.modalBtnText}>Zamknij</Text>

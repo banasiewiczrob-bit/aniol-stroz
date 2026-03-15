@@ -43,14 +43,8 @@ export default function Wsparcie24() {
         <Text style={styles.title}>24 godziny</Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="To spis kilku prostych działań, czynności, które skupiają się na najważniejszym, 
-          na Tu i teraz. Bo chodzi o to, aby robić jedną rzecz na raz i żyć jeden dzień na raz. 
-          Wiem, że to trudne, prawdopodobnie nie masz zbyt dużo doświadczeń w Tu i teraz, 
-          też nie miałem. Wszystko możesz zmienić. Zacznij już dziś. 
-          Ułóż plan na dziś i działaj. To tekst pomagający przeżyć dzień spokojniej, 
-          krok po kroku, bez przytłoczenia wszystkim naraz."
-          jak="Przeczytaj rano i wybierz 1-2 zdania, które bierzesz dla siebie na dziś. 
-          Wieczorem wróć i sprawdź, co zadziałało. Zaznacz na dole Przeczytałem."
+          co="To krótki tekst na jeden dzień. Pomaga wrócić do tego, co jest na teraz, bez brania na siebie całego życia naraz."
+          jak="Przeczytaj rano i wybierz 1-2 zdania na dziś. Wieczorem możesz wrócić i sprawdzić, co z tego naprawdę Ci pomogło."
         />
         {paragraphs.map((paragraph) => (
           <Text key={paragraph} style={styles.paragraph}>

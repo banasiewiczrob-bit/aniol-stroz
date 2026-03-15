@@ -1,3 +1,4 @@
+import { SOFT_BADGE_BG, SOFT_BADGE_BORDER, SOFT_BADGE_TEXT } from '@/constants/ui';
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -113,15 +114,15 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     paddingHorizontal: 8,
-    backgroundColor: '#E5495B',
+    backgroundColor: SOFT_BADGE_BG,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.92)',
+    borderColor: SOFT_BADGE_BORDER,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 4,
   },
   tileBadgeText: {
-    color: 'white',
+    color: SOFT_BADGE_TEXT,
     fontSize: 14,
     lineHeight: 16,
     fontWeight: '800',

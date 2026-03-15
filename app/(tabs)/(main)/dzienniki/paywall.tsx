@@ -13,10 +13,10 @@ export default function DziennikiPaywallScreen() {
     <BackgroundWrapper>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Dzienniki Premium</Text>
-        <Text style={styles.subtitle}>Obserwatorium 365: codzienna praca własna i historia postępów.</Text>
+        <Text style={styles.subtitle}>Obserwatorium 365: codzienne dzienniki i historia wpisów.</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Co odblokowuje premium</Text>
+          <Text style={styles.cardTitle}>W premium znajdziesz</Text>
           <Text style={styles.cardText}>• Dziennik uczuć</Text>
           <Text style={styles.cardText}>• Lista wyzwalaczy</Text>
           <Text style={styles.cardText}>• Dziennik głodu/kryzysu</Text>
@@ -26,7 +26,7 @@ export default function DziennikiPaywallScreen() {
 
         {source === 'tester_preview' && hasPremium ? (
           <View style={styles.banner}>
-            <Text style={styles.bannerText}>Tryb testerski aktywny: dostęp premium jest odblokowany.</Text>
+            <Text style={styles.bannerText}>Tryb testerski premium jest aktywny.</Text>
           </View>
         ) : (
           <View style={styles.bannerMuted}>

@@ -30,10 +30,8 @@ export default function WsparcieModlitwa() {
         <Text style={styles.title}>Modlitwa o pogodę ducha</Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="Być może znasz tę modlitwę. Być może odmawiałeś ją już wiele razy. 
-          To proste słowa porządkujące to, co mogę zmienić i czego nie mogę dziś kontrolować."
-          jak="Przeczytaj powoli raz, może dwa razy. Zatrzymaj się na zdaniu, które dzisiaj najbardziej 
-          do Ciebie trafia. Zaznacz na dole Przeczytałem i wróć do tego zdania w ciągu dnia, kiedy poczujesz, że potrzebujesz wsparcia."
+          co="To proste słowa, do których możesz wrócić, gdy potrzebujesz złapać granicę między tym, co możesz zmienić, a tym, czego dziś nie uniesiesz samą siłą."
+          jak="Przeczytaj powoli raz albo dwa razy. Zatrzymaj się przy jednym zdaniu, które dziś Cię porządkuje, i wracaj do niego w ciągu dnia."
         />
         <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />

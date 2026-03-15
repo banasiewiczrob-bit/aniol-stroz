@@ -1,0 +1,405 @@
+# Codzienne refleksje - same tytuly
+
+Status: podglad roboczy
+
+# Styczen - Zatrzymanie
+
+- 1 stycznia - Przestaje uciekac
+- 2 stycznia - W ciszy zaczynam slyszec
+- 3 stycznia - Mowie sobie prawde
+- 4 stycznia - Przestaje udawac
+- 5 stycznia - Rozpoznaje swoje zmeczenie
+- 6 stycznia - Daje sobie czas
+- 7 stycznia - Zatrzymuje sie, zeby zobaczyc
+- 8 stycznia - Widze, ze cos we mnie peka
+- 9 stycznia - Przestaje walczyc z rzeczywistoscia
+- 10 stycznia - Biore pierwszy oddech bez iluzji
+- 11 stycznia - Jestem pomiedzy chaosem a nadzieja
+- 12 stycznia - Nie wiem jeszcze co dalej
+- 13 stycznia - Przyznaje sie do bezradnosci
+- 14 stycznia - Dochodze do punktu, w ktorym koncza sie wymowki
+- 15 stycznia - Zaczynam slyszec siebie
+- 16 stycznia - Widze, ze zatrzymanie to nie porazka
+- 17 stycznia - Widze prawde o swoim zmeczeniu
+- 18 stycznia - Spotykam sie z wlasnym zyciem
+- 19 stycznia - Przestaje udawac sile
+- 20 stycznia - Zaczynam droge od prawdy
+- 21 stycznia - W ciszy widze siebie jak w lustrze
+- 22 stycznia - Przyjmuje, ze nie wszystko moge kontrolowac
+- 23 stycznia - Ucze sie pokory
+- 24 stycznia - Zgadzam sie na to, ze potrzebuje pomocy
+- 25 stycznia - Wreszcie przestaje udowadniac
+- 26 stycznia - Widze pierwsza szczeline w murze
+- 27 stycznia - Przyjmuje, ze prawda nie musi byc wygodna
+- 28 stycznia - Zaczynam widziec konsekwencje
+- 29 stycznia - Uznaje wlasna kruchosc
+- 30 stycznia - Zaczynam brac odpowiedzialnosc
+- 31 stycznia - Wchodze w nowy rok w prawdzie
+
+# Luty - Uczucia
+
+- 1 lutego - Emocje do mnie wracaja
+- 2 lutego - Slucham swojej zlosci
+- 3 lutego - Daje miejsce swojemu smutkowi
+- 4 lutego - Widze strach, ktory probuje mnie chronic
+- 5 lutego - Widze wstyd, ktory zamyka mnie od srodka
+- 6 lutego - Rozrozniam poczucie winy i odpowiedzialnosc
+- 7 lutego - Czuje samotnosc w tlumie
+- 8 lutego - Otwieram sie na radosc
+- 9 lutego - Traktuje emocje jak informacje
+- 10 lutego - Czuje, jak uczucia zaczynaja wracac
+- 11 lutego - Przestaje walczyc ze swoja zloscia
+- 12 lutego - Nie pozwalam, by strach mnie prowadzil
+- 13 lutego - Pozwalam smutkowi leczyc
+- 14 lutego - Pozwalam zobaczyc swoj wstyd
+- 15 lutego - Pozwalam, by poczucie winy prowadzilo mnie do zmiany
+- 16 lutego - Odkrywam, ze samotnosc moze byc poczatkiem spotkania
+- 17 lutego - Traktuje radosc jak odwage zycia
+- 18 lutego - Odczytuje emocje jak drogowskaz
+- 19 lutego - Przestaje traktowac uczucia jak problem
+- 20 lutego - Uczucia przestaja byc dla mnie zagrozeniem
+- 21 lutego - Ucze sie nazywac emocje
+- 22 lutego - Przestaje sie ich bac
+- 23 lutego - Odczytuje uczucia jak jezyk zycia
+- 24 lutego - Slysze, co moja zlosc mowi o granicach
+- 25 lutego - Slysze, co moj smutek mowi o stracie
+- 26 lutego - Slysze, co moj strach mowi o niepewnosci
+- 27 lutego - Slysze, co moj wstyd mowi o ukrywaniu
+- 28 lutego - Slysze, co moje poczucie winy mowi o odpowiedzialnosci
+- 29 lutego - Ucze sie lagodnosci wobec siebie
+
+# Marzec - Iluzje
+
+- 1 marca - Widze historie, ktora sobie opowiadam
+- 2 marca - Rozpoznaje swoje mechanizmy obronne
+- 3 marca - Rozpoznaje swoje racjonalizacje
+- 4 marca - Widze swoje zaprzeczanie
+- 5 marca - Widze, jak minimalizuje
+- 6 marca - Przestaje przerzucac wine
+- 7 marca - Uciekam w kontrole
+- 8 marca - Uciekam w chaos
+- 9 marca - Widze iluzje swojej sily
+- 10 marca - Widze iluzje swojej wyjatkowosci
+- 11 marca - Widze iluzje swojej niewinnosci
+- 12 marca - Zaczynam widziec schemat
+- 13 marca - Odkrywam swoje manipulacje
+- 14 marca - Widze historie, ktora buduje o sobie
+- 15 marca - Widze prawde o swojej roli
+- 16 marca - Widze mechanizmy, ktore mnie chronily
+- 17 marca - Widze, kiedy obrona staje sie wiezieniem
+- 18 marca - Zaczynam widziec swoje strategie
+- 19 marca - Przestaje walczyc z rzeczywistoscia
+- 20 marca - Zaczynam rozumiec swoje klamstwa
+- 21 marca - Zaczynam byc uczciwy
+- 22 marca - Widze bez usprawiedliwien
+- 23 marca - Konfrontuje sie z prawda
+- 24 marca - Widze iluzje kontroli
+- 25 marca - Widze iluzje bezpieczenstwa
+- 26 marca - Widze iluzje samotnosci
+- 27 marca - Widze iluzje samowystarczalnosci
+- 28 marca - Widze iluzje niezaleznosci
+- 29 marca - Widze iluzje wyjatkowego cierpienia
+- 30 marca - Przestaje wierzyc, ze jestem inny
+- 31 marca - Zaczynam widziec trzezwo
+
+# Kwiecien - Odpowiedzialnosc
+
+- 1 kwietnia - Biore odpowiedzialnosc za swoje zycie
+- 2 kwietnia - Biore odpowiedzialnosc za swoje decyzje
+- 3 kwietnia - Biore odpowiedzialnosc za swoje emocje
+- 4 kwietnia - Biore odpowiedzialnosc za swoje slowa
+- 5 kwietnia - Biore odpowiedzialnosc za relacje
+- 6 kwietnia - Biore odpowiedzialnosc za granice
+- 7 kwietnia - Biore odpowiedzialnosc za zmiany
+- 8 kwietnia - Biore odpowiedzialnosc za prawde
+- 9 kwietnia - Biore odpowiedzialnosc za konsekwencje
+- 10 kwietnia - Biore odpowiedzialnosc za wybory
+- 11 kwietnia - Biore odpowiedzialnosc za przeszlosc
+- 12 kwietnia - Biore odpowiedzialnosc za przyszlosc
+- 13 kwietnia - Biore odpowiedzialnosc za dzien dzisiejszy
+- 14 kwietnia - Biore odpowiedzialnosc za uczciwosc
+- 15 kwietnia - Biore odpowiedzialnosc za bledy
+- 16 kwietnia - Biore odpowiedzialnosc za naprawe
+- 17 kwietnia - Biore odpowiedzialnosc za sluchanie
+- 18 kwietnia - Biore odpowiedzialnosc za milczenie
+- 19 kwietnia - Biore odpowiedzialnosc za dzialanie
+- 20 kwietnia - Biore odpowiedzialnosc za relacje z samym soba
+- 21 kwietnia - Biore odpowiedzialnosc za cialo
+- 22 kwietnia - Biore odpowiedzialnosc za czas
+- 23 kwietnia - Biore odpowiedzialnosc za rozwoj
+- 24 kwietnia - Biore odpowiedzialnosc za pomoc
+- 25 kwietnia - Biore odpowiedzialnosc za przyjecie pomocy
+- 26 kwietnia - Biore odpowiedzialnosc za zmiane
+- 27 kwietnia - Biore odpowiedzialnosc za prawde o sobie
+- 28 kwietnia - Biore odpowiedzialnosc za terazniejszosc
+- 29 kwietnia - Biore odpowiedzialnosc za droge
+- 30 kwietnia - Odkrywam odpowiedzialnosc jako wolnosc
+
+# Maj - Relacje
+
+- 1 maja - Zaczynam relacje od prawdy
+- 2 maja - Spotykam drugi swiat
+- 3 maja - Zaczynam sluchac
+- 4 maja - Widze, ze relacja to nie kontrola
+- 5 maja - Ucze sie bliskosci bez udawania
+- 6 maja - Uwazam na drugiego czlowieka
+- 7 maja - Mowie i daje sie uslyszec
+- 8 maja - Slucham bez obrony
+- 9 maja - Daje relacjom czas
+- 10 maja - Pozwalam, by zaufanie rodzilo sie powoli
+- 11 maja - Ucze sie uczciwosci w rozmowie
+- 12 maja - Ucze sie bliskosci bez manipulacji
+- 13 maja - Wybieram spotkanie zamiast walki
+- 14 maja - Przestaje udowadniac racje
+- 15 maja - Ucze sie byc obecnym
+- 16 maja - Traktuje relacje jak przestrzen rozwoju
+- 17 maja - Otwieram sie na drugiego
+- 18 maja - Slucham takze tego, co trudne
+- 19 maja - Otwieram sie na zrozumienie
+- 20 maja - Buduje zaufanie
+- 21 maja - Biore odpowiedzialnosc w relacji
+- 22 maja - Ucze sie przyjmowac drugiego czlowieka
+- 23 maja - Przyjmuje roznice miedzy nami
+- 24 maja - Ucze sie szacunku w rozmowie
+- 25 maja - Robie miejsce na emocje w relacji
+- 26 maja - Relacje ucza mnie cierpliwosci
+- 27 maja - Ucze sie byc razem
+- 28 maja - Spotykam bez masek
+- 29 maja - Ucze sie bliskosci i granic
+- 30 maja - Traktuje relacje jak droge
+- 31 maja - Potrzebuje drugiego czlowieka
+
+# Czerwiec - Granice
+
+- 1 czerwca - Zaczynam od swiadomosci swoich granic
+- 2 czerwca - Mowie "nie" bez poczucia winy
+- 3 czerwca - Widze, ze granice chronia relacje
+- 4 czerwca - Ucze sie siebie szanowac
+- 5 czerwca - Biore odpowiedzialnosc za wlasne zycie
+- 6 czerwca - Widze, ze granice to nie mur
+- 7 czerwca - Widze w granicach przestrzen wolnosci
+- 8 czerwca - Odrozniam pomoc od ratowania
+- 9 czerwca - Zauwazam wlasne potrzeby
+- 10 czerwca - Stawiam granice wobec przeszlosci
+- 11 czerwca - Stawiam granice wobec manipulacji
+- 12 czerwca - Ucze sie odmawiac
+- 13 czerwca - Stawiam granice wobec chaosu
+- 14 czerwca - Stawiam granice wobec przemocy
+- 15 czerwca - Stawiam granice wobec wlasnych impulsow
+- 16 czerwca - Stawiam granice wobec leku
+- 17 czerwca - Stawiam granice wobec oczekiwan innych
+- 18 czerwca - Stawiam granice w relacjach rodzinnych
+- 19 czerwca - Stawiam granice wobec pracy
+- 20 czerwca - Stawiam granice wobec zmeczenia
+- 21 czerwca - Stawiam granice jako akt odwagi
+- 22 czerwca - Stawiam granice wobec nalogu
+- 23 czerwca - Stawiam granice wobec destrukcji
+- 24 czerwca - Stawiam granice wobec iluzji
+- 25 czerwca - Stawiam granice wobec manipulacji emocjonalnej
+- 26 czerwca - Stawiam granice wobec chaosu w glowie
+- 27 czerwca - Traktuje granice jak troske o siebie
+- 28 czerwca - Traktuje granice jak wyraz szacunku
+- 29 czerwca - Traktuje granice jak warunek zdrowia
+- 30 czerwca - Widze, jak granice buduja bezpieczenstwo
+
+# Lipiec - Wspolnota
+
+- 1 lipca - Zdrowieje miedzy ludzmi
+- 2 lipca - Czerpie sile ze wspolnoty
+- 3 lipca - Wspolnota staje sie dla mnie lustrem
+- 4 lipca - Spotykam sie w prawdzie
+- 5 lipca - Ucze sie wspolnoty bez masek
+- 6 lipca - Dziele sie doswiadczeniem
+- 7 lipca - Slucham historii innych
+- 8 lipca - Wspolnota daje mi nadzieje
+- 9 lipca - Wspolnota staje sie dla mnie przestrzenia zmiany
+- 10 lipca - Ucze sie byc razem
+- 11 lipca - Ucze sie wspolnoty bez oceniania
+- 12 lipca - Wspolnota staje sie dla mnie wsparciem
+- 13 lipca - Wnosze swoja historie
+- 14 lipca - Wspolnota staje sie dla mnie szkola relacji
+- 15 lipca - Ucze sie wspolnoty i odpowiedzialnosci
+- 16 lipca - Wspolnota staje sie dla mnie droga
+- 17 lipca - Odkrywam sile bycia razem
+- 18 lipca - Ucze sie wspolnoty i zaufania
+- 19 lipca - Ucze sie wspolnoty i szczerosci
+- 20 lipca - Ucze sie wspolnoty i odwagi
+- 21 lipca - Ucze sie wspolnoty i pokory
+- 22 lipca - Wspolnota staje sie dla mnie miejscem zdrowienia
+- 23 lipca - Wspolnota daje mi perspektywe
+- 24 lipca - Widze nadzieje we wspolnocie
+- 25 lipca - Wspolnota staje sie dla mnie domem
+- 26 lipca - Ucze sie wspolnoty w codziennosci
+- 27 lipca - Ucze sie wspolnoty w rozmowie
+- 28 lipca - Ucze sie wspolnoty w obecnosci
+- 29 lipca - Ucze sie wspolnoty we wzroscie
+- 30 lipca - Biore odpowiedzialnosc we wspolnocie
+- 31 lipca - Wspolnota staje sie moja droga powrotu
+
+# Sierpien - Pokora
+
+- 1 sierpnia - Ucze sie pokory zaczynajac od prawdy
+- 2 sierpnia - Ucze sie pokory wobec zycia
+- 3 sierpnia - Ucze sie pokory wobec wlasnych bledow
+- 4 sierpnia - Ucze sie pokory wobec innych ludzi
+- 5 sierpnia - Ucze sie pokory wobec procesu
+- 6 sierpnia - Ucze sie pokory wobec emocji
+- 7 sierpnia - Ucze sie pokory wobec zmiany
+- 8 sierpnia - Ucze sie pokory wobec czasu
+- 9 sierpnia - Ucze sie pokory wobec doswiadczenia
+- 10 sierpnia - Ucze sie pokory wobec wiedzy
+- 11 sierpnia - Ucze sie pokory wobec wlasnych ograniczen
+- 12 sierpnia - Ucze sie pokory wobec relacji
+- 13 sierpnia - Ucze sie pokory wobec przeszlosci
+- 14 sierpnia - Ucze sie pokory wobec terazniejszosci
+- 15 sierpnia - Ucze sie pokory wobec przyszlosci
+- 16 sierpnia - Odkrywam, ze pokora jest sila
+- 17 sierpnia - Odkrywam, ze pokora jest uczciwoscia
+- 18 sierpnia - Odkrywam, ze pokora jest odwaga
+- 19 sierpnia - Ucze sie pokory wobec prawdy
+- 20 sierpnia - Ucze sie pokory wobec zycia codziennego
+- 21 sierpnia - Ucze sie pokory wobec pracy nad soba
+- 22 sierpnia - Ucze sie pokory wobec wspolnoty
+- 23 sierpnia - Ucze sie pokory wobec slabosci
+- 24 sierpnia - Ucze sie pokory wobec cierpienia
+- 25 sierpnia - Ucze sie pokory wobec radosci
+- 26 sierpnia - Ucze sie pokory wobec zmeczenia
+- 27 sierpnia - Ucze sie pokory wobec nadziei
+- 28 sierpnia - Ucze sie pokory wobec milosci
+- 29 sierpnia - Ucze sie pokory wobec drogi
+- 30 sierpnia - Ucze sie pokory wobec sensu
+- 31 sierpnia - Odkrywam, ze pokora jest wolnoscia
+
+# Wrzesien - Zmiana
+
+- 1 wrzesnia - Zmiana zaczyna sie we mnie
+- 2 wrzesnia - Wchodze w zmiane z odwaga
+- 3 wrzesnia - Zmiane zaczynam od decyzji
+- 4 wrzesnia - Daje zmianie czas
+- 5 wrzesnia - Widze, ze zmiana nie jest linia prosta
+- 6 wrzesnia - Jeden moj dzien tez jest zmiana
+- 7 wrzesnia - Traktuje zmiane jak droge
+- 8 wrzesnia - Zmiane zaczynam od powrotu
+- 9 wrzesnia - Widze, jak nawyk buduje moja przyszlosc
+- 10 wrzesnia - Wierze, ze male kroki tez maja znaczenie
+- 11 wrzesnia - Widze zmiane i lek przed nawrotem
+- 12 wrzesnia - Wracam po potknieciu
+- 13 wrzesnia - Nie przekreslam wszystkiego
+- 14 wrzesnia - Wracam do rytmu
+- 15 wrzesnia - Widze, ze moje cialo tez potrzebuje zmiany
+- 16 wrzesnia - Dbam o sen, jedzenie i spokoj
+- 17 wrzesnia - Widze, ze wieczor bywa trudny
+- 18 wrzesnia - Daje zmianie plan
+- 19 wrzesnia - Prosze o pomoc wczesniej
+- 20 wrzesnia - Daje zmianie cierpliwosc
+- 21 wrzesnia - Traktuje zmiane jak praktyke
+- 22 wrzesnia - Powtarzam to, co dziala
+- 23 wrzesnia - Widze zmiane w relacjach
+- 24 wrzesnia - Nie wracam do starych wymowek
+- 25 wrzesnia - Biore odpowiedzialnosc za zmiane
+- 26 wrzesnia - Ukladam zmiane w codziennej rutynie
+- 27 wrzesnia - Wybieram zmiane na dzis
+- 28 wrzesnia - Trwam w zmianie
+- 29 wrzesnia - Widze w zmianie nadzieje
+- 30 wrzesnia - Wchodze w nowe zycie
+
+# Pazdziernik - Sens
+
+- 1 pazdziernika - Szukam sensu tego zatrzymania
+- 2 pazdziernika - Widze sens jednego uczciwego dnia
+- 3 pazdziernika - Widze sens malego kroku
+- 4 pazdziernika - Widze sens trzymania granic
+- 5 pazdziernika - Widze sens proszenia o pomoc
+- 6 pazdziernika - Widze sens planu dnia
+- 7 pazdziernika - Widze sens nazywania uczuc
+- 8 pazdziernika - Widze sens powiedzenia prawdy
+- 9 pazdziernika - Widze sens zwyklej obecnosci
+- 10 pazdziernika - Widze sens wyjscia z samotnosci
+- 11 pazdziernika - Widze sens rozmowy zamiast ucieczki
+- 12 pazdziernika - Widze sens odpoczynku
+- 13 pazdziernika - Widze sens dbania o cialo
+- 14 pazdziernika - Widze sens wytrwania w kryzysie
+- 15 pazdziernika - Widze sens zaczynania od nowa
+- 16 pazdziernika - Widze sens przyjecia wlasnej historii
+- 17 pazdziernika - Widze sens naprawiania szkod
+- 18 pazdziernika - Widze sens codziennych decyzji
+- 19 pazdziernika - Widze sens wspolnoty
+- 20 pazdziernika - Widze sens cierpliwosci
+- 21 pazdziernika - Widze sens pokory
+- 22 pazdziernika - Widze sens wytrwalosci
+- 23 pazdziernika - Widze sens pracy nad soba
+- 24 pazdziernika - Widze sens przebaczenia
+- 25 pazdziernika - Widze sens przyjmowania dobra
+- 26 pazdziernika - Widze sens wdziecznosci
+- 27 pazdziernika - Widze sens dawania innym
+- 28 pazdziernika - Widze sens zwyczajnosci
+- 29 pazdziernika - Widze sens nadziei
+- 30 pazdziernika - Widze sens dalszej drogi
+- 31 pazdziernika - Widze sens bycia tu dzisiaj
+
+# Listopad - Wdziecznosc
+
+- 1 listopada - Jestem wdzieczny za to, ze zyje
+- 2 listopada - Jestem wdzieczny za dzien bez ucieczki
+- 3 listopada - Jestem wdzieczny za ludzi obok
+- 4 listopada - Jestem wdzieczny za telefon, ktory wykonalem
+- 5 listopada - Jestem wdzieczny za pomoc, ktora przyjalem
+- 6 listopada - Jestem wdzieczny za zwykly spokoj
+- 7 listopada - Jestem wdzieczny za cialo, ktore mnie niesie
+- 8 listopada - Jestem wdzieczny za sen
+- 9 listopada - Jestem wdzieczny za posilek
+- 10 listopada - Jestem wdzieczny za dom
+- 11 listopada - Jestem wdzieczny za rozmowe
+- 12 listopada - Jestem wdzieczny za obecnosc
+- 13 listopada - Jestem wdzieczny za plan na dzis
+- 14 listopada - Jestem wdzieczny za granice
+- 15 listopada - Jestem wdzieczny za odwage powiedzenia prawdy
+- 16 listopada - Jestem wdzieczny za zatrzymanie
+- 17 listopada - Jestem wdzieczny za cierpliwosc
+- 18 listopada - Jestem wdzieczny za ludzi, ktorzy nie odpuscili
+- 19 listopada - Jestem wdzieczny za wspolnote
+- 20 listopada - Jestem wdzieczny za male zwyciestwa
+- 21 listopada - Jestem wdzieczny za dzien dzisiejszy
+- 22 listopada - Jestem wdzieczny za nauke z potkniec
+- 23 listopada - Jestem wdzieczny za zmiane, ktora rosnie powoli
+- 24 listopada - Jestem wdzieczny za nadzieje
+- 25 listopada - Jestem wdzieczny za sens
+- 26 listopada - Jestem wdzieczny za mozliwosc naprawy
+- 27 listopada - Jestem wdzieczny za prawde
+- 28 listopada - Jestem wdzieczny za nowe spojrzenie
+- 29 listopada - Jestem wdzieczny za przyszlosc
+- 30 listopada - Jestem wdzieczny za terazniejszosc
+
+# Grudzien - Dzielenie sie
+
+- 1 grudnia - Przekazuje dalej to, co sam otrzymuje
+- 2 grudnia - Wiem, ze moja obecnosc tez jest darem
+- 3 grudnia - Slucham zamiast pouczac
+- 4 grudnia - Opowiadam prawde o swojej drodze
+- 5 grudnia - Dzwonie do kogos, kto moze potrzebowac glosu
+- 6 grudnia - Dziele sie nadzieja, nie presja
+- 7 grudnia - Dziele sie spokojem
+- 8 grudnia - Dziele sie uwaga
+- 9 grudnia - Dziele sie czasem
+- 10 grudnia - Dziele sie doswiadczeniem kryzysu i powrotu
+- 11 grudnia - Dziele sie tym, co dziala
+- 12 grudnia - Dziele sie bez udawania mocnego
+- 13 grudnia - Dziele sie wlasna kruchoscia
+- 14 grudnia - Dziele sie wdziecznoscia
+- 15 grudnia - Dziele sie wspolnota
+- 16 grudnia - Dziele sie slowem otuchy
+- 17 grudnia - Dziele sie obecnoscia przy trudnym dniu
+- 18 grudnia - Dziele sie odpowiedzialnoscia
+- 19 grudnia - Dziele sie dobrem w malej formie
+- 20 grudnia - Dziele sie cierpliwoscia
+- 21 grudnia - Dziele sie tym, co sam chcialbym uslyszec
+- 22 grudnia - Dziele sie w prawdzie
+- 23 grudnia - Dziele sie, nie ratujac
+- 24 grudnia - Dziele sie pokojem
+- 25 grudnia - Dziele sie swiatlem
+- 26 grudnia - Dziele sie nadzieja po ciemnym czasie
+- 27 grudnia - Dziele sie sensem
+- 28 grudnia - Dziele sie droga zdrowienia
+- 29 grudnia - Dziele sie zyciem codziennym
+- 30 grudnia - Dziele sie tym, co najprostsze
+- 31 grudnia - Dziele sie zyciem

@@ -96,14 +96,12 @@ export default function KontraktScreen() {
             <>
               <CoJakSection
                 title="Opis i instrukcja"
-                co="To osobisty kontrakt, który wyznacza kierunek Twojej zmiany i przypomina, po co ją zaczynasz."
-                jak="Przeczytaj spokojnie wszystkie punkty. Zaznacz pole wyboru dopiero wtedy, gdy poczujesz gotowość wejścia w proces."
+                co="To osobisty kontrakt. Ma Ci przypominać, na co zgadzasz się wobec siebie, kiedy wracasz do zmiany."
+                jak="Przeczytaj spokojnie wszystkie punkty. Nie musisz się spieszyć. Zaznacz pole wyboru dopiero wtedy, gdy naprawdę chcesz wejść w ten kontrakt."
               />
               {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
 
-              <Text style={styles.intro}>
-                Zaczynam tę drogę dla siebie i ze sobą podpisuję ten kontrakt:
-              </Text>
+              <Text style={styles.intro}>Jeśli chcesz wejść w to uczciwie, możesz powiedzieć sobie:</Text>
 
               <View style={styles.point}>
                 <Image source={Watermark} resizeMode="contain" style={styles.pointWatermark} />

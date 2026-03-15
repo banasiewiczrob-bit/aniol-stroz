@@ -95,9 +95,9 @@ export default function DziennikiHomeScreen() {
 
         {!hasPremium ? (
           <View style={[styles.card, compact && styles.cardCompact]}>
-            <Text style={[styles.cardTitle, compact && styles.cardTitleCompact]}>Dostęp premium wymagany</Text>
+            <Text style={[styles.cardTitle, compact && styles.cardTitleCompact]}>Ta część jest w premium</Text>
             <Text style={[styles.cardText, compact && styles.cardTextCompact]}>
-              Ta sekcja odblokowuje dzienniki, listę wyzwalaczy i historię wpisów.
+              W tej sekcji znajdziesz dzienniki, listę wyzwalaczy i historię wpisów.
             </Text>
             <View style={styles.cardBullets}>
               <Text style={styles.cardBullet}>• Dziennik uczuć</Text>
@@ -117,7 +117,7 @@ export default function DziennikiHomeScreen() {
                 })
               }
             >
-              <Text style={styles.primaryBtnText}>Zobacz premium</Text>
+              <Text style={styles.primaryBtnText}>Sprawdź premium</Text>
             </Pressable>
           </View>
         ) : (

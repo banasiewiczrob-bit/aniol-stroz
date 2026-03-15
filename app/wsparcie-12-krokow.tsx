@@ -144,8 +144,8 @@ export default function Wsparcie12KrokowScreen() {
 
         <CoJakSection
           title="Opis i instrukcja"
-          co="W tym miejscu masz kilka wersji 12 kroków. Możesz wybrać to brzmienie, które jest najbliższe Twojej sytuacji."
-          jak="Najpierw wybierz wspólnotę lub wersję uniwersalną. Potem czytaj krok po kroku i zatrzymaj się przy tym, który dziś jest dla Ciebie najważniejszy."
+          co="W tym miejscu masz kilka wersji 12 kroków. Możesz wracać do tego brzmienia, które jest najbliższe Twojej sytuacji i Twojemu językowi."
+          jak="Nie musisz czytać wszystkiego naraz. Wybierz wspólnotę albo wersję uniwersalną i zatrzymaj się przy tym kroku, który dziś najbardziej do Ciebie mówi."
         />
 
         <View style={styles.chipsWrap}>

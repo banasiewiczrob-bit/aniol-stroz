@@ -25,16 +25,16 @@ export default function RefleksjeScreen() {
       >
         <Text style={styles.title}>Codzienne refleksje</Text>
         <Text style={styles.subtitle}>
-          Jedna refleksja na każdy dzień kalendarzowy. Wszyscy uczestnicy danego dnia słuchają tego samego nagrania.
+          Każdego dnia czeka tu jedno krótkie nagranie przypisane do daty. Możesz wrócić do niego we własnym rytmie.
         </Text>
 
         <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#8FAFD3' }]} />
-          <Text style={styles.cardTitle}>Dzisiejsza refleksja</Text>
-          <Text style={styles.cardText}>Tutaj będzie odtwarzane nagranie przypisane do dzisiejszej daty.</Text>
+          <Text style={styles.cardTitle}>Refleksja na dziś</Text>
+          <Text style={styles.cardText}>Tutaj pojawi się nagranie przypisane do dzisiejszej daty. Krótkie zatrzymanie na teraz.</Text>
           <Pressable style={styles.primaryBtn} disabled>
-            <Text style={styles.primaryBtnText}>Odtwórz refleksję (wkrótce)</Text>
+            <Text style={styles.primaryBtnText}>Posłuchaj refleksji (wkrótce)</Text>
           </Pressable>
         </View>
 
@@ -42,7 +42,7 @@ export default function RefleksjeScreen() {
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#B8C6FF' }]} />
           <Text style={styles.cardTitle}>Archiwum 365</Text>
-          <Text style={styles.cardText}>Tu pojawi się kalendarz refleksji z podziałem na daty i odsłuch nagrań.</Text>
+          <Text style={styles.cardText}>Tu pojawi się kalendarz refleksji, żebyś mógł wracać także do wcześniejszych dni.</Text>
         </View>
 
         <DailyReadToggle id="refleksje" />

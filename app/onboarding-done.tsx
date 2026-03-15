@@ -9,13 +9,13 @@ export default function OnboardingDoneScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Gotowe</Text>
         <Text style={styles.subtitle}>
-          Podpis jest zapisany, a licznik ustawiony.
+          Podpis jest zapisany, a data startu ustawiona.
           {'\n'}
-          Drzwi do całej aplikacji są już otwarte.
+          Możesz spokojnie wejść do aplikacji.
         </Text>
 
         <Pressable style={styles.button} onPress={() => router.replace('/(tabs)')}>
-          <Text style={styles.buttonText}>Wejdź do aplikacji</Text>
+          <Text style={styles.buttonText}>Przejdź do aplikacji</Text>
         </Pressable>
       </View>
     </SafeAreaView>

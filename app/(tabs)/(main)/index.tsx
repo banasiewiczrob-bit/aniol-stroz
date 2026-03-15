@@ -1,4 +1,5 @@
 import { BackButton } from '@/components/BackButton';
+import { SOFT_BADGE_BG, SOFT_BADGE_BORDER, SOFT_BADGE_TEXT } from '@/constants/ui';
 import { loadAppSettings, saveAppSettings, subscribeAppSettingsChanges } from '@/hooks/useAppSettings';
 import {
   loadPendingIntelligentSupportSuggestion,
@@ -330,10 +331,10 @@ export default function Dom() {
       >
         <View style={styles.promptOverlay}>
           <View style={styles.promptCard}>
-            <Text style={styles.promptTitle}>Jeden krok na dziś</Text>
+            <Text style={styles.promptTitle}>Jedna rzecz na teraz</Text>
             <Text style={styles.promptText}>{supportNudge?.message}</Text>
             <Pressable style={styles.promptPrimary} onPress={() => void handleSupportNudgeDone()}>
-              <Text style={styles.promptPrimaryText}>Zrób jeden krok</Text>
+              <Text style={styles.promptPrimaryText}>Zacznij od tego</Text>
             </Pressable>
             {supportNudge?.ctaSecondaryRoute ? (
               <Pressable style={styles.promptSecondary} onPress={() => void handleSupportNudgeAlternative()}>
@@ -341,7 +342,7 @@ export default function Dom() {
               </Pressable>
             ) : null}
             <Pressable style={styles.promptSecondary} onPress={() => void handleSupportNudgePostpone()}>
-              <Text style={styles.promptSecondaryText}>Odłóż</Text>
+              <Text style={styles.promptSecondaryText}>Później</Text>
             </Pressable>
           </View>
         </View>
@@ -469,16 +470,16 @@ const styles = StyleSheet.create({
     minWidth: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#D73D4A',
+    backgroundColor: SOFT_BADGE_BG,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.85)',
+    borderColor: SOFT_BADGE_BORDER,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
     zIndex: 4,
   },
   tileBadgeText: {
-    color: 'white',
+    color: SOFT_BADGE_TEXT,
     fontSize: 11,
     fontWeight: '800',
     lineHeight: 13,
