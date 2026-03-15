@@ -41,10 +41,8 @@ export default function WsparcieDesiderata() {
         <Text style={styles.title}>Desiderata</Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="Kolejny znany Ci zapewne tekst. Desiderata. To słowa do codziennego wzmacniania spokoju, 
-          pokory i życzliwego podejścia do siebie oraz innych."
-          jak="Czytaj bez pośpiechu, akapit po akapicie. 
-          Zaznacz w głowie jedno zdanie, które chcesz dziś wprowadzić w życie. Zaznacz na dole Przeczytałem."
+          co="To tekst, który pomaga wrócić do spokoju, pokory i życzliwszego spojrzenia na siebie oraz innych."
+          jak="Czytaj bez pośpiechu. Wybierz jedno zdanie, które dziś chcesz mieć bliżej siebie."
         />
         <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />

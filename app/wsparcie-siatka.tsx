@@ -296,13 +296,12 @@ export default function WsparcieSiatka() {
         <Text style={styles.title}>Siatka wsparcia</Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="Tu budujesz listę osób, do których możesz zadzwonić w trudniejszym momencie."
-          jak="Dodaj kontakty wcześniej, zanim pojawi się kryzys. Aktualizuj numery i utrzymuj listę pod ręką."
+          co="Tu zapisujesz ludzi, do których możesz się odezwać, kiedy robi się trudniej albo kiedy po prostu nie chcesz zostać z tym sam."
+          jak="Warto zrobić to wcześniej, w spokojniejszym momencie. Dzięki temu w kryzysie nie szukasz od zera, tylko sięgasz po gotowy kontakt."
         />
         <Text style={styles.subtitle}>
-          Zapisz osoby, do których możesz zadzwonić w kryzysie, albo po prostu pogadać. 
-          Zbuduj swoją siatkę wsparcia. W ten sposób łatwiej będzie Ci sięgnąć po pomoc, 
-          gdy znajdziesz się w potrzebie.
+          Zapisz osoby, do których możesz zadzwonić w kryzysie albo wtedy, gdy potrzebujesz zwykłej rozmowy.
+          Taka lista pomaga sięgnąć po kontakt, zanim napięcie zrobi się większe.
         </Text>
 
         <TextInput

@@ -352,7 +352,7 @@ export default function ListaWyzwalaczyScreen() {
   const summaryText =
     items.length === 0
       ? 'Na początek zapisz po 2-3 rzeczy z obu stron: co dzieje się w Tobie i co dzieje się wokół Ciebie.'
-      : `Masz już ${getCountLabel(items.length)}. Dzięki temu wiesz więcej o sobie. Dobra robota!`;
+      : `Masz już ${getCountLabel(items.length)}. Dzięki temu wiesz o sobie trochę więcej.`;
 
   const internalItems = items.filter((item) => item.kind === 'internal');
   const externalItems = items.filter((item) => item.kind === 'external');

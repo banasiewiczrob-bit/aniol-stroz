@@ -744,8 +744,8 @@ export default function UstawieniaScreen() {
           <Text style={styles.title}>Ustawienia</Text>
         <Text style={styles.subtitle}>
           {onboardingSettingsRequired
-            ? 'Krok 3 z 3: ustaw zgody oraz preferencje startowe (powiadomienia, badge i inteligentne wsparcie).'
-            : 'Pierwsze kroki: najpierw zgody, potem pozostałe ustawienia aplikacji.'}
+            ? 'Na początek ustaw zgody oraz preferencje startowe: powiadomienia, badge i inteligentne wsparcie.'
+            : 'Tutaj ustawisz zgody, powiadomienia i pozostałe preferencje aplikacji.'}
         </Text>
         {onboardingSettingsRequired ? <FirstStepsRoadmap currentStep={3} /> : null}
 
@@ -1032,7 +1032,7 @@ export default function UstawieniaScreen() {
                 />
               </View>
               <Text style={styles.hintText}>
-                Pokazuje liczniki na kaflach i zakładce Dom oraz badge na ikonie aplikacji.
+                Pokazuje znaczniki na kaflach i zakładce Dom oraz badge na ikonie aplikacji.
               </Text>
 
               <Pressable
@@ -1287,11 +1287,11 @@ export default function UstawieniaScreen() {
               ]}
             />
             <View style={styles.fullAccessBadge}>
-              <Text style={styles.fullAccessBadgeText}>Odblokowano</Text>
+              <Text style={styles.fullAccessBadgeText}>Gotowe</Text>
             </View>
-            <Text style={styles.fullAccessTitle}>Masz pełny dostęp</Text>
+            <Text style={styles.fullAccessTitle}>Możesz już wejść</Text>
             <Text style={styles.fullAccessText}>
-              do wszystkich funkcjonalności aplikacji. Gratuluję!{'\n'}Anioł Stróż. Korzystaj dzień po dniu.
+              Wszystkie funkcje aplikacji są już dla Ciebie dostępne.{'\n'}Korzystaj we własnym rytmie.
             </Text>
             <Pressable
               style={styles.fullAccessButton}
@@ -1300,7 +1300,7 @@ export default function UstawieniaScreen() {
                 router.replace('/(tabs)');
               }}
             >
-              <Text style={styles.fullAccessButtonText}>Wejdź do aplikacji</Text>
+              <Text style={styles.fullAccessButtonText}>Przejdź do aplikacji</Text>
             </Pressable>
           </Animated.View>
         </View>

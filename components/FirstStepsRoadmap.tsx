@@ -4,18 +4,19 @@ import { StyleSheet, Text, View } from 'react-native';
 type FirstStepsRoadmapProps = {
   currentStep: 1 | 2 | 3;
   compact?: boolean;
+  hideTitle?: boolean;
 };
 
 const STEPS = [
-  'Krok 1: podpisz kontrakt',
-  'Krok 2: ustaw datę startu w liczniku',
-  'Krok 3: ustaw zgody i preferencje w Ustawieniach',
+  'Podpisz kontrakt',
+  'Ustaw datę startu w liczniku',
+  'Ustaw zgody i preferencje w Ustawieniach',
 ] as const;
 
-export function FirstStepsRoadmap({ currentStep, compact = false }: FirstStepsRoadmapProps) {
+export function FirstStepsRoadmap({ currentStep, compact = false, hideTitle = false }: FirstStepsRoadmapProps) {
   return (
     <View style={[styles.card, compact && styles.cardCompact]}>
-      <Text style={[styles.title, compact && styles.titleCompact]}>Twoja droga startowa</Text>
+      {!hideTitle ? <Text style={[styles.title, compact && styles.titleCompact]}>Na początek</Text> : null}
       {STEPS.map((step, index) => {
         const stepNumber = (index + 1) as 1 | 2 | 3;
         const done = stepNumber < currentStep;
@@ -38,7 +39,7 @@ export function FirstStepsRoadmap({ currentStep, compact = false }: FirstStepsRo
           </View>
         );
       })}
-      {!compact ? <Text style={styles.note}>Po kroku 3 odblokujesz pełny dostęp do wszystkich funkcji aplikacji.</Text> : null}
+      {!compact ? <Text style={styles.note}>To wystarczy, żeby spokojnie wejść do całej aplikacji.</Text> : null}
     </View>
   );
 }

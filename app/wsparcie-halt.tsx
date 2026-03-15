@@ -28,11 +28,8 @@ export default function HaltScreen() {
         </Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="Znasz tak zwany program HALT? Jego stosowanie pomaga zauważyć stany, które zwiększają napięcie i ryzyko impulsywnych decyzji."
-          jak="Przed każdą ważną dla Ciebie decyzją zrób krótki sprawdzian: głód, złość, samotność, zmęczenie. 
-          Najpierw pomyśl o swoich potrzebach, potem działaj. Przeczytaj każdy punkt i zastanów się, 
-          czy któryś z nich nie jest teraz w Tobie obecny. Jeśli tak, zatrzymaj się i zadbaj o tę 
-          potrzebę, zanim podejmiesz decyzję. Zaznacz na dole Przeczytałem."
+          co="HALT pomaga zauważyć stany, które podnoszą napięcie i utrudniają spokojne decyzje."
+          jak="Zanim zrobisz coś ważnego, sprawdź głód, złość, samotność i zmęczenie. Jeśli któreś z nich jest dziś mocne, najpierw zajmij się tą potrzebą, dopiero potem działaj."
         />
 
         <HaltItem 

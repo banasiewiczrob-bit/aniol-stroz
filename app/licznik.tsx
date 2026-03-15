@@ -279,7 +279,7 @@ export default function LicznikScreen() {
       return;
     }
     if (step === 'counter') {
-      Alert.alert('Najpierw ustaw datę startu', 'Aby przejść dalej, zapisz datę rozpoczęcia zdrowienia.');
+      Alert.alert('Najpierw ustaw datę startu', 'Zapisz datę rozpoczęcia zdrowienia, żeby licznik mógł zacząć od Twojego miejsca.');
       return;
     }
     if (step === 'consents') {
@@ -324,9 +324,9 @@ export default function LicznikScreen() {
             <>
               <View style={styles.infoCompact}>
                 <Text style={styles.infoCompactTitle}>Opis i instrukcja</Text>
-                <Text style={styles.infoCompactText}>Ustaw datę startu i obserwuj codzienny postęp.</Text>
+                <Text style={styles.infoCompactText}>Ustaw datę startu i zobacz, ile trwa Twoje zdrowienie.</Text>
               </View>
-              <Text style={styles.headerSubtitle}>Pierwsze kroki: ustaw datę startu. Twoje zdrowienie trwa już:</Text>
+              <Text style={styles.headerSubtitle}>Ustaw datę startu. Twoje zdrowienie trwa już:</Text>
             </>
           )}
           {showFirstStepsRoadmap && !compact ? (
@@ -408,7 +408,7 @@ export default function LicznikScreen() {
           <Pressable style={[styles.button, compact && styles.buttonCompact, styles.nextStepButton]} onPress={() => void handleContinueFirstSteps()}>
             <Ionicons name="arrow-forward" size={20} color="white" style={{ marginRight: 10 }} />
             <Text style={[styles.buttonText, compact && styles.buttonTextCompact]}>
-              Krok 3: zgody i ustawienia
+              Przejdź do zgód i ustawień
             </Text>
           </Pressable>
         ) : null}

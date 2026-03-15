@@ -21,7 +21,7 @@ export const COMMUNITY_GROUPS: CommunityGroup[] = [
   {
     id: 'sukcesy',
     title: 'Sukcesy',
-    description: 'Dzielimy się postępami i wzmacniamy motywację.',
+    description: 'Dzielimy się tym, co pomaga, i wzmacniamy motywację.',
   },
   {
     id: 'pytania',

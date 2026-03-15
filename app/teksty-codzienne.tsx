@@ -28,42 +28,42 @@ type TileItem = {
 const ITEMS: TileItem[] = [
   {
     title: 'Modlitwa o pogodę ducha',
-    subtitle: 'Kilka zwykłych słów na początek dnia.',
+    subtitle: 'Kilka prostych słów, do których możesz wracać rano albo w trudniejszej chwili.',
     to: '/wsparcie-modlitwa',
     accent: '#9EE7D8',
     glow: 'rgba(158,231,216,0.28)',
   },
   {
     title: 'Właśnie dzisiaj',
-    subtitle: 'Program na najbliższe 24 godziny.',
+    subtitle: 'Krótki tekst, który pomaga złapać kierunek na najbliższe godziny.',
     to: '/wsparcie-24',
     accent: '#FFD18A',
     glow: 'rgba(255,209,138,0.28)',
   },
   {
     title: 'HALT',
-    subtitle: 'Cztery rzeczy, które warto sprawdzić codziennie.',
+    subtitle: 'Cztery stany, które warto sprawdzić, zanim napięcie przejmie ster.',
     to: '/wsparcie-halt',
     accent: '#FF9E9E',
     glow: 'rgba(255,158,158,0.28)',
   },
   {
     title: '12 kroków',
-    subtitle: 'AA, NA, Al-Anon, SLAA i wersja uniwersalna.',
+    subtitle: 'Kilka wersji kroków, żebyś mógł wracać do brzmienia najbliższego Tobie.',
     to: '/wsparcie-12-krokow',
     accent: '#8FAFD3',
     glow: 'rgba(143,175,211,0.28)',
   },
   {
     title: 'Desiderata',
-    subtitle: 'Tekst do spokojnego, codziennego czytania.',
+    subtitle: 'Spokojny tekst do czytania wtedy, gdy potrzebujesz złapać oddech.',
     to: '/wsparcie-desiderata',
     accent: '#B8C6FF',
     glow: 'rgba(184,198,255,0.28)',
   },
   {
     title: 'Codzienne refleksje',
-    subtitle: 'Jedna refleksja audio na każdy dzień kalendarzowy.',
+    subtitle: 'Jedno nagranie na dziś. Krótko i blisko tego, z czym możesz dziś przychodzić.',
     to: '/codzienne-refleksje',
     accent: '#FFC7D9',
     glow: 'rgba(255,199,217,0.28)',
@@ -93,12 +93,12 @@ export default function TekstyCodzienneScreen() {
       >
         <Text style={[styles.title, compact && styles.titleCompact]}>Teksty codzienne</Text>
         <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>
-          Sześć miejsc, do których możesz wracać każdego dnia.
+          Sześć miejsc, do których możesz wracać wtedy, gdy potrzebujesz zatrzymania, kierunku albo prostych słów.
         </Text>
 
         <View style={styles.instructionsCompact}>
           <Text style={styles.instructionsCompactTitle}>Opis i instrukcja</Text>
-          <Text style={styles.instructionsCompactText}>Wybierz tekst albo refleksję i przejdź dalej.</Text>
+          <Text style={styles.instructionsCompactText}>Wybierz to, czego dziś najbardziej potrzebujesz, i wejdź dalej.</Text>
         </View>
         <Text style={styles.focusLine}>Do czego chcesz dziś wrócić?</Text>
 

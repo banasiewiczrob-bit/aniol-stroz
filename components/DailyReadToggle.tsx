@@ -54,8 +54,8 @@ export function DailyReadToggle({ id }: { id: DailyTextId }) {
     <Pressable style={styles.wrap} onPress={toggle}>
       <Text style={styles.check}>{checked ? '☑' : '☐'}</Text>
       <View style={{ flex: 1 }}>
-        <Text style={styles.title}>Przeczytałem</Text>
-        <Text style={styles.sub}>Zalicza się do realizacji planu dnia</Text>
+        <Text style={styles.title}>Przeczytałem dziś</Text>
+        <Text style={styles.sub}>Zapisz, że dziś wróciłeś do tego tekstu.</Text>
       </View>
     </Pressable>
   );

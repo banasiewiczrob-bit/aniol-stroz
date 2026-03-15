@@ -234,7 +234,7 @@ export async function ensureDailyPlanNotifications(override?: DailyPlanNotificat
       await scheduleReminder(
         MORNING_KIND,
         'Anioł Stróż',
-        'Zaplanuj swój dzień. Pamiętaj o HALT i Tekstach codziennych. Nie zapomnij także o wypełnieniu Dziennika uczuć, Dziennika głodu/kryzysu i wypisaniu Wdzięczności. To może być Twój dobry dzień. Bądź zdrów. Anioł Stróż',
+        'Dzień się zaczyna. Jeśli chcesz, zajrzyj do planu dnia i HALT. Wystarczy jedna sensowna rzecz na teraz.',
         settings.morningHour,
         settings.morningMinute,
         settings.playSound,
@@ -246,7 +246,7 @@ export async function ensureDailyPlanNotifications(override?: DailyPlanNotificat
       await scheduleReminder(
         EVENING_KIND,
         'Anioł Stróż',
-        'Teraz możesz podsumować Swój dzień: Zaznacz wykonanie zaplanowanych zadań, sprawdź i zanzacz HALT jeśli trzeba. Jeśli dzienniki wymagają uzupełnienia to możesz zrobić to teraz. Spokojnego wieczoru. Anioł Stróż',
+        'Wieczorem możesz spokojnie wrócić do tego dnia. Jeśli chcesz, zajrzyj do podsumowania, HALT i dzienników.',
         settings.eveningHour,
         settings.eveningMinute,
         settings.playSound,

@@ -243,9 +243,8 @@ export default function WsparcieKontakt() {
         <Text style={styles.title}>Kontakt</Text>
         <CoJakSection
           title="Opis i instrukcja"
-          co="Ten ekran daje szybki dostęp do kontaktu, gdy potrzebujesz wsparcia tu i teraz."
-          jak="Wybierz odpowiedniego człowieka i działaj od razu. W kryzysie użyj pilnego wsparcia 
-          bez zwlekania. Jeśli czujesz, że potrzebujesz rozmowy — sięgnij po pomoc. Nie musisz być sam."
+          co="Ten ekran zbiera szybkie sposoby kontaktu, kiedy potrzebujesz wsparcia tu i teraz."
+          jak="Jeśli sytuacja jest pilna, sięgnij po pomoc bez zwlekania. Jeśli potrzebujesz po prostu rozmowy, wybierz właściwą osobę i zadzwoń. Nie musisz zostawać z tym sam."
         />
 
         <View style={styles.section}>

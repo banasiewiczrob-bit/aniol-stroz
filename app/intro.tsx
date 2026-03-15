@@ -61,10 +61,9 @@ export default function Intro() {
         <Animated.View style={[styles.textSection, { opacity: textAnim, transform: [{ translateY: textAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
           <View style={styles.textWrap}>
             <Text style={styles.hi}>Cześć.</Text>
-            <Text style={styles.kicker}>Pierwsze kroki</Text>
             <Text style={styles.line}>Jestem Anioł Stróż.</Text>
-            <Text style={styles.line}>Będę Cię wspierał{"\n"}w Twoim procesie zdrowienia.</Text>
-            {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} /> : null}
+            <Text style={styles.line}>Będę Ci towarzyszył{"\n"}w Twoim procesie zdrowienia.</Text>
+            {showFirstStepsRoadmap ? <FirstStepsRoadmap currentStep={1} hideTitle /> : null}
           </View>
         </Animated.View>
 
@@ -94,7 +93,6 @@ const styles = StyleSheet.create({
   textSection: { marginTop: 30, zIndex: 2 },
   textWrap: { justifyContent: "center" },
   hi: { color: "#fff", fontSize: 32, fontWeight: "700", marginBottom: 20, letterSpacing: 0.6 },
-  kicker: { color: "rgba(120,200,255,0.9)", fontSize: 14, fontWeight: "700", marginBottom: 8, letterSpacing: 1.2, textTransform: 'uppercase' },
   line: { color: "rgba(255,255,255,0.85)", fontSize: 19, lineHeight: 30, letterSpacing: 0.4, marginBottom: 12 },
   watermarkWrap: { position: "absolute", right: -10, bottom: 120, zIndex: 1 },
   watermark: { width: 180, height: 180, opacity: 0.04, resizeMode: "contain" },
