@@ -65,6 +65,7 @@ export default function MojeDoswiadczenieScreen() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [methods, setMethods] = useState<RecoveryMethod[]>([]);
   const [feedback, setFeedback] = useState("");
+  const [methodsOpen, setMethodsOpen] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -248,6 +249,9 @@ export default function MojeDoswiadczenieScreen() {
         <View style={{ position: "absolute", width: 260, height: 260, borderRadius: 130, backgroundColor: "rgba(255,199,217,0.1)", top: -70, right: -88 }} />
         <View style={{ position: "absolute", width: 220, height: 220, borderRadius: 110, backgroundColor: "rgba(184,198,255,0.09)", bottom: 110, left: -80 }} />
 
+        <Text style={{ ...TYPE.h1, color: "white", marginTop: 10, marginBottom: 6 }}>
+          Napisz, co Ci pomaga
+        </Text>
         <Text style={{ ...TYPE.bodyStrong, color: "rgba(255,255,255,0.92)", marginTop: 10 }}>
           Zapisuj to, co naprawdę pomaga Ci wrócić do równowagi.
         </Text>
@@ -265,7 +269,7 @@ export default function MojeDoswiadczenieScreen() {
         >
           <Image source={Watermark} resizeMode="contain" style={{ position: "absolute", right: -18, bottom: -20, width: 120, height: 120, opacity: 0.11, tintColor: "white", transform: [{ rotate: "16deg" }] }} />
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <Text style={{ ...TYPE.h3, color: "white" }}>Po co to robić?</Text>
+            <Text style={{ ...TYPE.h3, color: "white" }}>Opis i instrukcja</Text>
             <Pressable
               onPress={toggleDetails}
               style={{
@@ -277,15 +281,17 @@ export default function MojeDoswiadczenieScreen() {
                 paddingHorizontal: 12,
               }}
             >
-              <Text style={{ ...TYPE.caption, color: ACCENT }}>{detailsOpen ? "Zwiń" : "Rozwiń"}</Text>
+              <Text style={{ ...TYPE.caption, color: ACCENT }}>{detailsOpen ? "Mniej" : "Czytaj więcej"}</Text>
             </Pressable>
           </View>
 
-          <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.88)", marginTop: 12 }}>
-            To jest Twoja prywatna lista sprawdzonych sposobów.
-            {"\n\n"}
-            Gdy przyjdzie trudniejszy moment, łatwiej wrócisz do konkretów zamiast szukać wszystkiego od zera.
-          </Text>
+          {detailsOpen ? (
+            <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.88)", marginTop: 12 }}>
+              To jest Twoja prywatna lista sprawdzonych sposobów.
+              {"\n\n"}
+              Gdy przyjdzie trudniejszy moment, łatwiej wrócisz do konkretów zamiast szukać wszystkiego od zera.
+            </Text>
+          ) : null}
 
           {detailsOpen && (
             <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.88)", marginTop: 10 }}>
@@ -308,20 +314,6 @@ export default function MojeDoswiadczenieScreen() {
               Te wpisy zostają u Ciebie w aplikacji. To ma być Twoja własna baza rzeczy, które realnie działają.
             </Text>
           )}
-        </View>
-
-        <View
-          style={{
-            marginTop: 14,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.09)",
-            backgroundColor: "rgba(255,255,255,0.05)",
-            padding: 14,
-          }}
-        >
-          <Text style={{ ...TYPE.caption, color: ACCENT, letterSpacing: 0.3 }}>Twoja lista wsparcia</Text>
-          <Text style={{ ...TYPE.bodyStrong, color: "white", marginTop: 6 }}>{summaryText}</Text>
         </View>
 
         <View
@@ -404,15 +396,29 @@ export default function MojeDoswiadczenieScreen() {
         </View>
 
         <View style={{ marginTop: 8 }}>
-          <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Moje sprawdzone sposoby</Text>
-          <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginTop: 6 }}>
-            Wracaj tu, kiedy potrzebujesz przypomnieć sobie, co już wcześniej zadziałało.
-          </Text>
+          <Pressable
+            onPress={() => setMethodsOpen((prev) => !prev)}
+            style={{
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: ACCENT_BORDER,
+              backgroundColor: "rgba(12,38,62,0.62)",
+              padding: 14,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Moje sprawdzone sposoby</Text>
+              <Text style={{ ...TYPE.caption, color: ACCENT }}>{methodsOpen ? "Mniej" : "Czytaj więcej"}</Text>
+            </View>
+            <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginTop: 6 }}>
+              {summaryText}
+            </Text>
+          </Pressable>
 
-          {methods.length === 0 ? (
+          {methodsOpen ? (
             <View
               style={{
-                marginTop: 12,
+                marginTop: 10,
                 borderRadius: 14,
                 borderWidth: 1,
                 borderColor: "rgba(255,255,255,0.09)",
@@ -420,46 +426,46 @@ export default function MojeDoswiadczenieScreen() {
                 padding: 14,
               }}
             >
-              <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>
-                Na razie nie masz tu żadnego wpisu. Zacznij od jednej małej rzeczy, która pomaga Ci przetrwać trudniejszy moment.
-              </Text>
-            </View>
-          ) : (
-            methods.map((item) => (
-              <View
-                key={item.id}
-                style={{
-                  marginTop: 12,
-                  borderRadius: 14,
-                  borderWidth: 1,
-                  borderColor: ACCENT_BORDER,
-                  backgroundColor: "rgba(12,38,62,0.62)",
-                  padding: 14,
-                }}
-              >
-                <Text style={{ ...TYPE.bodyStrong, color: "white" }}>{item.text}</Text>
-                <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.6)" }}>
-                    Dodano {formatSavedDate(item.createdAt)}
-                  </Text>
-                  <Pressable
-                    onPress={() => {
-                      handleDeleteMethod(item.id);
-                    }}
+              {methods.length === 0 ? (
+                <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>
+                  Na razie nie masz tu żadnego wpisu. Zacznij od jednej małej rzeczy, która pomaga Ci przetrwać trudniejszy moment.
+                </Text>
+              ) : (
+                methods.map((item, index) => (
+                  <View
+                    key={item.id}
                     style={{
-                      borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.18)",
-                      borderRadius: 999,
-                      paddingVertical: 6,
-                      paddingHorizontal: 12,
+                      paddingTop: index === 0 ? 0 : 12,
+                      marginTop: index === 0 ? 0 : 12,
+                      borderTopWidth: index === 0 ? 0 : 1,
+                      borderTopColor: "rgba(255,255,255,0.09)",
                     }}
                   >
-                    <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)" }}>Usuń</Text>
-                  </Pressable>
-                </View>
-              </View>
-            ))
-          )}
+                    <Text style={{ ...TYPE.bodyStrong, color: "white" }}>{item.text}</Text>
+                    <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                      <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.6)" }}>
+                        Dodano {formatSavedDate(item.createdAt)}
+                      </Text>
+                      <Pressable
+                        onPress={() => {
+                          handleDeleteMethod(item.id);
+                        }}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: "rgba(255,255,255,0.18)",
+                          borderRadius: 999,
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                        }}
+                      >
+                        <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)" }}>Usuń</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

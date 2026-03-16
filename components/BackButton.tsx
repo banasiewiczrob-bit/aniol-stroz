@@ -11,7 +11,8 @@ type BackButtonProps = {
 export function useSwipeHintInset(showSwipeHint = true) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const canShowSwipeHint = showSwipeHint && navigation.canGoBack();
+  const canShowSwipeHint =
+    showSwipeHint && navigation.canGoBack() && Platform.OS !== 'web';
   const swipeHintPaddingBottom = Platform.OS === 'android' ? Math.max(insets.bottom, 10) : Math.max(insets.bottom, 8);
 
   return {

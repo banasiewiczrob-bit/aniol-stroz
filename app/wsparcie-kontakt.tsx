@@ -28,7 +28,13 @@ const SOS_BG = "#E11D1D";
 const SOS_BG_PRESSED = "#C41414";
 const SOS_BORDER = "#FF7A7A";
 const Watermark = require("../assets/images/maly_aniol.png");
+const DomRehabLogo = require("../assets/images/dom-rehab-logo.png");
 const SOS_CONTACT_KEY = "@sos_contact_v1";
+const DOM_REHAB_CONTACTS = [
+  { id: "513683660", label: "+48 513 683 660", phone: "+48513683660" },
+  { id: "789055032", label: "+48 789 055 032", phone: "+48789055032" },
+  { id: "789060154", label: "+48 789 060 154", phone: "+48789060154" },
+] as const;
 const HOTLINES = [
   {
     id: "116111",
@@ -73,6 +79,7 @@ export default function WsparcieKontakt() {
   const [sosName, setSosName] = useState("");
   const [sosPhone, setSosPhone] = useState("");
   const [sosFormOpen, setSosFormOpen] = useState(false);
+  const [domRehabExpanded, setDomRehabExpanded] = useState(false);
 
   useEffect(() => {
     const loadSosContact = async () => {
@@ -369,6 +376,42 @@ export default function WsparcieKontakt() {
             </View>
           ))}
         </View>
+
+        <View style={styles.section}>
+          <Pressable
+            style={({ pressed }) => [styles.card, styles.domRehabToggleCard, pressed && { opacity: 0.95 }]}
+            onPress={() => setDomRehabExpanded((prev) => !prev)}
+          >
+            <View style={styles.domRehabHeaderRow}>
+              <Image source={DomRehabLogo} resizeMode="contain" style={styles.domRehabHeaderLogo} />
+              <View style={styles.domRehabHeaderTextWrap}>
+                <Text style={styles.cardTitle}>dom-REHAB Robert Banasiewicz</Text>
+                <Text style={styles.cardSubtitle}>Terapia stacjonarna i wsparcie</Text>
+              </View>
+            </View>
+            <Text style={styles.domRehabToggleText}>{domRehabExpanded ? "Mniej" : "Czytaj więcej"}</Text>
+          </Pressable>
+
+          {domRehabExpanded ? (
+            <View style={[styles.card, styles.domRehabCard, styles.domRehabContentCard]}>
+              <Text style={styles.domRehabIntro}>Jeśli potrzebujesz terapii stacjonarnej, zadzwoń lub napisz.</Text>
+              <Text style={styles.email}>info@rehab-terapia.pl</Text>
+              {DOM_REHAB_CONTACTS.map((item) => (
+                <View key={item.id} style={styles.domRehabContactRow}>
+                  <Text style={styles.cardPhone}>{item.label}</Text>
+                  <View style={styles.domRehabButtons}>
+                    <Pressable style={styles.callButton} onPress={() => handleCall(item.phone)}>
+                      <Text style={styles.callButtonText}>Zadzwoń</Text>
+                    </Pressable>
+                    <Pressable style={[styles.callButton, styles.domRehabSmsButton]} onPress={() => handleSms(item.phone)}>
+                      <Text style={styles.callButtonText}>SMS</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -487,4 +530,51 @@ const styles = StyleSheet.create({
   smsButtonText: { ...TYPE.caption, color: ACCENT },
   email: { ...TYPE.bodyStrong, color: "white", marginTop: 8 },
   note: { ...TYPE.caption, color: MUTED, marginTop: 4 },
+  domRehabToggleCard: {
+    justifyContent: "space-between",
+  },
+  domRehabHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  domRehabHeaderLogo: {
+    width: 56,
+    height: 56,
+  },
+  domRehabHeaderTextWrap: {
+    flex: 1,
+  },
+  domRehabToggleText: {
+    ...TYPE.caption,
+    color: ACCENT,
+    fontWeight: "700",
+  },
+  domRehabCard: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  domRehabContentCard: {
+    marginTop: 10,
+  },
+  domRehabIntro: {
+    ...TYPE.bodySmall,
+    color: SUB,
+  },
+  domRehabContactRow: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.12)",
+  },
+  domRehabButtons: {
+    marginTop: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  domRehabSmsButton: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.28)",
+  },
 });

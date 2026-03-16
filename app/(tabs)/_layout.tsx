@@ -40,10 +40,25 @@ export default function TabLayout() {
   }, [pathname]);
 
   useEffect(() => {
+    let mounted = true;
     if (!onboardingRequired) return;
-    if (pathname !== '/intro' && pathname !== '/ustawienia') {
+    if (pathname === '/intro' || pathname === '/ustawienia') return;
+
+    const run = async () => {
+      const state = await getFirstStepsState();
+      if (!mounted) return;
+      if (state.firstStepsDone) {
+        setOnboardingRequired(false);
+        return;
+      }
       router.replace('/intro');
-    }
+    };
+
+    void run();
+
+    return () => {
+      mounted = false;
+    };
   }, [onboardingRequired, pathname]);
 
   useEffect(() => {

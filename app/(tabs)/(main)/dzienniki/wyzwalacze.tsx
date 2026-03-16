@@ -141,6 +141,8 @@ export default function ListaWyzwalaczyScreen() {
   const [pendingQuickAdd, setPendingQuickAdd] = useState<PendingQuickAdd | null>(null);
   const [internalExpanded, setInternalExpanded] = useState(false);
   const [externalExpanded, setExternalExpanded] = useState(false);
+  const [isIntroExpanded, setIsIntroExpanded] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -353,6 +355,9 @@ export default function ListaWyzwalaczyScreen() {
     items.length === 0
       ? 'Na początek zapisz po 2-3 rzeczy z obu stron: co dzieje się w Tobie i co dzieje się wokół Ciebie.'
       : `Masz już ${getCountLabel(items.length)}. Dzięki temu wiesz o sobie trochę więcej.`;
+  const introLead = 'Czym są tak zwane wyzwalacze zapewne już wiesz.';
+  const introRest =
+    'To wewnętrzne i zewnętrzne czynniki uruchamiające automatyzacje, często prowadzące do sytuacji nawrotowych. Ta lista to miejsce, gdzie możesz je zapisywać, żeby łatwiej było je zauważyć wcześniej i mieć plan, jak reagować.';
 
   const internalItems = items.filter((item) => item.kind === 'internal');
   const externalItems = items.filter((item) => item.kind === 'external');
@@ -380,17 +385,21 @@ export default function ListaWyzwalaczyScreen() {
 
         <Text style={styles.title}>Lista wyzwalaczy</Text>
         <Text style={styles.subtitle}>
-          Czym są tak zwane 'wyzwalacze' zapewne ju wiesz. To wewnetrzne i zewnętrzne czynniki uruchamiające 'automatyzacje',
-          często prowadzące do sytuacji nawrotowych. 
-          Ta lista to miejsce, gdzie możesz je zapisywać, żeby łatwiej było je zauważyć wcześniej i mieć plan, jak reagować.
+          {isIntroExpanded ? `${introLead} ${introRest}` : introLead}
         </Text>
+        <Pressable style={styles.readMoreButton} onPress={() => setIsIntroExpanded((prev) => !prev)}>
+          <Text style={styles.readMoreText}>{isIntroExpanded ? 'Mniej' : 'Czytaj więcej'}</Text>
+        </Pressable>
 
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>To ważne dla Ciebie</Text>
           <Text style={styles.infoText}>
             Kiedy wyzwalacz jest nazwany, łatwiej nie dać się zaskoczyć.
           </Text>
-          <Text style={styles.infoText}>{summaryText}</Text>
+          {isInfoExpanded ? <Text style={styles.infoText}>{summaryText}</Text> : null}
+          <Pressable style={styles.infoReadMoreButton} onPress={() => setIsInfoExpanded((prev) => !prev)}>
+            <Text style={styles.readMoreText}>{isInfoExpanded ? 'Mniej' : 'Czytaj więcej'}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.inputCard}>
@@ -399,27 +408,6 @@ export default function ListaWyzwalaczyScreen() {
           <Text style={styles.sectionText}>
             Podziel to na dwie grupy: wyzwalacze wewnętrzne, czyli stan w Tobie, i zewnętrzne, czyli sytuacje, ludzie, miejsca albo pory.
           </Text>
-
-          <View style={styles.kindRow}>
-            {(['internal', 'external'] as TriggerKind[]).map((kind) => {
-              const active = selectedKind === kind;
-              return (
-                <Pressable
-                  key={kind}
-                  style={[styles.kindButton, active && styles.kindButtonActive]}
-                  onPress={() => {
-                    setPendingQuickAdd(null);
-                    setSelectedKind((prev) => (prev === kind ? null : kind));
-                  }}
-                >
-                  <Text style={[styles.kindButtonTitle, active && styles.kindButtonTitleActive]}>{getKindLabel(kind)}</Text>
-                  <Text style={[styles.kindButtonText, active && styles.kindButtonTextActive]}>
-                    {kind === 'internal' ? 'stany, emocje, napięcie' : 'osoby, miejsca, pory, sytuacje'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
 
           <View style={styles.suggestionsBlock}>
             <Text style={styles.suggestionsTitle}>Szybkie dodanie</Text>
@@ -455,6 +443,27 @@ export default function ListaWyzwalaczyScreen() {
                 );
               })}
             </View>
+          </View>
+
+          <View style={styles.kindRow}>
+            {(['internal', 'external'] as TriggerKind[]).map((kind) => {
+              const active = selectedKind === kind;
+              return (
+                <Pressable
+                  key={kind}
+                  style={[styles.kindButton, active && styles.kindButtonActive]}
+                  onPress={() => {
+                    setPendingQuickAdd(null);
+                    setSelectedKind((prev) => (prev === kind ? null : kind));
+                  }}
+                >
+                  <Text style={[styles.kindButtonTitle, active && styles.kindButtonTitleActive]}>{getKindLabel(kind)}</Text>
+                  <Text style={[styles.kindButtonText, active && styles.kindButtonTextActive]}>
+                    {kind === 'internal' ? 'stany, emocje, napięcie' : 'osoby, miejsca, pory, sytuacje'}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           <TextInput
@@ -597,7 +606,17 @@ const styles = StyleSheet.create({
     color: SUB,
     fontSize: 16,
     lineHeight: 24,
+    marginBottom: 2,
+  },
+  readMoreButton: {
+    alignSelf: 'flex-start',
     marginBottom: 14,
+    paddingVertical: 2,
+  },
+  readMoreText: {
+    color: ACCENT,
+    fontSize: 14,
+    fontWeight: '700',
   },
   infoCard: {
     marginBottom: 14,
@@ -620,6 +639,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 4,
+  },
+  infoReadMoreButton: {
+    alignSelf: 'flex-start',
+    marginTop: 2,
+    paddingVertical: 2,
   },
   inputCard: {
     borderRadius: 16,

@@ -10,7 +10,7 @@ import {
   resetDailyPlanNotificationSettings,
   saveDailyPlanNotificationSettings,
 } from '@/hooks/useDailyPlanNotifications';
-import { getFirstStepsState, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
+import { getFirstStepsState, recomputeFirstStepsDone, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { APP_SETTINGS_STORAGE_KEY, AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from '@/hooks/useAppSettings';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
@@ -389,7 +389,7 @@ export default function UstawieniaScreen() {
   };
 
   const toggleConsent = (key: ConsentKey, nextValue?: boolean) => {
-    setAppSettings({ [key]: typeof nextValue === 'boolean' ? nextValue : !appSettings[key] });
+    setAppSettingsState((prev) => ({ ...prev, [key]: typeof nextValue === 'boolean' ? nextValue : !prev[key] }));
   };
 
   const collapseSection = async (key: SettingsSectionKey) => {
@@ -426,6 +426,10 @@ export default function UstawieniaScreen() {
         setNotice('Zapisano zgody. Powiadomienia są wyłączone do czasu zaznaczenia zgody.');
       } else {
         setNotice('Zapisano zgody.');
+      }
+
+      if (onboardingSettingsRequired) {
+        expandSection('notifications');
       }
       await collapseSection('consents');
     } catch (e) {
@@ -471,6 +475,10 @@ export default function UstawieniaScreen() {
         setNotice('Ustawienia powiadomień zapisane.');
       } else {
         setNotice('Ustawienia zapisane, ale brak zgody systemowej na powiadomienia.');
+      }
+
+      if (onboardingSettingsRequired) {
+        expandSection('personalization');
       }
       await collapseSection('notifications');
     } catch (e) {
@@ -575,6 +583,7 @@ export default function UstawieniaScreen() {
       await saveDailyPlanNotificationSettings(nextNotifications);
       await ensureDailyPlanNotifications(nextNotifications);
       await saveAppSettings(nextAppSettings);
+      await recomputeFirstStepsDone();
 
       setAppSettingsState(nextAppSettings);
       setNotificationSettings(nextNotifications);
@@ -805,9 +814,28 @@ export default function UstawieniaScreen() {
                 </Pressable>
               </View>
 
-              <Pressable style={[styles.buttonPrimary, busy && styles.buttonDisabled]} disabled={busy} onPress={saveConsentSection}>
-                <Text style={styles.buttonPrimaryText}>Zapisz zgody</Text>
-              </Pressable>
+              {onboardingSettingsRequired ? (
+                <>
+                  <Pressable
+                    style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
+                    disabled={busy}
+                    onPress={saveConsentSection}
+                  >
+                    <Text style={styles.buttonPrimaryText}>Zapisz zgody</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
+                    disabled={busy}
+                    onPress={() => expandSection('notifications')}
+                  >
+                    <Text style={styles.buttonSecondaryText}>Przejdź do powiadomień</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Pressable style={[styles.buttonPrimary, busy && styles.buttonDisabled]} disabled={busy} onPress={saveConsentSection}>
+                  <Text style={styles.buttonPrimaryText}>Zapisz zgody</Text>
+                </Pressable>
+              )}
             </>
           ) : null}
         </View>
@@ -904,6 +932,16 @@ export default function UstawieniaScreen() {
               >
                 <Text style={styles.buttonSecondaryText}>Domyślne powiadomienia</Text>
               </Pressable>
+
+              {onboardingSettingsRequired ? (
+                <Pressable
+                  style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
+                  disabled={busy}
+                  onPress={() => expandSection('personalization')}
+                >
+                  <Text style={styles.buttonSecondaryText}>Przejdź do personalizacji</Text>
+                </Pressable>
+              ) : null}
             </>
           ) : null}
         </View>

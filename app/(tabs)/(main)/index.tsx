@@ -11,7 +11,16 @@ import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Image,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 const BG = '#061A2C';
 const TILE_BG = 'rgba(12,38,62,0.78)';
@@ -250,7 +259,7 @@ export default function Dom() {
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton showSwipeHint={false} />
-      <View style={[styles.content, compact && styles.contentCompact]}>
+      <View style={[styles.content, compact && styles.contentCompact, Platform.OS === 'web' && styles.contentWeb]}>
         <View>
           <Text style={[styles.headerTitle, compact && styles.headerTitleCompact]}>Dom</Text>
           <Text style={[styles.headerSubtitle, compact && styles.headerSubtitleCompact]}>
@@ -267,7 +276,7 @@ export default function Dom() {
 
         </View>
 
-        <View style={[styles.grid, styles.gridRaised]}>
+        <View style={[styles.grid, styles.gridRaised, Platform.OS === 'web' && styles.gridWeb]}>
           {allTiles.map((item) => (
             <SquareTile
               key={item.title}
@@ -377,10 +386,18 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 12,
     justifyContent: 'flex-start',
+    alignItems: 'stretch',
   },
   contentCompact: {
     paddingTop: 10,
     paddingBottom: 10,
+  },
+  contentWeb: {
+    maxWidth: 960,
+    alignSelf: 'center',
+    width: '100%',
+    paddingLeft: 20,
+    paddingRight: 20,
   },
   headerTitle: { color: 'white', fontSize: 34, fontWeight: '900', marginBottom: 4, letterSpacing: 0.2 },
   headerTitleCompact: { fontSize: 30 },
@@ -420,6 +437,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     rowGap: 8,
+  },
+  gridWeb: {
+    rowGap: 12,
+    columnGap: 12,
   },
   gridRaised: {
     marginTop: 4,
