@@ -18,6 +18,7 @@ export type AppSettings = {
   privacyConsentLocalStorage: boolean;
   privacyConsentNotifications: boolean;
   privacyConsentRegulations: boolean;
+  privacyConsentSharedExperience: boolean;
   introSeen: boolean;
   counterDone: boolean;
   anniversaryDone: boolean;
@@ -38,6 +39,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   privacyConsentLocalStorage: false,
   privacyConsentNotifications: false,
   privacyConsentRegulations: false,
+  privacyConsentSharedExperience: false,
   introSeen: false,
   counterDone: false,
   anniversaryDone: false,
@@ -87,6 +89,10 @@ function normalizeSettings(value: Partial<AppSettings> | null | undefined): AppS
       typeof value?.privacyConsentRegulations === 'boolean'
         ? value.privacyConsentRegulations
         : DEFAULT_APP_SETTINGS.privacyConsentRegulations,
+    privacyConsentSharedExperience:
+      typeof value?.privacyConsentSharedExperience === 'boolean'
+        ? value.privacyConsentSharedExperience
+        : DEFAULT_APP_SETTINGS.privacyConsentSharedExperience,
     introSeen: typeof value?.introSeen === 'boolean' ? value.introSeen : DEFAULT_APP_SETTINGS.introSeen,
     counterDone: typeof value?.counterDone === 'boolean' ? value.counterDone : DEFAULT_APP_SETTINGS.counterDone,
     anniversaryDone:

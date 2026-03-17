@@ -20,7 +20,7 @@ export default function PolitykaPrywatnosciScreen() {
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Polityka prywatności</Text>
         <Text style={styles.meta}>Anioł Stróż</Text>
-        <Text style={styles.meta}>Data wejścia w życie: 26 lutego 2026</Text>
+        <Text style={styles.meta}>Data wejścia w życie: 17 marca 2026</Text>
 
         <Section title="1. Zakres danych">
           <Text style={styles.text}>
@@ -30,59 +30,65 @@ export default function PolitykaPrywatnosciScreen() {
           </Text>
         </Section>
 
-        <Section title="2. Cel przetwarzania">
+        <Section title="2. Dane lokalne i dane przekazywane dobrowolnie">
           <Text style={styles.text}>
-            Dane są przetwarzane wyłącznie w celu działania aplikacji, zapisu postępów, personalizacji ustawień oraz
-            realizacji przypomnień i powiadomień, jeśli użytkownik udzieli odpowiedniej zgody.
+            Większość danych użytkownika pozostaje lokalnie na urządzeniu. Dotyczy to w szczególności prywatnych wpisów,
+            planu dnia i ustawień. Wyjątkiem jest sytuacja, w której użytkownik sam zdecyduje się anonimowo przekazać
+            wybrany wpis do wspólnej bazy doświadczeń.
           </Text>
         </Section>
 
-        <Section title="3. Miejsce przechowywania danych">
+        <Section title="3. Anonimowe udostępnianie doświadczeń">
           <Text style={styles.text}>
-            Dane użytkownika są zapisywane lokalnie na urządzeniu. Jeśli w przyszłości pojawią się funkcje chmurowe,
-            zakres i zasady przetwarzania zostaną opisane w aktualizacji tej polityki.
+            Jeśli użytkownik wybierze opcję anonimowego udostępnienia wpisu, do chmury trafia wyłącznie treść tego
+            konkretnego wpisu oraz techniczne informacje niezbędne do jego obsługi. Taki wpis jest przeznaczony do
+            przeglądu i może zostać wykorzystany do budowy wspólnej bazy doświadczeń dla innych użytkowników aplikacji.
           </Text>
         </Section>
 
-        <Section title="4. Udostępnianie danych">
+        <Section title="4. Cel przetwarzania">
           <Text style={styles.text}>
-            Dane nie są sprzedawane. Dane mogą być przekazywane wyłącznie podmiotom technicznym wspierającym
-            utrzymanie aplikacji, gdy jest to niezbędne do jej działania oraz zgodne z obowiązującym prawem.
+            Dane są przetwarzane w celu działania aplikacji, zapisu postępów, personalizacji ustawień oraz realizacji
+            przypomnień i powiadomień, jeśli użytkownik udzieli odpowiedniej zgody. Anonimowo przekazane wpisy mogą być
+            dodatkowo wykorzystywane do tworzenia bezpiecznej, moderowanej bazy doświadczeń pomocnej dla innych osób.
           </Text>
         </Section>
 
-        <Section title="5. Uprawnienia użytkownika">
+        <Section title="5. Miejsce przechowywania i podmioty techniczne">
           <Text style={styles.text}>
-            Użytkownik może zarządzać swoimi danymi z poziomu aplikacji, w tym usuwać wpisy i zmieniać zgody.
-            Powiadomienia można wyłączyć w ustawieniach aplikacji i systemu urządzenia.
+            Dane lokalne pozostają na urządzeniu użytkownika. Anonimowo przekazane wpisy mogą być przechowywane w
+            infrastrukturze chmurowej obsługiwanej przez Supabase. Dane nie są sprzedawane i nie są przekazywane innym
+            podmiotom poza zakresem niezbędnym do technicznego działania usługi oraz obowiązków wynikających z prawa.
           </Text>
         </Section>
 
-        <Section title="6. Bezpieczeństwo">
+        <Section title="6. Uprawnienia i bezpieczeństwo">
           <Text style={styles.text}>
-            Stosowane są środki techniczne i organizacyjne, które mają chronić dane przed nieuprawnionym dostępem,
-            utratą i nadużyciem.
+            Użytkownik może zarządzać swoimi danymi lokalnymi z poziomu aplikacji, w tym usuwać wpisy i zmieniać zgody.
+            Anonimowe udostępnianie doświadczeń jest dobrowolne i można je wyłączyć w ustawieniach. Stosowane są środki
+            techniczne i organizacyjne, które mają chronić dane przed nieuprawnionym dostępem, utratą i nadużyciem.
           </Text>
         </Section>
 
-        <Section title="7. Dzieci">
+        <Section title="7. Ważna zasada przy udostępnianiu wpisów">
           <Text style={styles.text}>
-            Aplikacja nie jest kierowana do dzieci poniżej 13. roku życia. Jeśli w przyszłości zakres grupy odbiorców
-            ulegnie zmianie, polityka zostanie odpowiednio zaktualizowana.
+            Nie należy wpisywać imion, nazwisk, numerów telefonów, adresów ani innych danych, po których można rozpoznać
+            siebie lub inne osoby. Ze względu na anonimowy charakter tej funkcji, po publikacji wpisu może nie być
+            możliwe powiązanie go z konkretną osobą, jeśli sam wpis nie zawiera danych identyfikujących.
           </Text>
         </Section>
 
-        <Section title="8. Zmiany polityki">
+        <Section title="8. Dzieci i zmiany polityki">
           <Text style={styles.text}>
-            Polityka prywatności może być aktualizowana. Aktualna wersja jest publikowana w aplikacji oraz na stronie
-            informacyjnej aplikacji.
+            Aplikacja nie jest kierowana do dzieci poniżej 13. roku życia. Polityka prywatności może być aktualizowana.
+            Aktualna wersja jest publikowana w aplikacji oraz na stronie informacyjnej aplikacji.
           </Text>
         </Section>
 
         <Section title="9. Kontakt">
           <Text style={styles.text}>
-            W sprawach dotyczących prywatności należy kontaktować się adresem kontaktowym podanym na stronie
-            aplikacji w sklepie.
+            W sprawach dotyczących prywatności oraz anonimowo przekazanych doświadczeń należy kontaktować się adresem
+            kontaktowym podanym na stronie aplikacji w sklepie.
           </Text>
         </Section>
       </ScrollView>

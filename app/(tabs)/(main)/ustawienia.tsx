@@ -57,7 +57,11 @@ const COMMUNITY_SEEDED_STORAGE_KEY = '@community_seeded_v1';
 const EMOTION_JOURNAL_LAB_STORAGE_KEY = '@emotion_journal_lab_v2';
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
-type ConsentKey = 'privacyConsentLocalStorage' | 'privacyConsentNotifications' | 'privacyConsentRegulations';
+type ConsentKey =
+  | 'privacyConsentLocalStorage'
+  | 'privacyConsentNotifications'
+  | 'privacyConsentRegulations'
+  | 'privacyConsentSharedExperience';
 type SettingsSectionKey = 'consents' | 'notifications' | 'plan' | 'intelligentSupport' | 'personalization';
 type SectionExpandedState = Record<SettingsSectionKey, boolean>;
 
@@ -634,6 +638,7 @@ export default function UstawieniaScreen() {
                 privacyConsentLocalStorage: false,
                 privacyConsentNotifications: false,
                 privacyConsentRegulations: false,
+                privacyConsentSharedExperience: false,
                 firstRunSetupDone: false,
                 firstStepsDone: false,
                 counterDone: false,
@@ -811,6 +816,27 @@ export default function UstawieniaScreen() {
                 <Pressable style={styles.checkboxTextWrap} disabled={busy} onPress={() => toggleConsent('privacyConsentRegulations')}>
                   <Text style={styles.checkboxTitle}>Akceptuję zasady korzystania</Text>
                   <Text style={styles.checkboxHint}>Potwierdzasz, że świadomie korzystasz z narzędzi aplikacji.</Text>
+                  </Pressable>
+                </View>
+
+              <View style={styles.checkboxRow}>
+                <Checkbox
+                  style={styles.checkbox}
+                  value={appSettings.privacyConsentSharedExperience}
+                  onValueChange={(v) => toggleConsent('privacyConsentSharedExperience', v)}
+                  color={appSettings.privacyConsentSharedExperience ? '#4FA8E8' : undefined}
+                  disabled={busy}
+                />
+                <Pressable
+                  style={styles.checkboxTextWrap}
+                  disabled={busy}
+                  onPress={() => toggleConsent('privacyConsentSharedExperience')}
+                >
+                  <Text style={styles.checkboxTitle}>Zgoda na anonimowe przekazywanie doświadczeń</Text>
+                  <Text style={styles.checkboxHint}>
+                    Włączasz możliwość anonimowego przekazania wybranego wpisu do wspólnej bazy doświadczeń. To nadal
+                    Ty decydujesz osobno przy każdym wpisie, czy chcesz go udostępnić.
+                  </Text>
                 </Pressable>
               </View>
 
