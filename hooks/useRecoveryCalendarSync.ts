@@ -1,7 +1,9 @@
 import { getLocalDateKey, parseDateKey, todayDateKey, type DateKey } from '@/constants/calendar';
 import {
+  countCompletedDailyTexts,
   DAILY_TEXTS_STORAGE_KEY,
   getDailyTextsForDate,
+  getCompletedDailyTextIds,
   parseDailyTextsStore,
   type DailyTextId,
 } from '@/constants/daily-texts';
@@ -282,9 +284,7 @@ export async function loadDaySnapshot(dateKey: DateKey): Promise<DaySnapshot> {
   const haltCount = Object.values(plan.halt).filter(Boolean).length;
 
   const texts = getDailyTextsForDate(textsStore, dateKey);
-  const idsDone = (Object.entries(texts) as Array<[DailyTextId, boolean]>)
-    .filter(([, done]) => done)
-    .map(([id]) => id);
+  const idsDone = getCompletedDailyTextIds(texts);
 
   const journals =
     journalsByDate.get(dateKey) ??
@@ -305,7 +305,7 @@ export async function loadDaySnapshot(dateKey: DateKey): Promise<DaySnapshot> {
       summarized: plan.summarized,
     },
     texts: {
-      readCount: idsDone.length,
+      readCount: countCompletedDailyTexts(texts),
       idsDone,
     },
     journals,

@@ -1,7 +1,9 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { getLocalDateKey, type DateKey } from '@/constants/calendar';
 import {
+  countCompletedDailyTexts,
   DAILY_TEXTS_STORAGE_KEY,
+  DAILY_TEXTS_PROGRESS_TOTAL,
   createEmptyDailyTextsStore,
   getDailyTextsForDate,
   parseDailyTextsStore,
@@ -612,7 +614,7 @@ export default function PlanScreen() {
     const filledItems = targetPlan.items.filter((item) => item.text.trim().length > 0);
     const doneItems = filledItems.filter((item) => item.done).length;
     const completedCount = filledItems.length > 0 ? Math.round((doneItems / filledItems.length) * 4) : 0;
-    const targetReadCount = Object.values(getDailyTextsForDate(textsStore, dateKey)).filter(Boolean).length;
+    const targetReadCount = countCompletedDailyTexts(getDailyTextsForDate(textsStore, dateKey));
     const haltCount = Object.values(targetPlan.halt).filter(Boolean).length;
     const res = evaluateDay(completedCount, targetReadCount, haltCount);
 
@@ -699,7 +701,7 @@ export default function PlanScreen() {
   const todayFilledItems = todayPlan.items.filter((item) => item.text.trim().length > 0);
   const todayDoneItems = todayFilledItems.filter((item) => item.done).length;
   const completedCountToday = todayFilledItems.length > 0 ? Math.round((todayDoneItems / todayFilledItems.length) * 4) : 0;
-  const readCountToday = Object.values(readDone).filter(Boolean).length;
+  const readCountToday = countCompletedDailyTexts(readDone);
   const haltCountToday = Object.values(todayPlan.halt).filter(Boolean).length;
   const evalResultToday = evaluateDay(completedCountToday, readCountToday, haltCountToday);
 
@@ -1041,7 +1043,7 @@ export default function PlanScreen() {
                     {selectedDateKey === todayKey && (
                       <View style={styles.reminderCard}>
                         <Text style={styles.reminderTitle}>Teksty codzienne</Text>
-                        <Text style={styles.reminderText}>Dziś wróciłeś do: {readCountToday}/4 tekstów.</Text>
+                        <Text style={styles.reminderText}>Dziś wróciłeś do: {readCountToday}/{DAILY_TEXTS_PROGRESS_TOTAL} tekstów.</Text>
                       </View>
                     )}
 

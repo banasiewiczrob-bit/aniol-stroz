@@ -64,6 +64,12 @@ type ConsentKey =
   | 'privacyConsentSharedExperience';
 type SettingsSectionKey = 'consents' | 'notifications' | 'plan' | 'intelligentSupport' | 'personalization';
 type SectionExpandedState = Record<SettingsSectionKey, boolean>;
+const ONBOARDING_SECTION_ORDER: SettingsSectionKey[] = [
+  'consents',
+  'notifications',
+  'intelligentSupport',
+  'personalization',
+];
 
 const DEFAULT_SECTION_EXPANDED: SectionExpandedState = {
   consents: false,
@@ -75,10 +81,10 @@ const DEFAULT_SECTION_EXPANDED: SectionExpandedState = {
 
 const ONBOARDING_EXPANDED_STATE: SectionExpandedState = {
   consents: true,
-  notifications: true,
+  notifications: false,
   plan: false,
-  intelligentSupport: true,
-  personalization: true,
+  intelligentSupport: false,
+  personalization: false,
 };
 
 const FULL_APP_RESET_STORAGE_KEYS = [
@@ -125,6 +131,29 @@ function normalizeSectionExpanded(value: unknown): SectionExpandedState {
     personalization:
       typeof parsed.personalization === 'boolean' ? parsed.personalization : DEFAULT_SECTION_EXPANDED.personalization,
   };
+}
+
+function parseSectionExpanded(raw: string | null): SectionExpandedState | null {
+  if (!raw) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return normalizeSectionExpanded(parsed);
+  } catch {
+    return null;
+  }
+}
+
+function getSingleSectionExpanded(key: SettingsSectionKey): SectionExpandedState {
+  return {
+    ...DEFAULT_SECTION_EXPANDED,
+    [key]: true,
+  };
+}
+
+function normalizeOnboardingSectionExpanded(value: SectionExpandedState | null): SectionExpandedState {
+  const firstOpenKey = ONBOARDING_SECTION_ORDER.find((key) => value?.[key]) ?? 'consents';
+  return getSingleSectionExpanded(firstOpenKey);
 }
 
 function pad(value: number) {
@@ -184,6 +213,25 @@ export default function UstawieniaScreen() {
     const isSimulator = (Constants as { isDevice?: boolean }).isDevice === false;
     return isExpoGo || isSimulator;
   }, []);
+
+  const persistSectionExpandedState = async (next: SectionExpandedState) => {
+    sectionExpandedRef.current = next;
+    setSectionExpanded(next);
+    try {
+      await AsyncStorage.setItem(SETTINGS_SECTIONS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Ignorujemy błąd zapisu preferencji UI; stan w pamięci pozostaje aktualny.
+    }
+  };
+
+  const updateSectionExpanded = async (patch: Partial<SectionExpandedState>) => {
+    const next = { ...sectionExpandedRef.current, ...patch };
+    await persistSectionExpandedState(next);
+  };
+
+  const focusSingleSection = async (key: SettingsSectionKey) => {
+    await persistSectionExpandedState(getSingleSectionExpanded(key));
+  };
 
   useEffect(() => {
     if (!fullAccessModalVisible) {
@@ -323,6 +371,7 @@ export default function UstawieniaScreen() {
       AsyncStorage.getItem(SETTINGS_SECTIONS_STORAGE_KEY),
     ]);
     const safeNotif = app.privacyConsentNotifications ? notif : { ...notif, enabled: false };
+    const savedSectionExpanded = parseSectionExpanded(savedSectionExpandedRaw);
 
     if (!app.privacyConsentNotifications && notif.enabled) {
       await saveDailyPlanNotificationSettings(safeNotif);
@@ -336,31 +385,30 @@ export default function UstawieniaScreen() {
 
     if (!app.firstRunSetupDone) {
       setOnboardingSettingsRequired(true);
-      setSectionExpanded(ONBOARDING_EXPANDED_STATE);
-      sectionExpandedRef.current = ONBOARDING_EXPANDED_STATE;
-      return;
-    }
-    setOnboardingSettingsRequired(false);
-
-    if (!savedSectionExpandedRaw) {
-      setSectionExpanded(DEFAULT_SECTION_EXPANDED);
-      sectionExpandedRef.current = DEFAULT_SECTION_EXPANDED;
+      const nextExpanded = normalizeOnboardingSectionExpanded(savedSectionExpanded ?? ONBOARDING_EXPANDED_STATE);
+      sectionExpandedRef.current = nextExpanded;
+      setSectionExpanded(nextExpanded);
       try {
-        await AsyncStorage.setItem(SETTINGS_SECTIONS_STORAGE_KEY, JSON.stringify(DEFAULT_SECTION_EXPANDED));
+        await AsyncStorage.setItem(SETTINGS_SECTIONS_STORAGE_KEY, JSON.stringify(nextExpanded));
       } catch {
         // Ignorujemy błąd zapisu preferencji UI.
       }
       return;
     }
+    setOnboardingSettingsRequired(false);
 
+    if (savedSectionExpanded) {
+      sectionExpandedRef.current = savedSectionExpanded;
+      setSectionExpanded(savedSectionExpanded);
+      return;
+    }
+
+    sectionExpandedRef.current = DEFAULT_SECTION_EXPANDED;
+    setSectionExpanded(DEFAULT_SECTION_EXPANDED);
     try {
-      const parsed: unknown = JSON.parse(savedSectionExpandedRaw);
-      const normalized = normalizeSectionExpanded(parsed);
-      setSectionExpanded(normalized);
-      sectionExpandedRef.current = normalized;
+      await AsyncStorage.setItem(SETTINGS_SECTIONS_STORAGE_KEY, JSON.stringify(DEFAULT_SECTION_EXPANDED));
     } catch {
-      setSectionExpanded(DEFAULT_SECTION_EXPANDED);
-      sectionExpandedRef.current = DEFAULT_SECTION_EXPANDED;
+      // Ignorujemy błąd zapisu preferencji UI.
     }
   };
 
@@ -381,12 +429,13 @@ export default function UstawieniaScreen() {
     if (typeof params.openSection !== 'string') return;
     const allowed: SettingsSectionKey[] = ['consents', 'notifications', 'plan', 'intelligentSupport', 'personalization'];
     if (!allowed.includes(params.openSection as SettingsSectionKey)) return;
-    setSectionExpanded((prev) => {
-      const next = { ...prev, [params.openSection as SettingsSectionKey]: true };
-      sectionExpandedRef.current = next;
-      return next;
-    });
-  }, [loading, params.openSection]);
+    if (onboardingSettingsRequired) {
+      void focusSingleSection(params.openSection as SettingsSectionKey);
+      return;
+    }
+    const next = { ...sectionExpandedRef.current, [params.openSection as SettingsSectionKey]: true };
+    void persistSectionExpandedState(next);
+  }, [loading, onboardingSettingsRequired, params.openSection]);
 
   const setAppSettings = (patch: Partial<AppSettings>) => {
     setAppSettingsState((prev) => ({ ...prev, ...patch }));
@@ -396,23 +445,14 @@ export default function UstawieniaScreen() {
     setAppSettingsState((prev) => ({ ...prev, [key]: typeof nextValue === 'boolean' ? nextValue : !prev[key] }));
   };
 
-  const collapseSection = async (key: SettingsSectionKey) => {
-    const next = { ...sectionExpandedRef.current, [key]: false };
-    sectionExpandedRef.current = next;
-    setSectionExpanded(next);
-    try {
-      await AsyncStorage.setItem(SETTINGS_SECTIONS_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Ignorujemy błąd zapisu preferencji UI; stan w pamięci zostaje zwinięty.
-    }
-  };
+  const collapseSection = async (key: SettingsSectionKey) => updateSectionExpanded({ [key]: false });
 
-  const expandSection = (key: SettingsSectionKey) => {
-    setSectionExpanded((prev) => {
-      const next = { ...prev, [key]: true };
-      sectionExpandedRef.current = next;
-      return next;
-    });
+  const expandSection = async (key: SettingsSectionKey) => {
+    if (onboardingSettingsRequired) {
+      await focusSingleSection(key);
+      return;
+    }
+    await updateSectionExpanded({ [key]: true });
   };
 
   const saveConsentSection = async () => {
@@ -433,9 +473,10 @@ export default function UstawieniaScreen() {
       }
 
       if (onboardingSettingsRequired) {
-        expandSection('notifications');
+        await focusSingleSection('notifications');
+      } else {
+        await collapseSection('consents');
       }
-      await collapseSection('consents');
     } catch (e) {
       console.error('Błąd zapisu zgód:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać zgód.');
@@ -482,9 +523,10 @@ export default function UstawieniaScreen() {
       }
 
       if (onboardingSettingsRequired) {
-        expandSection('personalization');
+        await focusSingleSection('intelligentSupport');
+      } else {
+        await collapseSection('notifications');
       }
-      await collapseSection('notifications');
     } catch (e) {
       console.error('Błąd zapisu powiadomień:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać ustawień powiadomień.');
@@ -544,6 +586,25 @@ export default function UstawieniaScreen() {
     }
   };
 
+  const saveIntelligentSupportSection = async () => {
+    setBusy(true);
+    setNotice('');
+    try {
+      await saveAppSettings(appSettings);
+      setNotice('Zapisano ustawienia inteligentnego wsparcia.');
+      if (onboardingSettingsRequired) {
+        await focusSingleSection('personalization');
+      } else {
+        await collapseSection('intelligentSupport');
+      }
+    } catch (e) {
+      console.error('Błąd zapisu inteligentnego wsparcia:', e);
+      Alert.alert('Błąd', 'Nie udało się zapisać ustawień inteligentnego wsparcia.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const finishOnboardingSettings = async () => {
     if (!appSettings.privacyConsentLocalStorage || !appSettings.privacyConsentRegulations) {
       Alert.alert('Brak wymaganych zgód', 'Aby zakończyć konfigurację, zaznacz zgodę na zapis danych i akceptację zasad.');
@@ -592,7 +653,7 @@ export default function UstawieniaScreen() {
       setAppSettingsState(nextAppSettings);
       setNotificationSettings(nextNotifications);
       setOnboardingSettingsRequired(false);
-      await collapseSection('personalization');
+      await persistSectionExpandedState(DEFAULT_SECTION_EXPANDED);
       setNotice('Pierwsza konfiguracja została zapisana.');
       setFullAccessModalVisible(true);
     } catch (e) {
@@ -648,8 +709,7 @@ export default function UstawieniaScreen() {
               await saveAppSettings(resetSettings);
               setAppSettingsState(resetSettings);
               setOnboardingSettingsRequired(true);
-              setSectionExpanded(ONBOARDING_EXPANDED_STATE);
-              sectionExpandedRef.current = ONBOARDING_EXPANDED_STATE;
+              await persistSectionExpandedState(ONBOARDING_EXPANDED_STATE);
               setNotice('Tryb testowy: onboarding został zresetowany.');
               router.replace('/intro');
             } catch (e) {
@@ -692,8 +752,7 @@ export default function UstawieniaScreen() {
               setEveningTime(`${pad(resetNotifications.eveningHour)}:${pad(resetNotifications.eveningMinute)}`);
               setOnboardingSettingsRequired(true);
               setFullAccessModalVisible(false);
-              setSectionExpanded(ONBOARDING_EXPANDED_STATE);
-              sectionExpandedRef.current = ONBOARDING_EXPANDED_STATE;
+              await persistSectionExpandedState(ONBOARDING_EXPANDED_STATE);
               setNotice('Aplikacja została przywrócona do początku.');
               router.replace('/intro');
             } catch (e) {
@@ -852,7 +911,7 @@ export default function UstawieniaScreen() {
                   <Pressable
                     style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
                     disabled={busy}
-                    onPress={() => expandSection('notifications')}
+                    onPress={() => void expandSection('notifications')}
                   >
                     <Text style={styles.buttonSecondaryText}>Przejdź do powiadomień</Text>
                   </Pressable>
@@ -963,9 +1022,9 @@ export default function UstawieniaScreen() {
                 <Pressable
                   style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
                   disabled={busy}
-                  onPress={() => expandSection('personalization')}
+                  onPress={() => void expandSection('intelligentSupport')}
                 >
-                  <Text style={styles.buttonSecondaryText}>Przejdź do personalizacji</Text>
+                  <Text style={styles.buttonSecondaryText}>Przejdź do inteligentnego wsparcia</Text>
                 </Pressable>
               ) : null}
             </>
@@ -1102,10 +1161,20 @@ export default function UstawieniaScreen() {
               <Pressable
                 style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
                 disabled={busy}
-                onPress={() => saveAppPreferences('Zapisano ustawienia inteligentnego wsparcia.', 'intelligentSupport')}
+                onPress={() => void saveIntelligentSupportSection()}
               >
                 <Text style={styles.buttonPrimaryText}>Zapisz inteligentne wsparcie</Text>
               </Pressable>
+
+              {onboardingSettingsRequired ? (
+                <Pressable
+                  style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
+                  disabled={busy}
+                  onPress={() => void expandSection('personalization')}
+                >
+                  <Text style={styles.buttonSecondaryText}>Przejdź do personalizacji</Text>
+                </Pressable>
+              ) : null}
             </>
           ) : null}
         </View>

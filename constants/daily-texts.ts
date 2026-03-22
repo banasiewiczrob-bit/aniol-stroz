@@ -29,6 +29,22 @@ export function emptyDailyTextsState(): DailyTextsState {
   return { ...EMPTY_DAILY_TEXTS };
 }
 
+const COUNTED_DAILY_TEXT_IDS = ['wsparcie24', 'halt', 'modlitwa', 'desiderata', 'kroki12'] as const satisfies readonly DailyTextId[];
+
+export const DAILY_TEXTS_PROGRESS_TOTAL = COUNTED_DAILY_TEXT_IDS.length;
+
+export function getCompletedDailyTextIds(state: DailyTextsState): DailyTextId[] {
+  return COUNTED_DAILY_TEXT_IDS.filter((id) => state[id] === true) as DailyTextId[];
+}
+
+export function countCompletedDailyTexts(state: DailyTextsState) {
+  return getCompletedDailyTextIds(state).length;
+}
+
+export function countMissingDailyTexts(state: DailyTextsState) {
+  return DAILY_TEXTS_PROGRESS_TOTAL - countCompletedDailyTexts(state);
+}
+
 export function getDateKey(date = new Date()) {
   return getLocalDateKey(date);
 }

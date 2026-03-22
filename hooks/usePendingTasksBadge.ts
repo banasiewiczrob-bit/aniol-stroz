@@ -1,5 +1,11 @@
 import { getLocalDateKey } from '@/constants/calendar';
-import { createEmptyDailyTextsStore, DAILY_TEXTS_STORAGE_KEY, getDailyTextsForDate, parseDailyTextsStore } from '@/constants/daily-texts';
+import {
+  countMissingDailyTexts,
+  createEmptyDailyTextsStore,
+  DAILY_TEXTS_STORAGE_KEY,
+  getDailyTextsForDate,
+  parseDailyTextsStore,
+} from '@/constants/daily-texts';
 import { listJournalEntriesByDate } from '@/hooks/useJournals';
 import { subscribeSync } from '@/hooks/recoverySyncEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -94,7 +100,7 @@ async function computePendingTasksBadgeState(): Promise<PendingTasksBadgeState> 
   }
   const dailyTextsStore = parseDailyTextsStore(dailyTextsParsed);
   const dailyTextsState = getDailyTextsForDate(dailyTextsStore, dateKey);
-  const missingDailyTextsCount = Object.values(dailyTextsState).filter((done) => done !== true).length;
+  const missingDailyTextsCount = countMissingDailyTexts(dailyTextsState);
 
   let supportContactsCount = 0;
   if (supportContactsRaw) {

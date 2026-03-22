@@ -17,6 +17,7 @@
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.33",
+    "expo-audio": "~1.1.1",
     "expo-checkbox": "~5.0.8",
     "expo-constants": "~18.0.13",
     "expo-contacts": "~15.0.11",

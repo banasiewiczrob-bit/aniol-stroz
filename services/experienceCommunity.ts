@@ -33,14 +33,16 @@ export type ContributorProgress = {
   badges: ContributorBadgeAward[];
 };
 
+type ContributorBadgeResponse = {
+  kod_odznaki?: string;
+  przyznano_o?: string;
+  liczba_zaakceptowanych_przy_przyznaniu?: number;
+};
+
 type ContributorProgressResponse = {
   liczba_zaakceptowanych?: number;
   liczba_oczekujacych?: number;
-  odznaki?: Array<{
-    kod_odznaki?: string;
-    przyznano_o?: string;
-    liczba_zaakceptowanych_przy_przyznaniu?: number;
-  }>;
+  odznaki?: ContributorBadgeResponse[];
 } | null;
 
 export const CONTRIBUTOR_BADGES: ContributorBadgeDefinition[] = [
@@ -80,7 +82,7 @@ function isContributorBadgeCode(value: string): value is ContributorBadgeCode {
   return CONTRIBUTOR_BADGES.some((item) => item.code === value);
 }
 
-function parseContributorBadges(value: ContributorProgressResponse['odznaki']): ContributorBadgeAward[] {
+function parseContributorBadges(value: ContributorBadgeResponse[] | undefined): ContributorBadgeAward[] {
   if (!Array.isArray(value)) return [];
 
   return value

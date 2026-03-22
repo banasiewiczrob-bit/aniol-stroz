@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BackButton } from '@/components/BackButton';
 
 const DRAFT_KEY = '@trigger_list_draft_v1';
+const DESCRIPTION_DRAFT_KEY = '@trigger_list_description_draft_v1';
 const ITEMS_KEY = '@trigger_list_items_v1';
 const KIND_KEY = '@trigger_list_kind_v2';
 const LEGACY_CATEGORY_KEY = '@trigger_list_category_v1';
@@ -24,22 +25,16 @@ const ACCENT = '#C6D7FF';
 const ACCENT_BG = 'rgba(198,215,255,0.22)';
 const ACCENT_BORDER = 'rgba(198,215,255,0.55)';
 const SUB = 'rgba(233,239,255,0.88)';
-
-const INTERNAL_SUGGESTIONS = ['Samotność', 'Zmęczenie', 'Głód', 'Nuda', 'Lęk', 'Wstyd'];
-const EXTERNAL_SUGGESTIONS = ['Wieczór', 'Konflikt', 'Telefon', 'Miejsce', 'Powrót do domu', 'Media społecznościowe'];
+const ARCHIVE_SCROLL_TOP_OFFSET = 72;
 
 type TriggerKind = 'internal' | 'external';
 
 type TriggerItem = {
   id: string;
-  text: string;
+  triggerName: string;
+  description: string;
   kind: TriggerKind;
   createdAt: string;
-};
-
-type PendingQuickAdd = {
-  label: string;
-  kind: TriggerKind;
 };
 
 function isTriggerKind(value: unknown): value is TriggerKind {
@@ -84,10 +79,15 @@ function parseItems(raw: string | null): TriggerItem[] {
       .flatMap((item) => {
         if (!item || typeof item !== 'object') return [];
         const entry = item as Partial<TriggerItem>;
+        const legacyText = typeof (entry as { text?: unknown }).text === 'string' ? (entry as { text: string }).text : '';
+        const triggerName =
+          typeof entry.triggerName === 'string' && entry.triggerName.trim().length > 0
+            ? entry.triggerName
+            : legacyText;
+
         if (
           typeof entry.id !== 'string' ||
-          typeof entry.text !== 'string' ||
-          entry.text.trim().length === 0 ||
+          triggerName.trim().length === 0 ||
           typeof entry.createdAt !== 'string'
         ) {
           return [];
@@ -95,10 +95,11 @@ function parseItems(raw: string | null): TriggerItem[] {
         return [
           {
             id: entry.id,
-            text: entry.text,
+            triggerName,
+            description: typeof entry.description === 'string' ? entry.description.trim() : '',
             kind: isTriggerKind((entry as { kind?: unknown }).kind)
               ? (entry as { kind: TriggerKind }).kind
-              : inferLegacyKind((entry as { category?: unknown }).category, entry.text),
+              : inferLegacyKind((entry as { category?: unknown }).category, triggerName),
             createdAt: entry.createdAt,
           },
         ];
@@ -133,12 +134,19 @@ function getKindLabel(kind: TriggerKind) {
 
 export default function ListaWyzwalaczyScreen() {
   const insets = useSafeAreaInsets();
-  const [text, setText] = useState('');
+  const scrollRef = useRef<ScrollView | null>(null);
+  const archiveCardOffsetRef = useRef(0);
+  const sectionOffsetsRef = useRef<Record<TriggerKind, number>>({
+    internal: 0,
+    external: 0,
+  });
+  const pendingScrollKindRef = useRef<TriggerKind | null>(null);
+  const [triggerName, setTriggerName] = useState('');
+  const [description, setDescription] = useState('');
   const [selectedKind, setSelectedKind] = useState<TriggerKind | null>(null);
   const [items, setItems] = useState<TriggerItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const [pendingQuickAdd, setPendingQuickAdd] = useState<PendingQuickAdd | null>(null);
   const [internalExpanded, setInternalExpanded] = useState(false);
   const [externalExpanded, setExternalExpanded] = useState(false);
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
@@ -146,7 +154,8 @@ export default function ListaWyzwalaczyScreen() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSaved = useRef('');
+  const lastSavedName = useRef('');
+  const lastSavedDescription = useRef('');
   const lastSavedKind = useRef<TriggerKind | null>(null);
 
   useEffect(() => {
@@ -154,8 +163,9 @@ export default function ListaWyzwalaczyScreen() {
 
     void (async () => {
       try {
-        const [savedDraft, savedItems, savedKind, savedLegacyCategory] = await Promise.all([
+        const [savedDraft, savedDescriptionDraft, savedItems, savedKind, savedLegacyCategory] = await Promise.all([
           AsyncStorage.getItem(DRAFT_KEY),
+          AsyncStorage.getItem(DESCRIPTION_DRAFT_KEY),
           AsyncStorage.getItem(ITEMS_KEY),
           AsyncStorage.getItem(KIND_KEY),
           AsyncStorage.getItem(LEGACY_CATEGORY_KEY),
@@ -164,8 +174,12 @@ export default function ListaWyzwalaczyScreen() {
         if (!active) return;
 
         if (savedDraft != null) {
-          setText(savedDraft);
-          lastSaved.current = savedDraft;
+          setTriggerName(savedDraft);
+          lastSavedName.current = savedDraft;
+        }
+        if (savedDescriptionDraft != null) {
+          setDescription(savedDescriptionDraft);
+          lastSavedDescription.current = savedDescriptionDraft;
         }
         if (isTriggerKind(savedKind)) {
           setSelectedKind(savedKind);
@@ -196,17 +210,25 @@ export default function ListaWyzwalaczyScreen() {
     }, 2800);
   };
 
-  const saveDraftNow = async (value: string, kind: TriggerKind | null) => {
+  const saveDraftNow = async (nameValue: string, descriptionValue: string, kind: TriggerKind | null) => {
     if (!loaded) return;
-    if (value === lastSaved.current && kind === lastSavedKind.current) return;
+    if (
+      nameValue === lastSavedName.current &&
+      descriptionValue === lastSavedDescription.current &&
+      kind === lastSavedKind.current
+    ) {
+      return;
+    }
 
     try {
       await Promise.all([
-        AsyncStorage.setItem(DRAFT_KEY, value),
+        AsyncStorage.setItem(DRAFT_KEY, nameValue),
+        AsyncStorage.setItem(DESCRIPTION_DRAFT_KEY, descriptionValue),
         kind ? AsyncStorage.setItem(KIND_KEY, kind) : AsyncStorage.removeItem(KIND_KEY),
         AsyncStorage.removeItem(LEGACY_CATEGORY_KEY),
       ]);
-      lastSaved.current = value;
+      lastSavedName.current = nameValue;
+      lastSavedDescription.current = descriptionValue;
       lastSavedKind.current = kind;
     } catch {
       // no-op
@@ -218,49 +240,77 @@ export default function ListaWyzwalaczyScreen() {
 
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      void saveDraftNow(text, selectedKind);
+      void saveDraftNow(triggerName, description, selectedKind);
     }, 300);
 
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [loaded, selectedKind, text]);
+  }, [description, loaded, selectedKind, triggerName]);
 
   useEffect(() => {
     const sub = Keyboard.addListener('keyboardDidHide', () => {
-      void saveDraftNow(text, selectedKind);
+      void saveDraftNow(triggerName, description, selectedKind);
     });
     return () => sub.remove();
-  }, [loaded, selectedKind, text]);
+  }, [description, loaded, selectedKind, triggerName]);
+
+  useEffect(() => {
+    const pendingKind = pendingScrollKindRef.current;
+    if (!pendingKind) return;
+
+    const expanded = pendingKind === 'internal' ? internalExpanded : externalExpanded;
+    if (!expanded) {
+      pendingScrollKindRef.current = null;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      scrollToArchiveSection(pendingKind);
+      pendingScrollKindRef.current = null;
+    }, 80);
+
+    return () => clearTimeout(timer);
+  }, [externalExpanded, internalExpanded]);
 
   const persistItems = async (nextItems: TriggerItem[]) => {
     await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems));
   };
 
-  const addItem = async (nextText: string, nextKind: TriggerKind, options?: { clearDraft?: boolean; success?: string }) => {
-    const trimmed = nextText.trim();
-    if (!trimmed) return;
+  const addItem = async (
+    nextTriggerName: string,
+    nextDescription: string,
+    nextKind: TriggerKind,
+    options?: { clearDraft?: boolean; success?: string },
+  ) => {
+    const trimmedName = nextTriggerName.trim();
+    const trimmedDescription = nextDescription.trim();
+    if (!trimmedName) return;
 
     const duplicate = items.some(
-      (item) => item.kind === nextKind && normalizeComparableText(item.text) === normalizeComparableText(trimmed),
+      (item) =>
+        item.kind === nextKind &&
+        normalizeComparableText(item.triggerName) === normalizeComparableText(trimmedName) &&
+        normalizeComparableText(item.description) === normalizeComparableText(trimmedDescription),
     );
 
     if (duplicate) {
-      setPendingQuickAdd(null);
       setSelectedKind(nextKind);
-      showFeedback('To już jest na Twojej liście.');
+      showFeedback('Taki wyzwalacz z tym opisem już jest na Twojej liście.');
       return;
     }
 
     const nextItem: TriggerItem = {
       id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      text: trimmed,
+      triggerName: trimmedName,
+      description: trimmedDescription,
       kind: nextKind,
       createdAt: new Date().toISOString(),
     };
 
     const previousItems = items;
-    const previousText = text;
+    const previousName = triggerName;
+    const previousDescription = description;
     const previousKind = selectedKind;
     const nextItems = [nextItem, ...items];
     const clearDraft = options?.clearDraft === true;
@@ -269,37 +319,44 @@ export default function ListaWyzwalaczyScreen() {
 
     setItems(nextItems);
     if (clearDraft) {
-      setText('');
+      setTriggerName('');
+      setDescription('');
       setSelectedKind(null);
     } else {
       setSelectedKind(nextKind);
     }
-    setPendingQuickAdd(null);
 
     try {
       await persistItems(nextItems);
       if (clearDraft) {
-        await Promise.all([AsyncStorage.setItem(DRAFT_KEY, ''), AsyncStorage.removeItem(KIND_KEY), AsyncStorage.removeItem(LEGACY_CATEGORY_KEY)]);
-        lastSaved.current = '';
+        await Promise.all([
+          AsyncStorage.setItem(DRAFT_KEY, ''),
+          AsyncStorage.setItem(DESCRIPTION_DRAFT_KEY, ''),
+          AsyncStorage.removeItem(KIND_KEY),
+          AsyncStorage.removeItem(LEGACY_CATEGORY_KEY),
+        ]);
+        lastSavedName.current = '';
+        lastSavedDescription.current = '';
         lastSavedKind.current = null;
       }
 
       showFeedback(
         options?.success ??
-          'Wyzwalacz dodany do listy.',
+          'Wyzwalacz z opisem dodany do listy.',
       );
     } catch {
       setItems(previousItems);
-      setText(previousText);
+      setTriggerName(previousName);
+      setDescription(previousDescription);
       setSelectedKind(previousKind);
       Alert.alert('Błąd zapisu', 'Nie udało się zapisać tej pozycji. Spróbuj ponownie.');
     }
   };
 
   const handleSave = async () => {
-    const trimmed = text.trim();
-    if (!trimmed) {
-      Alert.alert('Brak treści', 'Najpierw zapisz jedną konkretną sytuację albo stan, który chcesz rozpoznawać wcześniej.');
+    const trimmedName = triggerName.trim();
+    if (!trimmedName) {
+      Alert.alert('Brak wyzwalacza', 'Najpierw nazwij konkretny wyzwalacz, który chcesz rozpoznawać wcześniej.');
       return;
     }
     if (!selectedKind) {
@@ -307,20 +364,7 @@ export default function ListaWyzwalaczyScreen() {
       return;
     }
 
-    await addItem(trimmed, selectedKind, { clearDraft: true });
-  };
-
-  const handleQuickAdd = async (label: string, kind: TriggerKind) => {
-    const isSecondTap = pendingQuickAdd?.label === label && pendingQuickAdd.kind === kind;
-
-    if (!isSecondTap) {
-      setSelectedKind(kind);
-      setPendingQuickAdd({ label, kind });
-      showFeedback('Dotknij jeszcze raz, aby dodać ten wyzwalacz.');
-      return;
-    }
-
-    await addItem(label, kind, { success: 'Wyzwalacz dodany do listy.' });
+    await addItem(trimmedName, description, selectedKind, { clearDraft: true });
   };
 
   const handleDelete = (id: string) => {
@@ -361,12 +405,46 @@ export default function ListaWyzwalaczyScreen() {
 
   const internalItems = items.filter((item) => item.kind === 'internal');
   const externalItems = items.filter((item) => item.kind === 'external');
-  const placeholder =
+  const triggerNamePlaceholder =
     selectedKind === 'internal'
-      ? 'Np. zmęczenie po pracy, samotność, głód, nuda po 21:00'
+      ? 'Np. samotność, zmęczenie, głód, napięcie'
       : selectedKind === 'external'
-        ? 'Np. wieczór sam w domu, konflikt, telefon od tej osoby, konkretne miejsce'
-        : 'Np. samotność, zmęczenie, wieczór sam w domu, konflikt, telefon od tej osoby';
+        ? 'Np. konflikt, wieczór sam w domu, konkretne miejsce'
+        : 'Np. samotność, zmęczenie, konflikt, wieczór sam w domu';
+  const descriptionPlaceholder =
+    selectedKind === 'internal'
+      ? 'Np. Najczęściej wieczorem, gdy brakuje mi bliskości albo kiedy coś mnie boli.'
+      : selectedKind === 'external'
+        ? 'Np. Najmocniej działa, gdy wracam do domu sam i nie mam planu na resztę wieczoru.'
+        : 'Np. Kiedy się pojawia, z czym się wiąże, po czym poznajesz że to już ten schemat.';
+
+  const scrollToArchiveSection = (kind: TriggerKind) => {
+    const y = Math.max(0, sectionOffsetsRef.current[kind] - ARCHIVE_SCROLL_TOP_OFFSET);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y, animated: true });
+    });
+  };
+
+  const toggleArchiveSection = (kind: TriggerKind) => {
+    if (kind === 'internal') {
+      setInternalExpanded((prev) => {
+        const next = !prev;
+        if (next) {
+          pendingScrollKindRef.current = 'internal';
+        }
+        return next;
+      });
+      return;
+    }
+
+    setExternalExpanded((prev) => {
+      const next = !prev;
+      if (next) {
+        pendingScrollKindRef.current = 'external';
+      }
+      return next;
+    });
+  };
 
   return (
     <KeyboardAvoidingView
@@ -376,6 +454,7 @@ export default function ListaWyzwalaczyScreen() {
     >
       <BackButton />
       <ScrollView
+        ref={scrollRef}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { paddingBottom: Math.max(64, insets.bottom + 40) }]}
         showsVerticalScrollIndicator={false}
@@ -404,46 +483,10 @@ export default function ListaWyzwalaczyScreen() {
 
         <View style={styles.inputCard}>
           <View style={styles.cardAccent} />
-          <Text style={styles.sectionTitle}>Dodaj nowy wyzwalacz</Text>
+          <Text style={styles.sectionTitle}>Dodaj wyzwalacz i jego opis</Text>
           <Text style={styles.sectionText}>
-            Podziel to na dwie grupy: wyzwalacze wewnętrzne, czyli stan w Tobie, i zewnętrzne, czyli sytuacje, ludzie, miejsca albo pory.
+            Najpierw nazwij wyzwalacz, a potem dopisz kiedy się pojawia, z czym się wiąże i jak zwykle wygląda ten schemat.
           </Text>
-
-          <View style={styles.suggestionsBlock}>
-            <Text style={styles.suggestionsTitle}>Szybkie dodanie</Text>
-
-            <Text style={styles.suggestionsLabel}>Wewnętrzne</Text>
-            <View style={styles.chipsRow}>
-              {INTERNAL_SUGGESTIONS.map((label) => {
-                const active = pendingQuickAdd?.label === label && pendingQuickAdd.kind === 'internal';
-                return (
-                  <Pressable
-                    key={label}
-                    style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => void handleQuickAdd(label, 'internal')}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <Text style={styles.suggestionsLabel}>Zewnętrzne</Text>
-            <View style={styles.chipsRow}>
-              {EXTERNAL_SUGGESTIONS.map((label) => {
-                const active = pendingQuickAdd?.label === label && pendingQuickAdd.kind === 'external';
-                return (
-                  <Pressable
-                    key={label}
-                    style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => void handleQuickAdd(label, 'external')}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
 
           <View style={styles.kindRow}>
             {(['internal', 'external'] as TriggerKind[]).map((kind) => {
@@ -452,10 +495,7 @@ export default function ListaWyzwalaczyScreen() {
                 <Pressable
                   key={kind}
                   style={[styles.kindButton, active && styles.kindButtonActive]}
-                  onPress={() => {
-                    setPendingQuickAdd(null);
-                    setSelectedKind((prev) => (prev === kind ? null : kind));
-                  }}
+                  onPress={() => setSelectedKind((prev) => (prev === kind ? null : kind))}
                 >
                   <Text style={[styles.kindButtonTitle, active && styles.kindButtonTitleActive]}>{getKindLabel(kind)}</Text>
                   <Text style={[styles.kindButtonText, active && styles.kindButtonTextActive]}>
@@ -466,14 +506,25 @@ export default function ListaWyzwalaczyScreen() {
             })}
           </View>
 
+          <Text style={styles.inputLabel}>Wyzwalacz</Text>
           <TextInput
-            value={text}
-            onChangeText={(value) => {
-              setPendingQuickAdd(null);
-              setText(value);
-            }}
-            onBlur={() => void saveDraftNow(text, selectedKind)}
-            placeholder={placeholder}
+            value={triggerName}
+            onChangeText={setTriggerName}
+            onBlur={() => void saveDraftNow(triggerName, description, selectedKind)}
+            placeholder={triggerNamePlaceholder}
+            placeholderTextColor="rgba(255,255,255,0.45)"
+            style={[styles.input, styles.inputCompact]}
+          />
+
+          <Text style={styles.inputLabel}>Opis / schemat</Text>
+          <Text style={styles.inputHint}>
+            To pole jest opcjonalne, ale pomaga zobaczyć kiedy ten wyzwalacz naprawdę działa.
+          </Text>
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            onBlur={() => void saveDraftNow(triggerName, description, selectedKind)}
+            placeholder={descriptionPlaceholder}
             placeholderTextColor="rgba(255,255,255,0.45)"
             multiline
             textAlignVertical="top"
@@ -491,16 +542,26 @@ export default function ListaWyzwalaczyScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.archiveCard}>
+        <View
+          style={styles.archiveCard}
+          onLayout={(event) => {
+            archiveCardOffsetRef.current = event.nativeEvent.layout.y;
+          }}
+        >
           <Text style={styles.archiveTitle}>Twoja lista ({items.length})</Text>
           {items.length === 0 ? (
             <Text style={styles.emptyText}>Na razie nic tu nie ma. Zacznij od pierwszej konkretnej rzeczy, która zwykle poprzedza gorszy moment.</Text>
           ) : (
             <>
-              <View style={styles.archiveSection}>
+              <View
+                style={styles.archiveSection}
+                onLayout={(event) => {
+                  sectionOffsetsRef.current.internal = archiveCardOffsetRef.current + event.nativeEvent.layout.y;
+                }}
+              >
                 <View style={styles.archiveSectionHeader}>
                   <Text style={styles.archiveSectionTitle}>Wewnętrzne ({internalItems.length})</Text>
-                  <Pressable style={styles.archiveToggleButton} onPress={() => setInternalExpanded((prev) => !prev)}>
+                  <Pressable style={styles.archiveToggleButton} onPress={() => toggleArchiveSection('internal')}>
                     <Text style={styles.archiveToggleButtonText}>{internalExpanded ? 'Ukryj listę' : 'Pokaż listę'}</Text>
                   </Pressable>
                 </View>
@@ -521,7 +582,8 @@ export default function ListaWyzwalaczyScreen() {
                             <Text style={styles.deleteButtonText}>Usuń</Text>
                           </Pressable>
                         </View>
-                        <Text style={styles.itemText}>{item.text}</Text>
+                        <Text style={styles.itemTitle}>{item.triggerName}</Text>
+                        {item.description.length > 0 ? <Text style={styles.itemDescription}>{item.description}</Text> : null}
                       </View>
                     ))
                   )
@@ -530,10 +592,15 @@ export default function ListaWyzwalaczyScreen() {
                 )}
               </View>
 
-              <View style={styles.archiveSection}>
+              <View
+                style={styles.archiveSection}
+                onLayout={(event) => {
+                  sectionOffsetsRef.current.external = archiveCardOffsetRef.current + event.nativeEvent.layout.y;
+                }}
+              >
                 <View style={styles.archiveSectionHeader}>
                   <Text style={styles.archiveSectionTitle}>Zewnętrzne ({externalItems.length})</Text>
-                  <Pressable style={styles.archiveToggleButton} onPress={() => setExternalExpanded((prev) => !prev)}>
+                  <Pressable style={styles.archiveToggleButton} onPress={() => toggleArchiveSection('external')}>
                     <Text style={styles.archiveToggleButtonText}>{externalExpanded ? 'Ukryj listę' : 'Pokaż listę'}</Text>
                   </Pressable>
                 </View>
@@ -554,7 +621,8 @@ export default function ListaWyzwalaczyScreen() {
                             <Text style={styles.deleteButtonText}>Usuń</Text>
                           </Pressable>
                         </View>
-                        <Text style={styles.itemText}>{item.text}</Text>
+                        <Text style={styles.itemTitle}>{item.triggerName}</Text>
+                        {item.description.length > 0 ? <Text style={styles.itemDescription}>{item.description}</Text> : null}
                       </View>
                     ))
                   )
@@ -711,48 +779,18 @@ const styles = StyleSheet.create({
   kindButtonTextActive: {
     color: 'rgba(255,255,255,0.9)',
   },
-  suggestionsBlock: {
-    marginBottom: 12,
-  },
-  suggestionsTitle: {
+  inputLabel: {
     color: 'white',
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  suggestionsLabel: {
-    color: 'rgba(232,245,255,0.74)',
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: '700',
     marginBottom: 6,
   },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(198,215,255,0.35)',
-    backgroundColor: 'rgba(7,24,38,0.34)',
-  },
-  chipActive: {
-    borderColor: 'rgba(226,244,255,0.95)',
-    backgroundColor: 'rgba(198,215,255,0.22)',
-  },
-  chipText: {
-    color: 'rgba(240,248,255,0.86)',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  chipTextActive: {
-    color: 'white',
+  inputHint: {
+    color: 'rgba(232,245,255,0.74)',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 8,
   },
   input: {
     minHeight: 110,
@@ -765,6 +803,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 17,
     lineHeight: 24,
+  },
+  inputCompact: {
+    minHeight: 58,
+    marginBottom: 12,
   },
   feedbackCard: {
     marginTop: 12,
@@ -895,10 +937,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
-  itemText: {
+  itemTitle: {
     color: 'white',
     fontSize: 16,
     lineHeight: 22,
+    fontWeight: '700',
+  },
+  itemDescription: {
+    color: SUB,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 6,
   },
   deleteButton: {
     borderRadius: 12,

@@ -4,6 +4,7 @@ import {
   BASE_EMOTIONS,
   EMOTION_DETAILS_BY_BASE,
   getJournalDateKey,
+  parseJournalDateKey,
   type BaseEmotion,
   type EmotionJournalEntry,
 } from '@/constants/journals';
@@ -32,6 +33,26 @@ const ACCENT = '#7ED8BE';
 const ACCENT_BG = 'rgba(126,216,190,0.23)';
 const ACCENT_BORDER = 'rgba(126,216,190,0.58)';
 const Watermark = require('../../../../assets/images/maly_aniol.png');
+// Etap 1: trend szacowany z emocji bazowych. Etap 2 do zaproponowania pozniej: zapisywac jawna ocene samopoczucia przy wpisie.
+const EMOTION_MOOD_SCORE_BY_BASE: Record<BaseEmotion, number> = {
+  'Złość': -2,
+  'Wstyd': -2,
+  'Strach': -2,
+  'Smutek': -2,
+  'Poczucie winy': -1,
+  'Samotność': -1,
+  'Radość': 2,
+};
+
+type TrendWindowDays = 14 | 30;
+type MoodTrendDay = {
+  dateKey: string;
+  score: number | null;
+  entryCount: number;
+  dominantEmotion: BaseEmotion | null;
+  barHeight: number;
+  barColor: string;
+};
 
 type DraftFeeling = {
   key: string;
@@ -44,6 +65,43 @@ type DraftFeeling = {
 const toDraftKey = (baseEmotion: BaseEmotion, detailEmotion: string) => `${baseEmotion}::${detailEmotion.trim()}`;
 const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 const toHourKey = (iso: string) => new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+
+function resolveDominantEmotion(entries: EmotionJournalEntry[]) {
+  if (entries.length === 0) return null;
+
+  const counts = new Map<BaseEmotion, number>();
+  entries.forEach((entry) => {
+    counts.set(entry.baseEmotion, (counts.get(entry.baseEmotion) ?? 0) + 1);
+  });
+
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+}
+
+function getMoodBarColor(score: number) {
+  if (score >= 1) return '#7ED8BE';
+  if (score >= 0.1) return '#8FD6F2';
+  if (score > -1) return '#F0C36D';
+  return '#F09A9A';
+}
+
+function getMoodSummaryLabel(score: number | null) {
+  if (score === null) return 'Brak danych';
+  if (score >= 1) return 'Wiecej lekkosci';
+  if (score >= 0.1) return 'Raczej stabilnie';
+  if (score > -1) return 'Mieszany okres';
+  return 'Wiecej napiecia';
+}
+
+function formatTrendLabel(dateKey: string) {
+  const parsed = parseJournalDateKey(dateKey);
+  if (!parsed) return dateKey.slice(8);
+  return parsed.toLocaleDateString('pl-PL', { day: '2-digit' });
+}
+
+function shouldShowTrendTick(index: number, total: number, windowDays: TrendWindowDays) {
+  if (index === 0 || index === total - 1) return true;
+  return windowDays === 14 ? index % 3 === 0 : index % 5 === 0;
+}
 
 export default function DziennikUczucTestScreen() {
   const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
@@ -61,6 +119,7 @@ export default function DziennikUczucTestScreen() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [openDates, setOpenDates] = useState<Record<string, boolean>>({});
   const [openHours, setOpenHours] = useState<Record<string, boolean>>({});
+  const [trendWindowDays, setTrendWindowDays] = useState<TrendWindowDays>(14);
 
   const detailOptions = useMemo(() => EMOTION_DETAILS_BY_BASE[baseEmotion], [baseEmotion]);
 
@@ -193,6 +252,71 @@ export default function DziennikUczucTestScreen() {
   }, [entries]);
 
   const archiveEntryCount = useMemo(() => new Set(entries.map((entry) => entry.createdAt)).size, [entries]);
+  const moodTrend = useMemo(() => {
+    const entriesByDate = new Map<string, EmotionJournalEntry[]>();
+    entries.forEach((entry) => {
+      const current = entriesByDate.get(entry.dateKey) ?? [];
+      current.push(entry);
+      entriesByDate.set(entry.dateKey, current);
+    });
+
+    const today = new Date();
+    const days: MoodTrendDay[] = [];
+    for (let offset = trendWindowDays - 1; offset >= 0; offset -= 1) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - offset);
+      const dateKey = getJournalDateKey(date);
+      const dayEntries = entriesByDate.get(dateKey) ?? [];
+
+      if (dayEntries.length === 0) {
+        days.push({
+          dateKey,
+          score: null,
+          entryCount: 0,
+          dominantEmotion: null,
+          barHeight: 8,
+          barColor: 'rgba(255,255,255,0.14)',
+        });
+        continue;
+      }
+
+      const score =
+        dayEntries.reduce((sum, entry) => sum + EMOTION_MOOD_SCORE_BY_BASE[entry.baseEmotion], 0) / dayEntries.length;
+      const normalized = (score + 2) / 4;
+      days.push({
+        dateKey,
+        score,
+        entryCount: dayEntries.length,
+        dominantEmotion: resolveDominantEmotion(dayEntries),
+        barHeight: 18 + normalized * 74,
+        barColor: getMoodBarColor(score),
+      });
+    }
+
+    const filledDays = days.filter((day) => day.score !== null);
+    const averageScore =
+      filledDays.length > 0
+        ? filledDays.reduce((sum, day) => sum + (day.score ?? 0), 0) / filledDays.length
+        : null;
+
+    const dominantEmotionCounts = new Map<BaseEmotion, number>();
+    filledDays.forEach((day) => {
+      if (!day.dominantEmotion) return;
+      dominantEmotionCounts.set(day.dominantEmotion, (dominantEmotionCounts.get(day.dominantEmotion) ?? 0) + 1);
+    });
+
+    const leadingEmotion = Array.from(dominantEmotionCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const selectedDateEntries = entriesByDate.get(selectedDateKey) ?? [];
+
+    return {
+      days,
+      filledDaysCount: filledDays.length,
+      averageScore,
+      leadingEmotion,
+      selectedDateEntryCount: selectedDateEntries.length,
+      selectedDateDominantEmotion: resolveDominantEmotion(selectedDateEntries),
+    };
+  }, [entries, selectedDateKey, trendWindowDays]);
 
   const toggleDateOpen = (dateKey: string) => {
     setOpenDates((prev) => {
@@ -346,6 +470,90 @@ export default function DziennikUczucTestScreen() {
           <Text style={styles.primaryBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>
         </Pressable>
 
+        <View style={styles.card}>
+          <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
+          <View style={styles.trendHeaderRow}>
+            <View style={styles.trendHeaderTextWrap}>
+              <Text style={styles.sectionTitle}>Trend samopoczucia</Text>
+              <Text style={styles.helper}>
+                Na podstawie emocji bazowych z wpisow. Wyzej = lzej, nizej = trudniej.
+              </Text>
+            </View>
+            <View style={styles.trendToggleWrap}>
+              {([14, 30] as const).map((days) => (
+                <Pressable
+                  key={days}
+                  style={[styles.trendToggleChip, trendWindowDays === days && styles.trendToggleChipActive]}
+                  onPress={() => setTrendWindowDays(days)}
+                >
+                  <Text style={[styles.trendToggleText, trendWindowDays === days && styles.trendToggleTextActive]}>
+                    {days} dni
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.trendSummaryRow}>
+            <View style={styles.trendStatCard}>
+              <Text style={styles.trendStatLabel}>Srednia</Text>
+              <Text style={styles.trendStatValue}>{getMoodSummaryLabel(moodTrend.averageScore)}</Text>
+            </View>
+            <View style={styles.trendStatCard}>
+              <Text style={styles.trendStatLabel}>Dni z wpisem</Text>
+              <Text style={styles.trendStatValue}>
+                {moodTrend.filledDaysCount}/{trendWindowDays}
+              </Text>
+            </View>
+          </View>
+
+          {moodTrend.leadingEmotion ? (
+            <Text style={styles.helpText}>Najczesciej wracalo: {moodTrend.leadingEmotion}.</Text>
+          ) : (
+            <Text style={styles.helpText}>W tym okresie nie ma jeszcze wpisow do pokazania trendu.</Text>
+          )}
+
+          {moodTrend.selectedDateEntryCount > 0 ? (
+            <Text style={styles.helpText}>
+              Dla wybranego dnia {selectedDateKey}: {moodTrend.selectedDateDominantEmotion ?? 'wiele roznych emocji'} (
+              {moodTrend.selectedDateEntryCount} wpis{moodTrend.selectedDateEntryCount === 1 ? '' : 'y'}).
+            </Text>
+          ) : (
+            <Text style={styles.helpText}>Dla wybranego dnia {selectedDateKey} nie ma jeszcze wpisu.</Text>
+          )}
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.trendChartScroll}
+            contentContainerStyle={styles.trendChartContent}
+          >
+            {moodTrend.days.map((day, index) => {
+              const isSelected = day.dateKey === selectedDateKey;
+              return (
+                <Pressable key={day.dateKey} style={styles.trendColumn} onPress={() => setSelectedDateKey(day.dateKey)}>
+                  <View style={[styles.trendTrack, isSelected && styles.trendTrackSelected]}>
+                    <View
+                      style={[
+                        day.score === null ? styles.trendBarEmpty : styles.trendBarFill,
+                        { height: day.barHeight, backgroundColor: day.barColor },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.trendTickLabel, isSelected && styles.trendTickLabelSelected]}>
+                    {shouldShowTrendTick(index, moodTrend.days.length, trendWindowDays) ? formatTrendLabel(day.dateKey) : ' '}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <View style={styles.trendLegendRow}>
+            <Text style={styles.trendLegendText}>Trudniej</Text>
+            <Text style={styles.trendLegendText}>Lzej</Text>
+          </View>
+        </View>
+
         <Pressable
           style={styles.archiveHeader}
           onLayout={setAnchor('archive-section')}
@@ -359,7 +567,7 @@ export default function DziennikUczucTestScreen() {
             })
           }
         >
-          <Text style={styles.archiveHeaderText}>Archiwum wpisow ({archiveEntryCount})</Text>
+          <Text style={styles.archiveHeaderText}>Historia wpisow ({archiveEntryCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
         </Pressable>
 
@@ -522,6 +730,119 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.6 },
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '700' },
+  trendHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  trendHeaderTextWrap: {
+    flex: 1,
+  },
+  trendToggleWrap: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  trendToggleChip: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 999,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  trendToggleChipActive: {
+    backgroundColor: ACCENT_BG,
+    borderColor: ACCENT_BORDER,
+  },
+  trendToggleText: {
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  trendToggleTextActive: {
+    color: 'white',
+  },
+  trendSummaryRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  trendStatCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  trendStatLabel: {
+    color: SUB,
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  trendStatValue: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  trendChartScroll: {
+    marginTop: 10,
+  },
+  trendChartContent: {
+    alignItems: 'flex-end',
+    gap: 10,
+    paddingRight: 8,
+  },
+  trendColumn: {
+    width: 22,
+    alignItems: 'center',
+  },
+  trendTrack: {
+    width: 18,
+    height: 96,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    justifyContent: 'flex-end',
+    padding: 2,
+  },
+  trendTrackSelected: {
+    borderColor: ACCENT_BORDER,
+    backgroundColor: 'rgba(126,216,190,0.08)',
+  },
+  trendBarFill: {
+    width: '100%',
+    borderRadius: 10,
+  },
+  trendBarEmpty: {
+    width: '100%',
+    borderRadius: 10,
+    opacity: 0.8,
+  },
+  trendTickLabel: {
+    color: 'rgba(255,255,255,0.58)',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 6,
+    minHeight: 12,
+  },
+  trendTickLabelSelected: {
+    color: 'white',
+  },
+  trendLegendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  trendLegendText: {
+    color: SUB,
+    fontSize: 12,
+  },
   archiveHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
