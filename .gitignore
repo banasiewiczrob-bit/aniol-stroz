@@ -44,3 +44,4 @@ app-example
 # Local backups (never commit)
 backups/*.tar.gz
 backups/*.bundle
+bugreport-*.zip
