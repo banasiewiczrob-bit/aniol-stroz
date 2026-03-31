@@ -6,9 +6,6 @@ const PUBLIC_STORAGE_BASE = `${SUPABASE_URL.replace(/\/+$/, '')}/storage/v1/obje
 const REFLECTIONS_BUCKET = 'daily-reflections';
 const REFLECTIONS_MANIFEST_PATH = 'manifests/daily-reflections.json';
 const MANIFEST_CACHE_KEY = '@daily_reflections_manifest_cache_v1';
-const PICK_CACHE_KEY = '@daily_reflection_pick_v1';
-const RECENT_IDS_CACHE_KEY = '@daily_reflection_recent_ids_v1';
-const MAX_RECENT_IDS = 7;
 
 export type DailyReflection = {
   id: string;
@@ -27,11 +24,6 @@ export type DailyReflection = {
 };
 
 type DailyReflectionsSource = 'remote' | 'cache' | 'fallback';
-
-type StoredReflectionPick = {
-  dateKey: string;
-  reflectionId: string;
-};
 
 type DailyReflectionsLoadErrorCode =
   | 'manifest_missing'
@@ -64,13 +56,13 @@ type StorageErrorPayload = {
 const FALLBACK_DAILY_REFLECTIONS: DailyReflection[] = [
   {
     id: 'fallback-reflection-today',
-    title: 'Na dziś wystarczy chwila zatrzymania',
-    opening: 'Nie musisz dziś wszystkiego rozumieć ani naprawiać.',
+    title: 'Przyjmuję życie takim, jakie do mnie przyszło',
+    opening: 'Dopiero wtedy mogę je naprawdę przeżyć.',
     reflection:
-      'Czasem najważniejsze jest tylko to, że na moment wracasz do siebie. Jeden spokojniejszy oddech, jedno uczciwe spojrzenie na to, co się w Tobie dzieje, i jedna mała zgoda na to, że możesz być dziś dokładnie tam, gdzie jesteś.',
-    question: 'Czego najbardziej potrzebuję od siebie właśnie teraz?',
-    smallStep: 'Zatrzymaj się na trzy spokojne oddechy i nazwij jedną rzecz, która dziś naprawdę jest ważna.',
-    closing: 'To wystarczy na ten moment.',
+      'Dziś nie muszę udowadniać, że wszystko jest w porządku. Mogę tylko zobaczyć to, co jest prawdziwe. Przyjęcie życia nie ma być rezygnacją w stylu: "No dobra, niech już będzie". Ma być początkiem świadomego kontaktu. Kiedy przestaję się szarpać z faktami, odzyskuję przestrzeń na to, co mogę wybrać: mój krok, mój kierunek, moje wartości. Akceptuję to, co przyszło, nie po to, by w tym utknąć, lecz po to, by wreszcie zacząć żyć w prawdzie, a nie w walce z nią.',
+    question: '',
+    smallStep: 'Powiedz na głos: "Tak." Potem dodaj: "Dziś moim małym krokiem w prawdzie będzie..." i zrób to.',
+    closing: '',
     monthDay: null,
     tags: [],
     durationSec: null,
@@ -150,12 +142,12 @@ function parseReflectionEntry(value: unknown, index: number): DailyReflection | 
   const durationSec = readOptionalNumber(row.durationSec) ?? readOptionalNumber(row.duration);
   const tags = normalizeTags(row.tags);
 
-  if (!title && !opening && !reflection && !question && !smallStep && !closing) {
+  if (!title && !opening && !reflection && !question && !smallStep && !closing && !audioPath) {
     return null;
   }
 
-  const fallbackTitle = title || `Refleksja ${index + 1}`;
-  const slugId = slugify(fallbackTitle);
+  const fallbackTitle = title;
+  const slugId = slugify(fallbackTitle || `reflection-${index + 1}`);
   const id = readOptionalText(row.id) ?? monthDay ?? (slugId || `reflection-${index + 1}`);
 
   return {
@@ -195,19 +187,22 @@ function getSelectableReflections(reflections: DailyReflection[]) {
   return playable.length > 0 ? playable : active;
 }
 
-function pickRandomReflection(reflections: DailyReflection[], currentId: string | null, recentIds: string[]) {
-  const selectable = getSelectableReflections(reflections);
+function getStableDailyHash(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+function pickReflectionForDate(reflections: DailyReflection[], dateKey: string) {
+  const selectable = getSelectableReflections(reflections)
+    .slice()
+    .sort((left, right) => left.id.localeCompare(right.id, 'pl'));
   if (selectable.length === 0) return null;
 
-  let pool = selectable.filter((item) => item.id !== currentId && !recentIds.includes(item.id));
-  if (pool.length === 0) {
-    pool = selectable.filter((item) => item.id !== currentId);
-  }
-  if (pool.length === 0) {
-    pool = selectable;
-  }
-
-  return pool[Math.floor(Math.random() * pool.length)] ?? null;
+  const index = getStableDailyHash(dateKey) % selectable.length;
+  return selectable[index] ?? null;
 }
 
 function formatStorageErrorDetails(payload: StorageErrorPayload) {
@@ -311,41 +306,6 @@ async function writeCachedManifest(reflections: DailyReflection[]) {
   await AsyncStorage.setItem(MANIFEST_CACHE_KEY, JSON.stringify({ reflections }));
 }
 
-async function readStoredPick(dateKey: string) {
-  const raw = await AsyncStorage.getItem(PICK_CACHE_KEY);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as StoredReflectionPick;
-    if (parsed && parsed.dateKey === dateKey && typeof parsed.reflectionId === 'string') {
-      return parsed.reflectionId;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-async function readRecentIds() {
-  const raw = await AsyncStorage.getItem(RECENT_IDS_CACHE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(readText).filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
-async function persistSelection(dateKey: string, reflectionId: string) {
-  const currentRecentIds = await readRecentIds();
-  const nextRecentIds = [reflectionId, ...currentRecentIds.filter((id) => id !== reflectionId)].slice(0, MAX_RECENT_IDS);
-
-  await AsyncStorage.multiSet([
-    [PICK_CACHE_KEY, JSON.stringify({ dateKey, reflectionId } satisfies StoredReflectionPick)],
-    [RECENT_IDS_CACHE_KEY, JSON.stringify(nextRecentIds)],
-  ]);
-}
-
 export async function loadDailyReflections(): Promise<{ reflections: DailyReflection[]; source: DailyReflectionsSource }> {
   const manifestUrl = `${PUBLIC_STORAGE_BASE}/${REFLECTIONS_BUCKET}/${REFLECTIONS_MANIFEST_PATH}`;
 
@@ -402,19 +362,5 @@ export async function loadDailyReflections(): Promise<{ reflections: DailyReflec
 
 export async function getInitialDailyReflection(reflections: DailyReflection[]) {
   const dateKey = getLocalDateKey();
-  const selectable = getSelectableReflections(reflections);
-  if (selectable.length === 0) return null;
-
-  const savedId = await readStoredPick(dateKey);
-  if (savedId) {
-    const savedReflection = selectable.find((item) => item.id === savedId);
-    if (savedReflection) return savedReflection;
-  }
-
-  const recentIds = await readRecentIds();
-  const nextReflection = pickRandomReflection(selectable, null, recentIds);
-  if (!nextReflection) return null;
-
-  await persistSelection(dateKey, nextReflection.id);
-  return nextReflection;
+  return pickReflectionForDate(reflections, dateKey);
 }

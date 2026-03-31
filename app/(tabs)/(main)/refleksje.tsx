@@ -1,7 +1,7 @@
 import { BackButton } from '@/components/BackButton';
 import { DailyReflection, getInitialDailyReflection, loadDailyReflections } from '@/services/dailyReflections';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,6 +10,8 @@ const CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
 const SUB = 'rgba(232,245,255,0.84)';
 const MUTED = 'rgba(232,245,255,0.66)';
+const TEXT_SECTION_SCROLL_OFFSET = 18;
+const TEXT_AUTO_SCROLL_MULTIPLIER = 1.1;
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 function formatTime(value: number) {
@@ -38,12 +40,21 @@ function ReflectionTextBlock({
   );
 }
 
+function joinReflectionText(parts: Array<string | null | undefined>) {
+  return parts.map((part) => (typeof part === 'string' ? part.trim() : '')).filter(Boolean).join('\n\n');
+}
+
 export default function RefleksjeScreen() {
   const insets = useSafeAreaInsets();
+  const mainScrollRef = useRef<ScrollView | null>(null);
+  const readingScrollRef = useRef<ScrollView | null>(null);
+  const readingSectionYRef = useRef(0);
   const [currentReflection, setCurrentReflection] = useState<DailyReflection | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [readingContentHeight, setReadingContentHeight] = useState(0);
+  const [readingViewportHeight, setReadingViewportHeight] = useState(0);
 
   const audioSource = useMemo(() => {
     if (!currentReflection?.audioUrl) return null;
@@ -54,6 +65,11 @@ export default function RefleksjeScreen() {
   }, [currentReflection?.audioUrl, currentReflection?.title]);
   const player = useAudioPlayer(null, { downloadFirst: true, updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
+  const readingText = joinReflectionText([currentReflection?.opening, currentReflection?.reflection]);
+  const hasReadingDetails = Boolean(
+    readingText || currentReflection?.question || currentReflection?.smallStep || currentReflection?.closing
+  );
+  const displayTitle = currentReflection?.title || 'Dzisiejsza refleksja';
 
   const progress =
     status.duration > 0 && status.currentTime > 0 ? Math.min(1, status.currentTime / status.duration) : 0;
@@ -80,6 +96,21 @@ export default function RefleksjeScreen() {
       player.seekTo(0);
     }
   }, [player, status.didJustFinish, status.duration]);
+
+  useEffect(() => {
+    if (!readingScrollRef.current) return;
+    readingScrollRef.current.scrollTo({ y: 0, animated: false });
+  }, [currentReflection?.id]);
+
+  useEffect(() => {
+    if (!readingScrollRef.current || !hasReadingDetails || status.duration <= 0) return;
+
+    const maxOffset = Math.max(0, readingContentHeight - readingViewportHeight);
+    if (maxOffset <= 0) return;
+
+    const nextOffset = maxOffset * Math.min(1, progress * TEXT_AUTO_SCROLL_MULTIPLIER);
+    readingScrollRef.current.scrollTo({ y: nextOffset, animated: false });
+  }, [hasReadingDetails, progress, readingContentHeight, readingViewportHeight, status.duration]);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +174,10 @@ export default function RefleksjeScreen() {
       player.pause();
       return;
     }
+    mainScrollRef.current?.scrollTo({
+      y: Math.max(0, readingSectionYRef.current - TEXT_SECTION_SCROLL_OFFSET),
+      animated: true,
+    });
     if (status.duration > 0 && status.currentTime >= status.duration - 0.25) {
       player.seekTo(0);
     }
@@ -161,6 +196,7 @@ export default function RefleksjeScreen() {
       <View style={styles.bgOrbB} />
       <BackButton />
       <ScrollView
+        ref={mainScrollRef}
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
         showsVerticalScrollIndicator={false}
@@ -174,7 +210,7 @@ export default function RefleksjeScreen() {
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#8FAFD3' }]} />
           <Text style={styles.eyebrow}>Refleksja na dziś</Text>
-          <Text style={styles.cardTitle}>{currentReflection?.title ?? 'Dzisiejsza refleksja'}</Text>
+          <Text style={styles.cardTitle}>{displayTitle}</Text>
           {loading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator color="#78C8FF" />
@@ -182,12 +218,6 @@ export default function RefleksjeScreen() {
             </View>
           ) : currentReflection ? (
             <>
-              <Text style={styles.cardText}>
-                {currentReflection.opening ||
-                  currentReflection.reflection ||
-                  'Treść dzisiejszej refleksji pojawi się tutaj za chwilę.'}
-              </Text>
-
               <View style={styles.playerRow}>
                 <Pressable
                   style={[styles.primaryBtn, !currentReflection.audioUrl && styles.buttonDisabled]}
@@ -248,17 +278,44 @@ export default function RefleksjeScreen() {
           )}
         </View>
 
-        <View style={styles.card}>
+        <View
+          style={styles.card}
+          onLayout={(event) => {
+            readingSectionYRef.current = event.nativeEvent.layout.y;
+          }}
+        >
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#B8C6FF' }]} />
-          <Text style={styles.cardTitle}>Tekst do przeczytania</Text>
+          <Text style={styles.cardTitle}>Tekst refleksji</Text>
           {currentReflection ? (
             <>
-              <ReflectionTextBlock label="Zdanie otwarcia" content={currentReflection.opening} accent="#A6E2FF" />
-              <ReflectionTextBlock label="Krótka refleksja" content={currentReflection.reflection} accent="#FFD18A" />
-              <ReflectionTextBlock label="Pytanie do siebie" content={currentReflection.question} accent="#FFB4C7" />
-              <ReflectionTextBlock label="Mały krok" content={currentReflection.smallStep} accent="#9EE7D8" />
-              <ReflectionTextBlock label="Domknięcie" content={currentReflection.closing} accent="#B8C6FF" />
+              {hasReadingDetails ? (
+                <>
+                  <Text style={styles.readingHint}>Tekst płynie razem z nagraniem, ale w każdej chwili możesz też czytać go w swoim tempie.</Text>
+                  <ScrollView
+                    ref={readingScrollRef}
+                    style={styles.readingScroll}
+                    contentContainerStyle={styles.readingScrollContent}
+                    onLayout={(event) => setReadingViewportHeight(event.nativeEvent.layout.height)}
+                    onContentSizeChange={(_, height) => setReadingContentHeight(height)}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled
+                  >
+                    <Text style={styles.reflectionTitle}>{displayTitle}</Text>
+                    {readingText ? <Text style={styles.readingText}>{readingText}</Text> : null}
+                    <ReflectionTextBlock label="Pytanie do siebie" content={currentReflection.question} accent="#FFB4C7" />
+                    <ReflectionTextBlock label="Mały krok" content={currentReflection.smallStep} accent="#9EE7D8" />
+                    <ReflectionTextBlock label="Domknięcie" content={currentReflection.closing} accent="#B8C6FF" />
+                  </ScrollView>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.reflectionTitle}>{displayTitle}</Text>
+                  <Text style={styles.cardText}>
+                    Tekst tej refleksji dołączy tu razem z jej pełnym zapisem. Na ten moment możesz spokojnie zostać przy samym słuchaniu.
+                  </Text>
+                </>
+              )}
             </>
           ) : (
             <Text style={styles.cardText}>Po pobraniu refleksji cały tekst pojawi się tutaj, żeby można było wracać do niego także bez słuchania.</Text>
@@ -423,6 +480,18 @@ const styles = StyleSheet.create({
   readingBlock: {
     marginTop: 10,
   },
+  readingHint: {
+    color: MUTED,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  readingScroll: {
+    maxHeight: 320,
+  },
+  readingScrollContent: {
+    paddingBottom: 12,
+  },
   readingLabel: {
     fontSize: 13,
     fontWeight: '800',
@@ -434,5 +503,11 @@ const styles = StyleSheet.create({
     color: SUB,
     fontSize: 17,
     lineHeight: 25,
+  },
+  reflectionTitle: {
+    color: 'white',
+    fontSize: 21,
+    fontWeight: '700',
+    marginBottom: 10,
   },
 });

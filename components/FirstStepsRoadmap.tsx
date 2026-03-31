@@ -10,7 +10,7 @@ type FirstStepsRoadmapProps = {
 const STEPS = [
   'Podpisz kontrakt',
   'Ustaw datę startu w liczniku',
-  'Ustaw zgody i preferencje w Ustawieniach',
+  'Zaznacz wymagane zgody w Ustawieniach',
 ] as const;
 
 export function FirstStepsRoadmap({ currentStep, compact = false, hideTitle = false }: FirstStepsRoadmapProps) {

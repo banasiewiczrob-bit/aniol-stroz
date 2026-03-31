@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#071826" },
   mainContainer: { flex: 1, paddingHorizontal: 30, paddingTop: 10, paddingBottom: 30 },
   logoSection: { alignItems: 'center', justifyContent: 'center', height: 220, marginTop: 20 },
-  logo: { width: 280, height: '100%', resizeMode: "contain" },
+  logo: { width: 164, height: 164, borderRadius: 82, resizeMode: "cover" },
   textSection: { marginTop: 30, zIndex: 2 },
   textWrap: { justifyContent: "center" },
   hi: { color: "#fff", fontSize: 32, fontWeight: "700", marginBottom: 20, letterSpacing: 0.6 },

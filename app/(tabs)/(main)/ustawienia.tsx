@@ -66,9 +66,6 @@ type SettingsSectionKey = 'consents' | 'notifications' | 'plan' | 'intelligentSu
 type SectionExpandedState = Record<SettingsSectionKey, boolean>;
 const ONBOARDING_SECTION_ORDER: SettingsSectionKey[] = [
   'consents',
-  'notifications',
-  'intelligentSupport',
-  'personalization',
 ];
 
 const DEFAULT_SECTION_EXPANDED: SectionExpandedState = {
@@ -456,10 +453,42 @@ export default function UstawieniaScreen() {
   };
 
   const saveConsentSection = async () => {
+    if (onboardingSettingsRequired && (!appSettings.privacyConsentLocalStorage || !appSettings.privacyConsentRegulations)) {
+      Alert.alert('Brak wymaganych zgód', 'Aby wejść do aplikacji, zaznacz zgodę na zapis danych i akceptację zasad.');
+      return;
+    }
+
     setBusy(true);
     setNotice('');
 
     try {
+      if (onboardingSettingsRequired) {
+        const nextPromptAt = (() => {
+          const d = new Date();
+          d.setDate(d.getDate() + 30);
+          return d.toISOString();
+        })();
+        const nextAppSettings: AppSettings = {
+          ...appSettings,
+          firstRunSetupDone: true,
+          intelligentSupportPromptNextAt: appSettings.intelligentSupportEnabled ? null : nextPromptAt,
+        };
+        const nextNotifications = { ...notificationSettings, enabled: false };
+
+        await saveDailyPlanNotificationSettings(nextNotifications);
+        await ensureDailyPlanNotifications(nextNotifications);
+        await saveAppSettings(nextAppSettings);
+        await recomputeFirstStepsDone();
+
+        setAppSettingsState(nextAppSettings);
+        setNotificationSettings(nextNotifications);
+        setOnboardingSettingsRequired(false);
+        await persistSectionExpandedState(DEFAULT_SECTION_EXPANDED);
+        setNotice('Gotowe. Resztę ustawisz później, już z poziomu aplikacji.');
+        setFullAccessModalVisible(true);
+        return;
+      }
+
       await saveAppSettings(appSettings);
 
       if (!appSettings.privacyConsentNotifications) {
@@ -472,11 +501,7 @@ export default function UstawieniaScreen() {
         setNotice('Zapisano zgody.');
       }
 
-      if (onboardingSettingsRequired) {
-        await focusSingleSection('notifications');
-      } else {
-        await collapseSection('consents');
-      }
+      await collapseSection('consents');
     } catch (e) {
       console.error('Błąd zapisu zgód:', e);
       Alert.alert('Błąd', 'Nie udało się zapisać zgód.');
@@ -605,72 +630,7 @@ export default function UstawieniaScreen() {
     }
   };
 
-  const finishOnboardingSettings = async () => {
-    if (!appSettings.privacyConsentLocalStorage || !appSettings.privacyConsentRegulations) {
-      Alert.alert('Brak wymaganych zgód', 'Aby zakończyć konfigurację, zaznacz zgodę na zapis danych i akceptację zasad.');
-      return;
-    }
-
-    const morning = parseTime(morningTime);
-    const evening = parseTime(eveningTime);
-    if (notificationSettings.enabled && (!morning || !evening)) {
-      Alert.alert('Niepoprawny format godziny', 'Użyj formatu HH:MM, np. 08:00 lub 20:30.');
-      return;
-    }
-
-    setBusy(true);
-    setNotice('');
-    try {
-      const nextNotifications: DailyPlanNotificationSettings = {
-        ...notificationSettings,
-        enabled: appSettings.privacyConsentNotifications ? notificationSettings.enabled : false,
-        morningHour: morning?.hour ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.morningHour,
-        morningMinute: morning?.minute ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.morningMinute,
-        eveningHour: evening?.hour ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.eveningHour,
-        eveningMinute: evening?.minute ?? DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS.eveningMinute,
-      };
-
-      const nextPromptAt =
-        appSettings.intelligentSupportEnabled
-          ? null
-          : (() => {
-              const d = new Date();
-              d.setDate(d.getDate() + 30);
-              return d.toISOString();
-            })();
-
-      const nextAppSettings: AppSettings = {
-        ...appSettings,
-        firstRunSetupDone: true,
-        intelligentSupportPromptNextAt: nextPromptAt,
-      };
-
-      await saveDailyPlanNotificationSettings(nextNotifications);
-      await ensureDailyPlanNotifications(nextNotifications);
-      await saveAppSettings(nextAppSettings);
-      await recomputeFirstStepsDone();
-
-      setAppSettingsState(nextAppSettings);
-      setNotificationSettings(nextNotifications);
-      setOnboardingSettingsRequired(false);
-      await persistSectionExpandedState(DEFAULT_SECTION_EXPANDED);
-      setNotice('Pierwsza konfiguracja została zapisana.');
-      setFullAccessModalVisible(true);
-    } catch (e) {
-      console.error('Błąd zapisu konfiguracji startowej:', e);
-      Alert.alert('Błąd', 'Nie udało się zapisać konfiguracji startowej.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const handleSavePersonalization = async () => {
-    const shouldFinishOnboarding =
-      onboardingSettingsRequired || !appSettings.firstRunSetupDone || !appSettings.firstStepsDone;
-    if (shouldFinishOnboarding) {
-      await finishOnboardingSettings();
-      return;
-    }
     await saveAppPreferences('Zapisano personalizację.', 'personalization');
   };
 
@@ -814,10 +774,10 @@ export default function UstawieniaScreen() {
         >
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
-          <Text style={styles.title}>Ustawienia</Text>
+        <Text style={styles.title}>Ustawienia</Text>
         <Text style={styles.subtitle}>
           {onboardingSettingsRequired
-            ? 'Na początek ustaw zgody oraz preferencje startowe: powiadomienia, badge i inteligentne wsparcie.'
+            ? 'Na początek wystarczą dwie zgody potrzebne do działania aplikacji. Resztę ustawisz już później, spokojnie.'
             : 'Tutaj ustawisz zgody, powiadomienia i pozostałe preferencje aplikacji.'}
         </Text>
         {onboardingSettingsRequired ? <FirstStepsRoadmap currentStep={3} /> : null}
@@ -834,7 +794,11 @@ export default function UstawieniaScreen() {
 
           {sectionExpanded.consents ? (
             <>
-              <Text style={styles.cardText}>Podstawa działania aplikacji na tym urządzeniu.</Text>
+              <Text style={styles.cardText}>
+                {onboardingSettingsRequired
+                  ? 'Aby wejść do aplikacji, potrzebujemy tylko dwóch podstawowych zgód. Pozostałe ustawienia możesz zostawić na później.'
+                  : 'Podstawa działania aplikacji na tym urządzeniu.'}
+              </Text>
 
               <View style={styles.checkboxRow}>
                 <Checkbox
@@ -850,19 +814,25 @@ export default function UstawieniaScreen() {
                 </Pressable>
               </View>
 
-              <View style={styles.checkboxRow}>
-                <Checkbox
-                  style={styles.checkbox}
-                  value={appSettings.privacyConsentNotifications}
-                  onValueChange={(v) => toggleConsent('privacyConsentNotifications', v)}
-                  color={appSettings.privacyConsentNotifications ? '#4FA8E8' : undefined}
-                  disabled={busy}
-                />
-                <Pressable style={styles.checkboxTextWrap} disabled={busy} onPress={() => toggleConsent('privacyConsentNotifications')}>
-                  <Text style={styles.checkboxTitle}>Zgoda na lokalne powiadomienia</Text>
-                  <Text style={styles.checkboxHint}>Bez tej zgody przypomnienia poranne i wieczorne pozostają wyłączone.</Text>
-                </Pressable>
-              </View>
+              {!onboardingSettingsRequired ? (
+                <View style={styles.checkboxRow}>
+                  <Checkbox
+                    style={styles.checkbox}
+                    value={appSettings.privacyConsentNotifications}
+                    onValueChange={(v) => toggleConsent('privacyConsentNotifications', v)}
+                    color={appSettings.privacyConsentNotifications ? '#4FA8E8' : undefined}
+                    disabled={busy}
+                  />
+                  <Pressable
+                    style={styles.checkboxTextWrap}
+                    disabled={busy}
+                    onPress={() => toggleConsent('privacyConsentNotifications')}
+                  >
+                    <Text style={styles.checkboxTitle}>Zgoda na lokalne powiadomienia</Text>
+                    <Text style={styles.checkboxHint}>Bez tej zgody przypomnienia poranne i wieczorne pozostają wyłączone.</Text>
+                  </Pressable>
+                </View>
+              ) : null}
 
               <View style={styles.checkboxRow}>
                 <Checkbox
@@ -878,44 +848,37 @@ export default function UstawieniaScreen() {
                   </Pressable>
                 </View>
 
-              <View style={styles.checkboxRow}>
-                <Checkbox
-                  style={styles.checkbox}
-                  value={appSettings.privacyConsentSharedExperience}
-                  onValueChange={(v) => toggleConsent('privacyConsentSharedExperience', v)}
-                  color={appSettings.privacyConsentSharedExperience ? '#4FA8E8' : undefined}
-                  disabled={busy}
-                />
-                <Pressable
-                  style={styles.checkboxTextWrap}
-                  disabled={busy}
-                  onPress={() => toggleConsent('privacyConsentSharedExperience')}
-                >
-                  <Text style={styles.checkboxTitle}>Zgoda na anonimowe przekazywanie doświadczeń</Text>
-                  <Text style={styles.checkboxHint}>
-                    Włączasz możliwość anonimowego przekazania wybranego wpisu do wspólnej bazy doświadczeń. To nadal
-                    Ty decydujesz osobno przy każdym wpisie, czy chcesz go udostępnić.
-                  </Text>
-                </Pressable>
-              </View>
+              {!onboardingSettingsRequired ? (
+                <View style={styles.checkboxRow}>
+                  <Checkbox
+                    style={styles.checkbox}
+                    value={appSettings.privacyConsentSharedExperience}
+                    onValueChange={(v) => toggleConsent('privacyConsentSharedExperience', v)}
+                    color={appSettings.privacyConsentSharedExperience ? '#4FA8E8' : undefined}
+                    disabled={busy}
+                  />
+                  <Pressable
+                    style={styles.checkboxTextWrap}
+                    disabled={busy}
+                    onPress={() => toggleConsent('privacyConsentSharedExperience')}
+                  >
+                    <Text style={styles.checkboxTitle}>Zgoda na anonimowe przekazywanie doświadczeń</Text>
+                    <Text style={styles.checkboxHint}>
+                      Włączasz możliwość anonimowego przekazania wybranego wpisu do wspólnej bazy doświadczeń. To nadal
+                      Ty decydujesz osobno przy każdym wpisie, czy chcesz go udostępnić.
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
 
               {onboardingSettingsRequired ? (
-                <>
-                  <Pressable
-                    style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
-                    disabled={busy}
-                    onPress={saveConsentSection}
-                  >
-                    <Text style={styles.buttonPrimaryText}>Zapisz zgody</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
-                    disabled={busy}
-                    onPress={() => void expandSection('notifications')}
-                  >
-                    <Text style={styles.buttonSecondaryText}>Przejdź do powiadomień</Text>
-                  </Pressable>
-                </>
+                <Pressable
+                  style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
+                  disabled={busy}
+                  onPress={saveConsentSection}
+                >
+                  <Text style={styles.buttonPrimaryText}>Zapisz i wejdź do aplikacji</Text>
+                </Pressable>
               ) : (
                 <Pressable style={[styles.buttonPrimary, busy && styles.buttonDisabled]} disabled={busy} onPress={saveConsentSection}>
                   <Text style={styles.buttonPrimaryText}>Zapisz zgody</Text>
@@ -925,6 +888,7 @@ export default function UstawieniaScreen() {
           ) : null}
         </View>
 
+        {!onboardingSettingsRequired ? (
         <View style={styles.card}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.notifications && styles.sectionHeaderRowCollapsed]}>
             <Text style={[styles.cardTitle, styles.cardTitleTight]}>Powiadomienia</Text>
@@ -1017,19 +981,10 @@ export default function UstawieniaScreen() {
               >
                 <Text style={styles.buttonSecondaryText}>Domyślne powiadomienia</Text>
               </Pressable>
-
-              {onboardingSettingsRequired ? (
-                <Pressable
-                  style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
-                  disabled={busy}
-                  onPress={() => void expandSection('intelligentSupport')}
-                >
-                  <Text style={styles.buttonSecondaryText}>Przejdź do inteligentnego wsparcia</Text>
-                </Pressable>
-              ) : null}
             </>
           ) : null}
         </View>
+        ) : null}
 
         {!onboardingSettingsRequired ? (
           <View style={styles.card}>
@@ -1112,6 +1067,7 @@ export default function UstawieniaScreen() {
           </View>
         ) : null}
 
+        {!onboardingSettingsRequired ? (
         <View style={styles.card}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.intelligentSupport && styles.sectionHeaderRowCollapsed]}>
             <Text style={[styles.cardTitle, styles.cardTitleTight]}>Inteligentne wsparcie</Text>
@@ -1165,20 +1121,12 @@ export default function UstawieniaScreen() {
               >
                 <Text style={styles.buttonPrimaryText}>Zapisz inteligentne wsparcie</Text>
               </Pressable>
-
-              {onboardingSettingsRequired ? (
-                <Pressable
-                  style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
-                  disabled={busy}
-                  onPress={() => void expandSection('personalization')}
-                >
-                  <Text style={styles.buttonSecondaryText}>Przejdź do personalizacji</Text>
-                </Pressable>
-              ) : null}
             </>
           ) : null}
         </View>
+        ) : null}
 
+        {!onboardingSettingsRequired ? (
         <View style={styles.card}>
           <View style={[styles.sectionHeaderRow, !sectionExpanded.personalization && styles.sectionHeaderRowCollapsed]}>
             <Text style={[styles.cardTitle, styles.cardTitleTight]}>Personalizacja</Text>
@@ -1235,6 +1183,7 @@ export default function UstawieniaScreen() {
             </>
           ) : null}
         </View>
+        ) : null}
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Pomoc i informacje</Text>

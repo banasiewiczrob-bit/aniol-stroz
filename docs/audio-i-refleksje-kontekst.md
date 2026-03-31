@@ -1,6 +1,6 @@
 # Audio i refleksje - kontekst do osobnego czatu
 
-Status: aktywny zestaw ustalen, zaktualizowany 2026-03-14
+Status: aktywny zestaw ustalen, zaktualizowany 2026-03-31
 
 Ten plik jest kontekstem specjalistycznym.
 Wspolny kontekst dla wszystkich rozmow o projekcie jest tutaj:
@@ -43,10 +43,14 @@ Format jednej refleksji:
 
 Obecny stan:
 
-- `Codzienne refleksje` maja juz material redakcyjny i dedykowany ekran w aplikacji
-- ekran pokazuje placeholder `Posluchaj refleksji (wkrotce)`
-- archiwum 365 jest zapowiedziane w UI, ale nie jest jeszcze podpiete
-- to oznacza, ze tresc i model publikacji sa juz gotowe, ale delivery audio nadal czeka na wdrozenie
+- `Codzienne refleksje` maja juz aktywny ekran w aplikacji z tytulem, odtwarzaczem i sekcja `Tekst refleksji`
+- po kliknieciu `Odtworz` ekran przewija sie do tekstu, a tekst autoscrolluje lekko szybciej niz audio
+- user nie widzi, ze wybor jest losowaniem; w UI jest to po prostu `Refleksja na dzis`
+- wybor dziennej refleksji jest deterministyczny dla danej daty, wiec wszyscy userzy dostaja tego samego dnia ten sam wpis
+- publiczny bucket Supabase `daily-reflections` ma obecnie pliki audio `01-01.m4a` do `01-32.m4a`
+- manifest [daily-reflections.json](./daily-reflections.json) jest juz zsynchronizowany z Supabase i zawiera 32 aktywne wpisy z tekstami
+- techniczne ID typu `01-01`, `01-02` sa nazwami plikow i kluczami manifestu; nie sa pokazywane userowi jako daty
+- archiwum pelnych 365 refleksji nadal nie jest jeszcze podpiete
 
 Model:
 - to nie ma byc zwykly podcast w tle
@@ -117,11 +121,21 @@ Proponowane podfoldery w `single/`:
 
 ## Co jest do zrobienia dalej
 
-1. Nagrac pierwsze pliki audio.
-2. Wrzucic pierwsze nagrania do odpowiednich bucketow.
-3. Przygotowac `daily-reflections.json`.
-4. Przygotowac `app-audio-library.json`.
-5. Podpiac to w aplikacji.
+1. Kontynuowac ten sam proces dla kolejnych nagran `01-33+`.
+2. Po kazdej nowej paczce audio dopisac odpowiadajace teksty do [daily-reflections.json](./daily-reflections.json).
+3. Wrzucic zaktualizowany manifest do `daily-reflections/manifests/daily-reflections.json`.
+4. Docelowo rozszerzyc zestaw z 32 do pelnego roku `365 + bonus 29.02`.
+5. Osobno przygotowac `app-audio-library.json` dla biblioteki audio poza refleksjami dziennymi.
+
+## Jak kontynuowac pozniej bez odtwarzania ustalen
+
+Najwazniejsze zalozenia na teraz:
+
+- nie zmieniamy modelu UI `Refleksja na dzis`
+- nie pokazujemy userowi zadnych technicznych informacji o manifestach, losowaniu ani Supabase
+- kolejny krok to po prostu dokladanie nastepnych nagran i tekstow do juz dzialajacego manifestu
+- zrodlem tekstow do pierwszej paczki bylo: `/Users/robert/Downloads/refleksje od kazdego pisarza.xlsx`
+- jesli pojawia sie nowe audio, zachowujemy naming `01-33.m4a`, `01-34.m4a` itd. i dopisujemy matching wpisy do manifestu
 
 ## Tekst startowy do nowego czatu
 
