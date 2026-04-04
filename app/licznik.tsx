@@ -492,17 +492,6 @@ export default function LicznikScreen() {
           <StatBox label="Dni" value={stats.days} compact={compact} />
         </View>
 
-        <Pressable onPress={() => router.push('/licznik-strat')} style={[styles.lossTile, compact && styles.lossTileCompact]}>
-          <Image source={Watermark} resizeMode="contain" style={styles.rewardsWatermark} />
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.lossTitle, compact && styles.lossTitleCompact]}>Licznik kosztów kryzysu</Text>
-            <Text style={[styles.lossSubtitle, compact && styles.lossSubtitleCompact]}>
-              Moduł dodatkowy, poza onboardingiem.
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color="#FFD18A" />
-        </Pressable>
-
         <Pressable onPress={() => router.push('/licznik-nagrody')} style={[styles.rewardsTile, compact && styles.rewardsTileCompact]}>
           <Image source={Watermark} resizeMode="contain" style={styles.rewardsWatermark} />
           <View style={{ flex: 1 }}>
@@ -696,29 +685,6 @@ const styles = StyleSheet.create({
   nextStepButton: { marginTop: 8, marginBottom: 4, backgroundColor: 'rgba(120, 200, 255, 0.3)' },
   resetButton: { marginTop: 12, backgroundColor: 'rgba(255, 100, 100, 0.15)', borderColor: 'rgba(255, 100, 100, 0.5)' },
   resetButtonCompact: { marginTop: 8 },
-  lossTile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 209, 138, 0.08)',
-    width: '100%',
-    padding: 16,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 209, 138, 0.35)',
-    marginBottom: 12,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  lossTileCompact: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  lossTitle: { ...TYPE.h3, color: 'white' },
-  lossTitleCompact: { fontSize: 18, lineHeight: 21 },
-  lossSubtitle: { ...TYPE.bodySmall, color: 'rgba(255,255,255,0.76)', marginTop: 4 },
-  lossSubtitleCompact: { fontSize: 13, lineHeight: 15, marginTop: 1 },
   rewardsTile: {
     flexDirection: 'row',
     alignItems: 'center',

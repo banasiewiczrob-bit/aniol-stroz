@@ -1,8 +1,32 @@
 import { BackButton } from '@/components/BackButton';
-import { DailyReflection, getInitialDailyReflection, loadDailyReflections } from '@/services/dailyReflections';
+import {
+  DailyReflection,
+  findDailyReflectionById,
+  getInitialDailyReflection,
+  loadDailyReflections,
+  loadFavoriteDailyReflectionIds,
+  toggleFavoriteDailyReflection,
+} from '@/services/dailyReflections';
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { useKeepAwake } from 'expo-keep-awake';
+import * as Sharing from 'expo-sharing';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BG = '#061A2C';
@@ -10,8 +34,12 @@ const CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
 const SUB = 'rgba(232,245,255,0.84)';
 const MUTED = 'rgba(232,245,255,0.66)';
+const INITIAL_VIEW_OFFSET = 132;
 const TEXT_SECTION_SCROLL_OFFSET = 18;
-const TEXT_AUTO_SCROLL_MULTIPLIER = 1.1;
+const TEXT_AUTO_SCROLL_MULTIPLIER = 1.2;
+const SMALL_STEP_ENDING_LINE = 'I niech to będzie Twój mały krok na dziś.';
+const SHARE_CARD_CHAR_LIMIT = 420;
+const CAPTURE_TIMEOUT_MS = 12000;
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 function formatTime(value: number) {
@@ -44,17 +72,90 @@ function joinReflectionText(parts: Array<string | null | undefined>) {
   return parts.map((part) => (typeof part === 'string' ? part.trim() : '')).filter(Boolean).join('\n\n');
 }
 
+function formatSmallStepText(content: string) {
+  const trimmed = content.trim();
+  const normalizedEnding = SMALL_STEP_ENDING_LINE.toLowerCase().replace(/[.:,\s]+/g, ' ').trim();
+
+  if (!trimmed) {
+    return SMALL_STEP_ENDING_LINE;
+  }
+
+  const normalized = trimmed.toLowerCase().replace(/[.:,\s]+/g, ' ').trim();
+
+  if (normalized.endsWith(normalizedEnding)) {
+    return trimmed;
+  }
+
+  return `${trimmed}\n\n${SMALL_STEP_ENDING_LINE}`;
+}
+
+function buildShareCardExcerpt(content: string) {
+  const normalized = content.replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (!normalized) return 'Kilka spokojnych zdań, do których można wracać w swoim rytmie.';
+  if (normalized.length <= SHARE_CARD_CHAR_LIMIT) return normalized;
+
+  const clipped = normalized.slice(0, SHARE_CARD_CHAR_LIMIT);
+  const boundary = Math.max(clipped.lastIndexOf('. '), clipped.lastIndexOf('! '), clipped.lastIndexOf('? '), clipped.lastIndexOf(' '));
+  const safeEnd = boundary > SHARE_CARD_CHAR_LIMIT * 0.55 ? boundary : SHARE_CARD_CHAR_LIMIT;
+  return `${clipped.slice(0, safeEnd).trim().replace(/[.,;:!?]+$/, '')}…`;
+}
+
+function buildReflectionShareMessage(reflection: DailyReflection) {
+  const sections = [
+    reflection.title || 'Dzisiejsza refleksja',
+    joinReflectionText([reflection.opening, reflection.reflection]),
+    reflection.question ? `Pytanie do siebie:\n${reflection.question}` : '',
+    reflection.smallStep ? `Mały krok:\n${formatSmallStepText(reflection.smallStep)}` : '',
+    reflection.closing ? `Domknięcie:\n${reflection.closing}` : '',
+  ].filter(Boolean);
+
+  return sections.join('\n\n');
+}
+
+async function withTimeout<T>(promise: Promise<T>, message: string, timeoutMs = CAPTURE_TIMEOUT_MS) {
+  return await new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    );
+  });
+}
+
+function ReflectionPlaybackKeepAwake() {
+  useKeepAwake('daily-reflection-playback');
+  return null;
+}
+
 export default function RefleksjeScreen() {
+  const params = useLocalSearchParams<{ reflectionId?: string | string[] }>();
   const insets = useSafeAreaInsets();
   const mainScrollRef = useRef<ScrollView | null>(null);
   const readingScrollRef = useRef<ScrollView | null>(null);
+  const shareCardRef = useRef<View | null>(null);
   const readingSectionYRef = useRef(0);
+  const introCardYRef = useRef(0);
+  const didApplyInitialOffsetRef = useRef(false);
   const [currentReflection, setCurrentReflection] = useState<DailyReflection | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [readingContentHeight, setReadingContentHeight] = useState(0);
   const [readingViewportHeight, setReadingViewportHeight] = useState(0);
+  const selectedReflectionId = typeof params.reflectionId === 'string' ? params.reflectionId : Array.isArray(params.reflectionId) ? params.reflectionId[0] : null;
 
   const audioSource = useMemo(() => {
     if (!currentReflection?.audioUrl) return null;
@@ -70,11 +171,19 @@ export default function RefleksjeScreen() {
     readingText || currentReflection?.question || currentReflection?.smallStep || currentReflection?.closing
   );
   const displayTitle = currentReflection?.title || 'Dzisiejsza refleksja';
+  const isFavorite = currentReflection?.id ? favoriteIds.includes(currentReflection.id) : false;
+  const showingSelectedReflection = Boolean(selectedReflectionId && currentReflection?.id === selectedReflectionId);
+  const eyebrowLabel = showingSelectedReflection ? 'Wybrana refleksja' : 'Refleksja na dziś';
+  const shareMessage = currentReflection ? buildReflectionShareMessage(currentReflection) : '';
+  const shareCardExcerpt = buildShareCardExcerpt(readingText);
+  const isExpoGo = Constants.executionEnvironment === 'storeClient';
+  const canShareGraphicCard = !isExpoGo;
 
   const progress =
     status.duration > 0 && status.currentTime > 0 ? Math.min(1, status.currentTime / status.duration) : 0;
   const durationLabel = formatTime(currentReflection?.durationSec ?? status.duration ?? 0);
   const positionLabel = formatTime(status.currentTime ?? 0);
+  const shouldKeepAwake = Boolean(currentReflection?.audioUrl) && (status.playing || status.isBuffering);
 
   useEffect(() => {
     void setAudioModeAsync({
@@ -103,6 +212,15 @@ export default function RefleksjeScreen() {
   }, [currentReflection?.id]);
 
   useEffect(() => {
+    if (loading || didApplyInitialOffsetRef.current) return;
+    if (!mainScrollRef.current) return;
+
+    didApplyInitialOffsetRef.current = true;
+    const targetY = Math.max(0, introCardYRef.current - INITIAL_VIEW_OFFSET);
+    mainScrollRef.current.scrollTo({ y: targetY, animated: false });
+  }, [loading]);
+
+  useEffect(() => {
     if (!readingScrollRef.current || !hasReadingDetails || status.duration <= 0) return;
 
     const maxOffset = Math.max(0, readingContentHeight - readingViewportHeight);
@@ -120,12 +238,18 @@ export default function RefleksjeScreen() {
       setError(null);
 
       try {
-        const loaded = await loadDailyReflections();
+        const [loaded, storedFavoriteIds] = await Promise.all([
+          loadDailyReflections(),
+          loadFavoriteDailyReflectionIds(),
+        ]);
         if (cancelled) return;
 
-        const selected = await getInitialDailyReflection(loaded.reflections);
+        const selected =
+          findDailyReflectionById(loaded.reflections, selectedReflectionId) ??
+          (await getInitialDailyReflection(loaded.reflections));
         if (cancelled) return;
 
+        setFavoriteIds(storedFavoriteIds);
         setCurrentReflection(selected);
         if (!selected) {
           setError('Dzisiejsza refleksja jeszcze się układa. Zajrzyj tu za chwilę.');
@@ -147,15 +271,21 @@ export default function RefleksjeScreen() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedReflectionId]);
 
   const refreshLibrary = async () => {
     setRefreshing(true);
     setError(null);
 
     try {
-      const loaded = await loadDailyReflections();
-      const selected = await getInitialDailyReflection(loaded.reflections);
+      const [loaded, storedFavoriteIds] = await Promise.all([
+        loadDailyReflections(),
+        loadFavoriteDailyReflectionIds(),
+      ]);
+      const selected =
+        findDailyReflectionById(loaded.reflections, selectedReflectionId) ??
+        (await getInitialDailyReflection(loaded.reflections));
+      setFavoriteIds(storedFavoriteIds);
       setCurrentReflection(selected);
       if (!selected) {
         setError('Dzisiejsza refleksja jeszcze się układa. Zajrzyj tu za chwilę.');
@@ -190,11 +320,164 @@ export default function RefleksjeScreen() {
     player.seekTo(nextTime);
   };
 
+  const handleToggleFavorite = async () => {
+    if (!currentReflection?.id || favoriteBusy) return;
+    setFavoriteBusy(true);
+    try {
+      const next = await toggleFavoriteDailyReflection(currentReflection.id);
+      setFavoriteIds(next);
+    } finally {
+      setFavoriteBusy(false);
+    }
+  };
+
+  const openFavorites = () => {
+    router.push('/ulubione-refleksje');
+  };
+
+  const openShareSheet = () => {
+    if (!currentReflection || shareBusy) return;
+    setShareSheetOpen(true);
+  };
+
+  const launchShareFlow = (runner: () => Promise<void>) => {
+    setShareBusy(false);
+    setTimeout(() => {
+      void runner();
+    }, 0);
+  };
+
+  const handleShareText = async () => {
+    if (!currentReflection || shareBusy) return;
+    setShareBusy(true);
+    setShareSheetOpen(false);
+
+    launchShareFlow(async () => {
+      try {
+        await Share.share({ message: shareMessage });
+      } catch (nextError) {
+        console.error('Nie udało się udostępnić tekstu refleksji:', nextError);
+        Alert.alert('Nie udało się udostępnić refleksji', 'Spróbuj ponownie za chwilę.');
+      }
+    });
+  };
+
+  const handleShareCard = async () => {
+    if (!currentReflection || shareBusy) return;
+    setShareBusy(true);
+    setShareSheetOpen(false);
+
+    try {
+      if (isExpoGo) {
+        launchShareFlow(async () => {
+          try {
+            await Share.share({ message: shareMessage });
+          } catch (nextError) {
+            console.error('Nie udało się udostępnić refleksji w Expo Go:', nextError);
+            Alert.alert('Nie udało się udostępnić refleksji', 'Spróbuj ponownie za chwilę.');
+          }
+        });
+        return;
+      }
+
+      if (!shareCardRef.current) {
+        launchShareFlow(async () => {
+          try {
+            await Share.share({ message: shareMessage });
+          } catch (nextError) {
+            console.error('Nie udało się udostępnić tekstu refleksji:', nextError);
+            Alert.alert('Nie udało się udostępnić refleksji', 'Spróbuj ponownie za chwilę.');
+          }
+        });
+        return;
+      }
+
+      const imageUri = await withTimeout(
+        captureRef(shareCardRef, {
+          format: 'png',
+          quality: 1,
+          result: 'tmpfile',
+        }),
+        'Przygotowanie karty trwało zbyt długo.'
+      );
+
+      launchShareFlow(async () => {
+        try {
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(imageUri, {
+              mimeType: 'image/png',
+              UTI: 'public.png',
+              dialogTitle: 'Udostępnij refleksję',
+            });
+            return;
+          }
+
+          await Share.share({ message: shareMessage, url: imageUri });
+        } catch (nextError) {
+          console.error('Nie udało się udostępnić karty refleksji:', nextError);
+          try {
+            await Share.share({ message: shareMessage });
+          } catch {
+            Alert.alert('Nie udało się udostępnić refleksji', 'Spróbuj ponownie za chwilę.');
+          }
+        }
+      });
+    } catch (nextError) {
+      setShareBusy(false);
+      console.error('Nie udało się przygotować karty refleksji:', nextError);
+      launchShareFlow(async () => {
+        try {
+          await Share.share({ message: shareMessage });
+        } catch {
+          Alert.alert('Nie udało się udostępnić refleksji', 'Spróbuj ponownie za chwilę.');
+        }
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {shouldKeepAwake ? <ReflectionPlaybackKeepAwake /> : null}
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
+      <Modal transparent animationType="fade" visible={shareSheetOpen} onRequestClose={() => setShareSheetOpen(false)}>
+        <View style={styles.shareSheetBackdrop}>
+          <Pressable style={styles.shareSheetDismissArea} onPress={() => setShareSheetOpen(false)} />
+          <View style={[styles.shareSheet, { paddingBottom: Math.max(18, insets.bottom + 4) }]}>
+            <View style={styles.shareSheetHandle} />
+            <Text style={styles.shareSheetTitle}>Udostępnij refleksję</Text>
+            <Text style={styles.shareSheetSubtitle}>
+              {canShareGraphicCard
+                ? 'Wybierz spokojniejszą formę: gotowy tekst do wysłania albo kartę graficzną.'
+                : 'Możesz wysłać gotowy tekst refleksji do wybranej osoby lub aplikacji.'}
+            </Text>
+            <Pressable style={styles.shareSheetOption} onPress={handleShareText} disabled={shareBusy}>
+              <View style={[styles.shareSheetIconWrap, { backgroundColor: 'rgba(120,200,255,0.14)' }]}>
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#78C8FF" />
+              </View>
+              <View style={styles.shareSheetTextWrap}>
+                <Text style={styles.shareSheetOptionTitle}>Wyślij jako tekst</Text>
+                <Text style={styles.shareSheetOptionBody}>Dobre do SMS-a, maila i komunikatorów.</Text>
+              </View>
+            </Pressable>
+            {canShareGraphicCard ? (
+              <Pressable style={styles.shareSheetOption} onPress={handleShareCard} disabled={shareBusy}>
+                <View style={[styles.shareSheetIconWrap, { backgroundColor: 'rgba(255,180,199,0.14)' }]}>
+                  <Ionicons name="image-outline" size={20} color="#FFB4C7" />
+                </View>
+                <View style={styles.shareSheetTextWrap}>
+                  <Text style={styles.shareSheetOptionTitle}>Udostępnij kartę</Text>
+                  <Text style={styles.shareSheetOptionBody}>Jedna estetyczna plansza z tytułem i fragmentem refleksji.</Text>
+                </View>
+              </Pressable>
+            ) : null}
+            <Pressable style={styles.shareSheetClose} onPress={() => setShareSheetOpen(false)} disabled={shareBusy}>
+              <Text style={styles.shareSheetCloseText}>Na razie zostaję tutaj</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       <ScrollView
         ref={mainScrollRef}
         style={styles.scroll}
@@ -206,11 +489,29 @@ export default function RefleksjeScreen() {
           Na dziś czeka tu jedna refleksja. Możesz jej posłuchać, spokojnie przeczytać tekst i wracać do niego w swoim rytmie przez cały dzień.
         </Text>
 
-        <View style={styles.card}>
+        <View
+          style={styles.card}
+          onLayout={(event) => {
+            introCardYRef.current = event.nativeEvent.layout.y;
+          }}
+        >
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#8FAFD3' }]} />
-          <Text style={styles.eyebrow}>Refleksja na dziś</Text>
-          <Text style={styles.cardTitle}>{displayTitle}</Text>
+          <View style={styles.titleRow}>
+            <View style={styles.titleWrap}>
+              <Text style={styles.eyebrow}>{eyebrowLabel}</Text>
+              <Text style={styles.cardTitle}>{displayTitle}</Text>
+            </View>
+            {currentReflection ? (
+              <Pressable
+                style={[styles.favoriteIconButton, isFavorite && styles.favoriteIconButtonActive, favoriteBusy && styles.buttonDisabled]}
+                onPress={handleToggleFavorite}
+                disabled={favoriteBusy}
+              >
+                <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={22} color="#FF7A90" />
+              </Pressable>
+            ) : null}
+          </View>
           {loading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator color="#78C8FF" />
@@ -267,6 +568,27 @@ export default function RefleksjeScreen() {
                   <Text style={styles.metaChip}>Nagranie: {durationLabel}</Text>
                 </View>
               ) : null}
+
+              <View style={styles.actionRow}>
+                <Pressable
+                  style={[styles.secondaryBtn, favoriteBusy && styles.buttonDisabled]}
+                  onPress={handleToggleFavorite}
+                  disabled={favoriteBusy}
+                >
+                  <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={18} color="#FF7A90" />
+                  <Text style={styles.secondaryBtnText}>{isFavorite ? 'W ulubionych' : 'Dodaj do ulubionych'}</Text>
+                </Pressable>
+                <Pressable style={styles.secondaryBtn} onPress={openFavorites}>
+                  <Ionicons name="list-outline" size={18} color="#B8C6FF" />
+                  <Text style={styles.secondaryBtnText}>Ulubione refleksje</Text>
+                </Pressable>
+                {!isExpoGo ? (
+                  <Pressable style={[styles.secondaryBtn, shareBusy && styles.buttonDisabled]} onPress={openShareSheet} disabled={shareBusy}>
+                    <Ionicons name="share-social-outline" size={18} color="#9EE7D8" />
+                    <Text style={styles.secondaryBtnText}>{shareBusy ? 'Chwileczkę...' : 'Udostępnij'}</Text>
+                  </Pressable>
+                ) : null}
+              </View>
             </>
           ) : (
             <>
@@ -304,7 +626,7 @@ export default function RefleksjeScreen() {
                     <Text style={styles.reflectionTitle}>{displayTitle}</Text>
                     {readingText ? <Text style={styles.readingText}>{readingText}</Text> : null}
                     <ReflectionTextBlock label="Pytanie do siebie" content={currentReflection.question} accent="#FFB4C7" />
-                    <ReflectionTextBlock label="Mały krok" content={currentReflection.smallStep} accent="#9EE7D8" />
+                    <ReflectionTextBlock label="Mały krok" content={formatSmallStepText(currentReflection.smallStep)} accent="#9EE7D8" />
                     <ReflectionTextBlock label="Domknięcie" content={currentReflection.closing} accent="#B8C6FF" />
                   </ScrollView>
                 </>
@@ -322,6 +644,24 @@ export default function RefleksjeScreen() {
           )}
         </View>
       </ScrollView>
+      {currentReflection ? (
+        <View style={styles.shareCaptureHost} pointerEvents="none">
+          <View ref={shareCardRef} collapsable={false} style={styles.shareCaptureCanvas}>
+            <Image source={Watermark} resizeMode="contain" style={styles.shareCardWatermark} />
+            <View style={styles.shareCardAccent} />
+            <Text style={styles.shareCardEyebrow}>Codzienna refleksja</Text>
+            <Text style={styles.shareCardTitle}>{displayTitle}</Text>
+            <Text style={styles.shareCardBody}>{shareCardExcerpt}</Text>
+            {currentReflection.smallStep ? (
+              <View style={styles.shareStepWrap}>
+                <Text style={styles.shareStepLabel}>Mały krok</Text>
+                <Text style={styles.shareStepText}>{formatSmallStepText(currentReflection.smallStep)}</Text>
+              </View>
+            ) : null}
+            <Text style={styles.shareCardFooter}>Anioł Stróż</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -374,6 +714,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     marginBottom: 10,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  titleWrap: {
+    flex: 1,
+  },
   cardWatermark: {
     position: 'absolute',
     right: -22,
@@ -385,6 +733,20 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '16deg' }],
   },
   cardTitle: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 8 },
+  favoriteIconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  favoriteIconButtonActive: {
+    backgroundColor: 'rgba(255,122,144,0.12)',
+    borderColor: 'rgba(255,122,144,0.28)',
+  },
   cardText: { color: SUB, fontSize: 17, lineHeight: 24 },
   loadingWrap: {
     flexDirection: 'row',
@@ -465,6 +827,12 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
+  actionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 14,
+  },
   metaChip: {
     color: 'white',
     fontSize: 13,
@@ -476,6 +844,102 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.07)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.09)',
+  },
+  secondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  secondaryBtnText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  shareSheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(5,11,19,0.58)',
+    justifyContent: 'flex-end',
+  },
+  shareSheetDismissArea: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  shareSheet: {
+    backgroundColor: '#0A2439',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(159,216,255,0.18)',
+    paddingHorizontal: 18,
+    paddingTop: 14,
+  },
+  shareSheetHandle: {
+    width: 54,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  shareSheetTitle: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  shareSheetSubtitle: {
+    color: SUB,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 14,
+  },
+  shareSheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    padding: 14,
+    marginBottom: 10,
+  },
+  shareSheetIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareSheetTextWrap: {
+    flex: 1,
+  },
+  shareSheetOptionTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  shareSheetOptionBody: {
+    color: MUTED,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  shareSheetClose: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    marginTop: 2,
+  },
+  shareSheetCloseText: {
+    color: '#B8C6FF',
+    fontSize: 15,
+    fontWeight: '700',
   },
   readingBlock: {
     marginTop: 10,
@@ -509,5 +973,82 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: '700',
     marginBottom: 10,
+  },
+  shareCaptureHost: {
+    position: 'absolute',
+    left: -4000,
+    top: 0,
+    width: 1080,
+  },
+  shareCaptureCanvas: {
+    width: 1080,
+    backgroundColor: BG,
+    padding: 44,
+  },
+  shareCardWatermark: {
+    position: 'absolute',
+    right: 18,
+    bottom: 18,
+    width: 320,
+    height: 320,
+    opacity: 0.08,
+    tintColor: 'white',
+    transform: [{ rotate: '14deg' }],
+  },
+  shareCardAccent: {
+    width: 108,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#78C8FF',
+    marginBottom: 24,
+  },
+  shareCardEyebrow: {
+    color: '#9EE7D8',
+    fontSize: 26,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 18,
+  },
+  shareCardTitle: {
+    color: 'white',
+    fontSize: 56,
+    lineHeight: 68,
+    fontWeight: '800',
+    marginBottom: 26,
+  },
+  shareCardBody: {
+    color: 'rgba(232,245,255,0.94)',
+    fontSize: 34,
+    lineHeight: 49,
+    marginBottom: 28,
+  },
+  shareStepWrap: {
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(158,231,216,0.26)',
+    backgroundColor: 'rgba(158,231,216,0.08)',
+    padding: 24,
+    marginTop: 4,
+  },
+  shareStepLabel: {
+    color: '#9EE7D8',
+    fontSize: 24,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1.1,
+    marginBottom: 12,
+  },
+  shareStepText: {
+    color: 'white',
+    fontSize: 28,
+    lineHeight: 40,
+  },
+  shareCardFooter: {
+    color: 'rgba(232,245,255,0.64)',
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginTop: 28,
   },
 });

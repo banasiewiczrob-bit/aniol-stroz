@@ -5,6 +5,11 @@ import { runMigrationsIfNeeded } from '@/hooks/useDataMigrations';
 import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, subscribeAppSettingsChanges } from '@/hooks/useAppSettings';
 import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // If the splash is already controlled by the native layer, we can continue quietly.
+});
 
 export const Array = {
   // To wymusza na routerze zachowanie statyczne, co często naprawia ten błąd
@@ -60,8 +65,15 @@ export default function RootLayout() {
     }
   }, [migrationsReady, pathname, startupRedirectDone]);
 
+  useEffect(() => {
+    if (!migrationsReady) return;
+    void SplashScreen.hideAsync().catch(() => {
+      // Avoid surfacing a startup error if the splash has already been hidden.
+    });
+  }, [migrationsReady]);
+
   if (!migrationsReady) {
-    return null;
+    return <View style={styles.root} />;
   }
 
   const uiScale = appSettings.textScale === 'small' ? 0.97 : appSettings.textScale === 'large' ? 1.04 : 1;
@@ -84,6 +96,14 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="kontrakt"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="liczniki"
             options={{
               gestureEnabled: true,
               fullScreenGestureEnabled: true,
@@ -188,6 +208,14 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="codzienne-refleksje"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="ulubione-refleksje"
             options={{
               gestureEnabled: true,
               fullScreenGestureEnabled: true,

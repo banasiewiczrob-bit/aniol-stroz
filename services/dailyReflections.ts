@@ -6,6 +6,7 @@ const PUBLIC_STORAGE_BASE = `${SUPABASE_URL.replace(/\/+$/, '')}/storage/v1/obje
 const REFLECTIONS_BUCKET = 'daily-reflections';
 const REFLECTIONS_MANIFEST_PATH = 'manifests/daily-reflections.json';
 const MANIFEST_CACHE_KEY = '@daily_reflections_manifest_cache_v1';
+const FAVORITE_REFLECTION_IDS_KEY = '@daily_reflections_favorites_v1';
 
 export type DailyReflection = {
   id: string;
@@ -187,6 +188,23 @@ function getSelectableReflections(reflections: DailyReflection[]) {
   return playable.length > 0 ? playable : active;
 }
 
+function normalizeFavoriteIds(raw: unknown) {
+  if (!Array.isArray(raw)) return [];
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const value of raw) {
+    if (typeof value !== 'string') continue;
+    const id = value.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    normalized.push(id);
+  }
+
+  return normalized;
+}
+
 function getStableDailyHash(value: string) {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -363,4 +381,50 @@ export async function loadDailyReflections(): Promise<{ reflections: DailyReflec
 export async function getInitialDailyReflection(reflections: DailyReflection[]) {
   const dateKey = getLocalDateKey();
   return pickReflectionForDate(reflections, dateKey);
+}
+
+export function findDailyReflectionById(reflections: DailyReflection[], reflectionId: string | null | undefined) {
+  const normalizedId = typeof reflectionId === 'string' ? reflectionId.trim() : '';
+  if (!normalizedId) return null;
+  return reflections.find((item) => item.id === normalizedId) ?? null;
+}
+
+export function listFavoriteDailyReflections(reflections: DailyReflection[], favoriteIds: string[]) {
+  const normalizedIds = normalizeFavoriteIds(favoriteIds);
+  const byId = new Map(reflections.map((item) => [item.id, item] as const));
+
+  return normalizedIds
+    .map((favoriteId) => byId.get(favoriteId) ?? null)
+    .filter((item): item is DailyReflection => item !== null);
+}
+
+export async function loadFavoriteDailyReflectionIds() {
+  const raw = await AsyncStorage.getItem(FAVORITE_REFLECTION_IDS_KEY);
+  if (!raw) return [];
+
+  try {
+    return normalizeFavoriteIds(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+export async function saveFavoriteDailyReflectionIds(favoriteIds: string[]) {
+  const normalized = normalizeFavoriteIds(favoriteIds);
+  await AsyncStorage.setItem(FAVORITE_REFLECTION_IDS_KEY, JSON.stringify(normalized));
+  return normalized;
+}
+
+export async function toggleFavoriteDailyReflection(reflectionId: string) {
+  const normalizedId = reflectionId.trim();
+  if (!normalizedId) {
+    return loadFavoriteDailyReflectionIds();
+  }
+
+  const current = await loadFavoriteDailyReflectionIds();
+  const next = current.includes(normalizedId)
+    ? current.filter((item) => item !== normalizedId)
+    : [normalizedId, ...current];
+
+  return saveFavoriteDailyReflectionIds(next);
 }

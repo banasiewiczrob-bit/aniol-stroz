@@ -21,6 +21,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#071826",
+          "image": "./app/assets/images/icon-stroz.png",
+          "imageWidth": 180
+        }
+      ],
         [
           "expo-contacts",
           {
