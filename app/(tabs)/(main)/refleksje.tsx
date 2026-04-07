@@ -27,6 +27,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BG = '#061A2C';
@@ -34,12 +35,13 @@ const CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
 const SUB = 'rgba(232,245,255,0.84)';
 const MUTED = 'rgba(232,245,255,0.66)';
-const INITIAL_VIEW_OFFSET = 132;
+const INITIAL_VIEW_OFFSET = 18;
 const TEXT_SECTION_SCROLL_OFFSET = 18;
 const TEXT_AUTO_SCROLL_MULTIPLIER = 1.2;
 const SMALL_STEP_ENDING_LINE = 'I niech to będzie Twój mały krok na dziś.';
-const SHARE_CARD_CHAR_LIMIT = 420;
+const SHARE_CARD_CHAR_LIMIT = 280;
 const CAPTURE_TIMEOUT_MS = 12000;
+const APP_NAME = 'Anioł Stróż';
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 function formatTime(value: number) {
@@ -107,9 +109,22 @@ function buildReflectionShareMessage(reflection: DailyReflection) {
     reflection.question ? `Pytanie do siebie:\n${reflection.question}` : '',
     reflection.smallStep ? `Mały krok:\n${formatSmallStepText(reflection.smallStep)}` : '',
     reflection.closing ? `Domknięcie:\n${reflection.closing}` : '',
+    reflection.audioUrl
+      ? `Tej refleksji możesz też posłuchać w aplikacji ${APP_NAME}.`
+      : `Znajdziesz tę refleksję w aplikacji ${APP_NAME}.`,
   ].filter(Boolean);
 
   return sections.join('\n\n');
+}
+
+function buildReflectionShareCallout(reflection: DailyReflection | null) {
+  if (!reflection) {
+    return `Znajdziesz tę refleksję w aplikacji ${APP_NAME}.`;
+  }
+
+  return reflection.audioUrl
+    ? `Tej refleksji możesz też posłuchać w aplikacji ${APP_NAME}.`
+    : `Znajdziesz tę refleksję w aplikacji ${APP_NAME}.`;
 }
 
 async function withTimeout<T>(promise: Promise<T>, message: string, timeoutMs = CAPTURE_TIMEOUT_MS) {
@@ -176,8 +191,18 @@ export default function RefleksjeScreen() {
   const eyebrowLabel = showingSelectedReflection ? 'Wybrana refleksja' : 'Refleksja na dziś';
   const shareMessage = currentReflection ? buildReflectionShareMessage(currentReflection) : '';
   const shareCardExcerpt = buildShareCardExcerpt(readingText);
+  const shareCardCallout = buildReflectionShareCallout(currentReflection);
   const isExpoGo = Constants.executionEnvironment === 'storeClient';
   const canShareGraphicCard = !isExpoGo;
+
+  const scrollToIntroCard = React.useCallback(
+    (animated = false) => {
+      if (!mainScrollRef.current) return;
+      const targetY = Math.max(0, introCardYRef.current - INITIAL_VIEW_OFFSET);
+      mainScrollRef.current.scrollTo({ y: targetY, animated });
+    },
+    []
+  );
 
   const progress =
     status.duration > 0 && status.currentTime > 0 ? Math.min(1, status.currentTime / status.duration) : 0;
@@ -216,9 +241,25 @@ export default function RefleksjeScreen() {
     if (!mainScrollRef.current) return;
 
     didApplyInitialOffsetRef.current = true;
-    const targetY = Math.max(0, introCardYRef.current - INITIAL_VIEW_OFFSET);
-    mainScrollRef.current.scrollTo({ y: targetY, animated: false });
-  }, [loading]);
+    scrollToIntroCard(false);
+  }, [loading, scrollToIntroCard]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      didApplyInitialOffsetRef.current = false;
+
+      const frameId = requestAnimationFrame(() => {
+        if (!loading) {
+          didApplyInitialOffsetRef.current = true;
+          scrollToIntroCard(false);
+        }
+      });
+
+      return () => {
+        cancelAnimationFrame(frameId);
+      };
+    }, [loading, scrollToIntroCard])
+  );
 
   useEffect(() => {
     if (!readingScrollRef.current || !hasReadingDetails || status.duration <= 0) return;
@@ -440,7 +481,7 @@ export default function RefleksjeScreen() {
       {shouldKeepAwake ? <ReflectionPlaybackKeepAwake /> : null}
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
-      <BackButton />
+      <BackButton showSwipeHint={false} />
       <Modal transparent animationType="fade" visible={shareSheetOpen} onRequestClose={() => setShareSheetOpen(false)}>
         <View style={styles.shareSheetBackdrop}>
           <Pressable style={styles.shareSheetDismissArea} onPress={() => setShareSheetOpen(false)} />
@@ -468,7 +509,7 @@ export default function RefleksjeScreen() {
                 </View>
                 <View style={styles.shareSheetTextWrap}>
                   <Text style={styles.shareSheetOptionTitle}>Udostępnij kartę</Text>
-                  <Text style={styles.shareSheetOptionBody}>Jedna estetyczna plansza z tytułem i fragmentem refleksji.</Text>
+                  <Text style={styles.shareSheetOptionBody}>Estetyczna plansza z fragmentem refleksji i zaproszeniem do odsłuchu w aplikacji.</Text>
                 </View>
               </Pressable>
             ) : null}
@@ -647,18 +688,31 @@ export default function RefleksjeScreen() {
       {currentReflection ? (
         <View style={styles.shareCaptureHost} pointerEvents="none">
           <View ref={shareCardRef} collapsable={false} style={styles.shareCaptureCanvas}>
+            <View style={styles.shareCardGlowA} />
+            <View style={styles.shareCardGlowB} />
             <Image source={Watermark} resizeMode="contain" style={styles.shareCardWatermark} />
+            <View style={styles.shareCardTopRow}>
+              <View style={styles.shareCardBadge}>
+                <Text style={styles.shareCardBadgeText}>{APP_NAME}</Text>
+              </View>
+              <View style={styles.shareCardListenBadge}>
+                <Text style={styles.shareCardListenBadgeText}>
+                  {currentReflection.audioUrl ? 'Do odsłuchania w aplikacji' : 'Dostępne w aplikacji'}
+                </Text>
+              </View>
+            </View>
             <View style={styles.shareCardAccent} />
             <Text style={styles.shareCardEyebrow}>Codzienna refleksja</Text>
             <Text style={styles.shareCardTitle}>{displayTitle}</Text>
-            <Text style={styles.shareCardBody}>{shareCardExcerpt}</Text>
-            {currentReflection.smallStep ? (
-              <View style={styles.shareStepWrap}>
-                <Text style={styles.shareStepLabel}>Mały krok</Text>
-                <Text style={styles.shareStepText}>{formatSmallStepText(currentReflection.smallStep)}</Text>
-              </View>
-            ) : null}
-            <Text style={styles.shareCardFooter}>Anioł Stróż</Text>
+            <View style={styles.shareQuoteWrap}>
+              <Text style={styles.shareQuoteMark}>“</Text>
+              <Text style={styles.shareCardBody}>{shareCardExcerpt}</Text>
+            </View>
+            <View style={styles.shareCalloutWrap}>
+              <Text style={styles.shareCalloutLabel}>Posłuchaj dalej</Text>
+              <Text style={styles.shareCalloutText}>{shareCardCallout}</Text>
+            </View>
+            <Text style={styles.shareCardFooter}>{APP_NAME} • codzienne refleksje</Text>
           </View>
         </View>
       ) : null}
@@ -983,72 +1037,149 @@ const styles = StyleSheet.create({
   shareCaptureCanvas: {
     width: 1080,
     backgroundColor: BG,
-    padding: 44,
+    paddingHorizontal: 52,
+    paddingTop: 52,
+    paddingBottom: 56,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  shareCardGlowA: {
+    position: 'absolute',
+    width: 520,
+    height: 520,
+    borderRadius: 260,
+    backgroundColor: 'rgba(120,200,255,0.14)',
+    top: -160,
+    right: -140,
+  },
+  shareCardGlowB: {
+    position: 'absolute',
+    width: 460,
+    height: 460,
+    borderRadius: 230,
+    backgroundColor: 'rgba(184,198,255,0.12)',
+    bottom: -180,
+    left: -150,
   },
   shareCardWatermark: {
     position: 'absolute',
-    right: 18,
-    bottom: 18,
-    width: 320,
-    height: 320,
-    opacity: 0.08,
+    right: -24,
+    bottom: -12,
+    width: 360,
+    height: 360,
+    opacity: 0.06,
     tintColor: 'white',
     transform: [{ rotate: '14deg' }],
   },
+  shareCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 14,
+    marginBottom: 24,
+  },
+  shareCardBadge: {
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  shareCardBadgeText: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  shareCardListenBadge: {
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(158,231,216,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(158,231,216,0.24)',
+  },
+  shareCardListenBadgeText: {
+    color: '#9EE7D8',
+    fontSize: 21,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
   shareCardAccent: {
-    width: 108,
+    width: 132,
     height: 8,
     borderRadius: 999,
     backgroundColor: '#78C8FF',
-    marginBottom: 24,
+    marginBottom: 22,
   },
   shareCardEyebrow: {
-    color: '#9EE7D8',
-    fontSize: 26,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    marginBottom: 18,
-  },
-  shareCardTitle: {
-    color: 'white',
-    fontSize: 56,
-    lineHeight: 68,
-    fontWeight: '800',
-    marginBottom: 26,
-  },
-  shareCardBody: {
-    color: 'rgba(232,245,255,0.94)',
-    fontSize: 34,
-    lineHeight: 49,
-    marginBottom: 28,
-  },
-  shareStepWrap: {
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(158,231,216,0.26)',
-    backgroundColor: 'rgba(158,231,216,0.08)',
-    padding: 24,
-    marginTop: 4,
-  },
-  shareStepLabel: {
     color: '#9EE7D8',
     fontSize: 24,
     fontWeight: '800',
     textTransform: 'uppercase',
-    letterSpacing: 1.1,
-    marginBottom: 12,
+    letterSpacing: 1.3,
+    marginBottom: 16,
   },
-  shareStepText: {
+  shareCardTitle: {
     color: 'white',
-    fontSize: 28,
-    lineHeight: 40,
+    fontSize: 60,
+    lineHeight: 72,
+    fontWeight: '800',
+    marginBottom: 28,
+    maxWidth: 860,
+  },
+  shareQuoteWrap: {
+    position: 'relative',
+    borderRadius: 34,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(5,17,28,0.42)',
+    paddingTop: 42,
+    paddingRight: 34,
+    paddingBottom: 34,
+    paddingLeft: 34,
+    marginBottom: 26,
+  },
+  shareQuoteMark: {
+    position: 'absolute',
+    top: 8,
+    left: 20,
+    color: 'rgba(120,200,255,0.28)',
+    fontSize: 82,
+    lineHeight: 82,
+    fontWeight: '800',
+  },
+  shareCardBody: {
+    color: 'rgba(232,245,255,0.94)',
+    fontSize: 36,
+    lineHeight: 52,
+  },
+  shareCalloutWrap: {
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(120,200,255,0.24)',
+    backgroundColor: 'rgba(120,200,255,0.08)',
+    padding: 24,
+  },
+  shareCalloutLabel: {
+    color: '#78C8FF',
+    fontSize: 22,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  shareCalloutText: {
+    color: 'white',
+    fontSize: 30,
+    lineHeight: 42,
   },
   shareCardFooter: {
     color: 'rgba(232,245,255,0.64)',
     fontSize: 24,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
     marginTop: 28,
   },
 });

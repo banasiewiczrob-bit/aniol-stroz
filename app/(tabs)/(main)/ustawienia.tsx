@@ -1,7 +1,13 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
-import { DAILY_TEXTS_STORAGE_KEY } from '@/constants/daily-texts';
-import { CONTRACT_SIGNED_STORAGE_KEY, JOURNALS_DRAFTS_STORAGE_KEY, JOURNALS_ENTRIES_STORAGE_KEY } from '@/constants/storageKeys';
+import {
+  ANNIVERSARY_SEEN_STORAGE_KEY,
+  APP_RESET_STORAGE_KEYS,
+  CLOUD_BACKUP_RECOVERY_CODE_STORAGE_KEY,
+  SETTINGS_SECTIONS_STORAGE_KEY,
+  START_DATE_STORAGE_KEY,
+} from '@/constants/appDataStorageKeys';
+import { CONTRACT_SIGNED_STORAGE_KEY } from '@/constants/storageKeys';
 import {
   DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS,
   DailyPlanNotificationSettings,
@@ -10,11 +16,32 @@ import {
   resetDailyPlanNotificationSettings,
   saveDailyPlanNotificationSettings,
 } from '@/hooks/useDailyPlanNotifications';
-import { getFirstStepsState, recomputeFirstStepsDone, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
-import { APP_SETTINGS_STORAGE_KEY, AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from '@/hooks/useAppSettings';
+import { runMigrationsIfNeeded } from '@/hooks/useDataMigrations';
+import { recomputeFirstStepsDone } from '@/hooks/useFirstSteps';
+import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from '@/hooks/useAppSettings';
+import {
+  AppBackupPayload,
+  createAppBackupFile,
+  createAppBackupPayload,
+  getAppBackupSummary,
+  pickAppBackupFile,
+  restoreAppBackupPayload,
+} from '@/services/appBackup';
+import {
+  ensureCurrentBackupSchema,
+  fetchCloudBackup,
+  formatCloudBackupRecoveryCode,
+  generateCloudBackupRecoveryCode,
+  isCloudBackupFeatureEnabled,
+  isCloudBackupRuntimeSupported,
+  isValidCloudBackupRecoveryCode,
+  normalizeCloudBackupRecoveryCode,
+  saveCloudBackup,
+} from '@/services/cloudBackup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import Constants from 'expo-constants';
+import * as Sharing from 'expo-sharing';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -26,6 +53,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  Share,
   ScrollView,
   StyleSheet,
   Switch,
@@ -36,25 +64,6 @@ import {
 
 const BG = '#061A2C';
 const SUB = 'rgba(232,245,255,0.84)';
-const SETTINGS_SECTIONS_STORAGE_KEY = '@settings_sections_expanded';
-const START_DATE_STORAGE_KEY = 'startDate';
-const ANNIVERSARY_SEEN_STORAGE_KEY = '@anniversary_seen_once';
-const DAILY_PLAN_STORAGE_KEY = '@daily_task';
-const DAILY_PLAN_ARCHIVE_STORAGE_KEY = '@daily_task_archive';
-const MIGRATIONS_VERSION_KEY = '@migrations_version';
-const DAILY_PLAN_NOTIFICATION_IDS_STORAGE_KEY = '@daily_plan_notification_ids';
-const DAILY_PLAN_NOTIFICATION_SETTINGS_STORAGE_KEY = '@daily_plan_notification_settings';
-const INTELLIGENT_SUPPORT_STATE_KEY = '@intelligent_support_state_v1';
-const VISITED_TILES_STORAGE_KEY = '@visited_tiles_v1';
-const SUPPORT_CONTACTS_STORAGE_KEY = '@support_contacts';
-const SOS_CONTACT_STORAGE_KEY = '@sos_contact_v1';
-const LOSS_COUNTER_STORAGE_KEY = '@loss_counter_v1';
-const NOTE_STORAGE_KEY = 'single_note_v1';
-const COMMUNITY_THREADS_STORAGE_KEY = '@community_threads_v1';
-const COMMUNITY_COMMENTS_STORAGE_KEY = '@community_comments_v1';
-const COMMUNITY_MAIN_ROOM_MESSAGES_STORAGE_KEY = '@community_main_room_messages_v1';
-const COMMUNITY_SEEDED_STORAGE_KEY = '@community_seeded_v1';
-const EMOTION_JOURNAL_LAB_STORAGE_KEY = '@emotion_journal_lab_v2';
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 type ConsentKey =
@@ -83,33 +92,6 @@ const ONBOARDING_EXPANDED_STATE: SectionExpandedState = {
   intelligentSupport: false,
   personalization: false,
 };
-
-const FULL_APP_RESET_STORAGE_KEYS = [
-  APP_SETTINGS_STORAGE_KEY,
-  SETTINGS_SECTIONS_STORAGE_KEY,
-  CONTRACT_SIGNED_STORAGE_KEY,
-  START_DATE_STORAGE_KEY,
-  ANNIVERSARY_SEEN_STORAGE_KEY,
-  DAILY_PLAN_STORAGE_KEY,
-  DAILY_PLAN_ARCHIVE_STORAGE_KEY,
-  DAILY_TEXTS_STORAGE_KEY,
-  JOURNALS_ENTRIES_STORAGE_KEY,
-  JOURNALS_DRAFTS_STORAGE_KEY,
-  DAILY_PLAN_NOTIFICATION_IDS_STORAGE_KEY,
-  DAILY_PLAN_NOTIFICATION_SETTINGS_STORAGE_KEY,
-  INTELLIGENT_SUPPORT_STATE_KEY,
-  VISITED_TILES_STORAGE_KEY,
-  SUPPORT_CONTACTS_STORAGE_KEY,
-  SOS_CONTACT_STORAGE_KEY,
-  LOSS_COUNTER_STORAGE_KEY,
-  NOTE_STORAGE_KEY,
-  COMMUNITY_THREADS_STORAGE_KEY,
-  COMMUNITY_COMMENTS_STORAGE_KEY,
-  COMMUNITY_MAIN_ROOM_MESSAGES_STORAGE_KEY,
-  COMMUNITY_SEEDED_STORAGE_KEY,
-  EMOTION_JOURNAL_LAB_STORAGE_KEY,
-  MIGRATIONS_VERSION_KEY,
-] as const;
 
 function normalizeSectionExpanded(value: unknown): SectionExpandedState {
   if (!value || typeof value !== 'object') {
@@ -170,6 +152,29 @@ function parseTime(value: string) {
   return { hour, minute };
 }
 
+function formatBackupDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'nieznana data';
+  return date.toLocaleString('pl-PL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function isUserCancelledFileAction(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : typeof error === 'string'
+        ? error.toLowerCase()
+        : '';
+
+  return message.includes('cancel') || message.includes('anulow');
+}
+
 export default function UstawieniaScreen() {
   const params = useLocalSearchParams<{ openSection?: string }>();
   const [loading, setLoading] = useState(true);
@@ -181,6 +186,7 @@ export default function UstawieniaScreen() {
   );
   const [morningTime, setMorningTime] = useState('08:00');
   const [eveningTime, setEveningTime] = useState('20:00');
+  const [cloudBackupCode, setCloudBackupCode] = useState('');
 
   const [appSettings, setAppSettingsState] = useState<AppSettings>(DEFAULT_APP_SETTINGS);
   const [sectionExpanded, setSectionExpanded] = useState<SectionExpandedState>(DEFAULT_SECTION_EXPANDED);
@@ -203,6 +209,9 @@ export default function UstawieniaScreen() {
     () => Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.0',
     []
   );
+  const cloudBackupFeatureEnabled = useMemo(() => isCloudBackupFeatureEnabled(), []);
+  const cloudBackupRuntimeSupported = useMemo(() => isCloudBackupRuntimeSupported(), []);
+  const cloudBackupReady = cloudBackupFeatureEnabled && cloudBackupRuntimeSupported;
   const canSimulateOnboarding = useMemo(() => {
     const appOwnership = (Constants as { appOwnership?: string | null }).appOwnership;
     const executionEnvironment = (Constants as { executionEnvironment?: string | null }).executionEnvironment;
@@ -362,10 +371,11 @@ export default function UstawieniaScreen() {
   ]);
 
   const loadAllSettings = async () => {
-    const [notif, app, savedSectionExpandedRaw] = await Promise.all([
+    const [notif, app, savedSectionExpandedRaw, savedCloudBackupCode] = await Promise.all([
       loadDailyPlanNotificationSettings(),
       loadAppSettings(),
       AsyncStorage.getItem(SETTINGS_SECTIONS_STORAGE_KEY),
+      AsyncStorage.getItem(CLOUD_BACKUP_RECOVERY_CODE_STORAGE_KEY),
     ]);
     const safeNotif = app.privacyConsentNotifications ? notif : { ...notif, enabled: false };
     const savedSectionExpanded = parseSectionExpanded(savedSectionExpandedRaw);
@@ -378,6 +388,7 @@ export default function UstawieniaScreen() {
     setNotificationSettings(safeNotif);
     setMorningTime(`${pad(safeNotif.morningHour)}:${pad(safeNotif.morningMinute)}`);
     setEveningTime(`${pad(safeNotif.eveningHour)}:${pad(safeNotif.eveningMinute)}`);
+    setCloudBackupCode(savedCloudBackupCode ?? '');
     setAppSettingsState(app);
 
     if (!app.firstRunSetupDone) {
@@ -704,12 +715,13 @@ export default function UstawieniaScreen() {
               await saveDailyPlanNotificationSettings(resetNotifications);
               await ensureDailyPlanNotifications(resetNotifications);
               await saveAppSettings(DEFAULT_APP_SETTINGS);
-              await AsyncStorage.multiRemove([...FULL_APP_RESET_STORAGE_KEYS]);
+              await AsyncStorage.multiRemove([...APP_RESET_STORAGE_KEYS]);
 
               setAppSettingsState(DEFAULT_APP_SETTINGS);
               setNotificationSettings(resetNotifications);
               setMorningTime(`${pad(resetNotifications.morningHour)}:${pad(resetNotifications.morningMinute)}`);
               setEveningTime(`${pad(resetNotifications.eveningHour)}:${pad(resetNotifications.eveningMinute)}`);
+              setCloudBackupCode('');
               setOnboardingSettingsRequired(true);
               setFullAccessModalVisible(false);
               await persistSectionExpandedState(ONBOARDING_EXPANDED_STATE);
@@ -743,6 +755,207 @@ export default function UstawieniaScreen() {
     } catch (e) {
       console.error('Błąd przywracania preferencji planu:', e);
       Alert.alert('Błąd', 'Nie udało się przywrócić preferencji planu.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportAppBackup = async () => {
+    setBusy(true);
+    setNotice('');
+
+    try {
+      const { file, payload, serialized } = await createAppBackupFile(appVersion);
+      const { keyCount } = getAppBackupSummary(payload);
+
+      try {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(file.uri, {
+            dialogTitle: 'Zapisz kopię danych',
+            mimeType: 'application/json',
+            UTI: 'public.json',
+          });
+        } else {
+          await Share.share({
+            title: 'Kopia danych Anioł Stróż',
+            message: serialized,
+          });
+        }
+
+        setNotice(
+          `Kopia danych została przygotowana. Obejmuje ${keyCount} obszarów danych i warto zachować ją w bezpiecznym miejscu.`
+        );
+      } catch (error) {
+        if (isUserCancelledFileAction(error)) {
+          setNotice('Kopia danych została przygotowana, ale nie została jeszcze udostępniona.');
+          return;
+        }
+
+        throw error;
+      }
+    } catch (e) {
+      console.error('Błąd eksportu kopii danych:', e);
+      Alert.alert('Błąd', 'Nie udało się przygotować kopii danych.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmRestoreBackup = async (payload: AppBackupPayload, nextCloudRecoveryCode?: string) => {
+    setBusy(true);
+    setNotice('');
+
+    try {
+      await restoreAppBackupPayload(payload);
+      if (typeof nextCloudRecoveryCode === 'string' && nextCloudRecoveryCode.length > 0) {
+        const formattedCode = formatCloudBackupRecoveryCode(nextCloudRecoveryCode);
+        await AsyncStorage.setItem(CLOUD_BACKUP_RECOVERY_CODE_STORAGE_KEY, formattedCode);
+        setCloudBackupCode(formattedCode);
+      }
+      await runMigrationsIfNeeded();
+      await recomputeFirstStepsDone();
+      await loadAllSettings();
+
+      const [restoredSettings, restoredNotifications] = await Promise.all([
+        loadAppSettings(),
+        loadDailyPlanNotificationSettings(),
+      ]);
+      const notificationsToApply = restoredSettings.privacyConsentNotifications
+        ? restoredNotifications
+        : { ...restoredNotifications, enabled: false };
+
+      await ensureDailyPlanNotifications(notificationsToApply);
+      setNotice(`Przywrócono kopię danych z ${formatBackupDateTime(payload.createdAt)}.`);
+
+      if (!restoredSettings.firstRunSetupDone) {
+        router.replace('/intro');
+      }
+    } catch (e) {
+      console.error('Błąd przywracania kopii danych:', e);
+      Alert.alert('Błąd', 'Nie udało się przywrócić kopii danych.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const importAppBackup = async () => {
+    setBusy(true);
+    setNotice('');
+
+    try {
+      const { payload } = await pickAppBackupFile();
+      const summary = getAppBackupSummary(payload);
+      const appVersionHint = summary.appVersion ? `\nWersja aplikacji: ${summary.appVersion}.` : '';
+
+      Alert.alert(
+        'Przywrócić kopię danych?',
+        `Kopia z ${formatBackupDateTime(summary.createdAt)}.\nObejmuje ${summary.keyCount} obszarów danych.${appVersionHint}\n\nTo nadpisze obecne lokalne dane na tym urządzeniu.`,
+        [
+          { text: 'Anuluj', style: 'cancel' },
+          {
+            text: 'Przywróć',
+            style: 'destructive',
+            onPress: () => {
+              void confirmRestoreBackup(payload);
+            },
+          },
+        ]
+      );
+    } catch (e) {
+      if (isUserCancelledFileAction(e)) {
+        return;
+      }
+
+      console.error('Błąd wyboru kopii danych:', e);
+      Alert.alert('Błąd', 'Nie udało się odczytać wybranego pliku kopii.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveCloudBackupToSupabase = async () => {
+    if (!cloudBackupFeatureEnabled) {
+      Alert.alert('Backup w chmurze', 'Ta funkcja jest wyłączona w tej konfiguracji aplikacji.');
+      return;
+    }
+    if (!cloudBackupRuntimeSupported) {
+      Alert.alert('Backup w chmurze', 'Ten build nie obsługuje szyfrowanego backupu w chmurze.');
+      return;
+    }
+
+    setBusy(true);
+    setNotice('');
+
+    try {
+      const normalizedCurrentCode = normalizeCloudBackupRecoveryCode(cloudBackupCode);
+      const nextCode = normalizedCurrentCode || normalizeCloudBackupRecoveryCode(generateCloudBackupRecoveryCode());
+      const formattedCode = formatCloudBackupRecoveryCode(nextCode);
+      const createdNewCode = normalizedCurrentCode.length === 0;
+      const payload = await createAppBackupPayload(appVersion);
+      const summary = getAppBackupSummary(payload);
+
+      await saveCloudBackup(payload, nextCode);
+      await AsyncStorage.setItem(CLOUD_BACKUP_RECOVERY_CODE_STORAGE_KEY, formattedCode);
+      setCloudBackupCode(formattedCode);
+
+      setNotice(
+        `Kopia w chmurze została zapisana. Obejmuje ${summary.keyCount} obszarów danych i możesz ją odzyskać podając zapisany kod.`
+      );
+
+      if (createdNewCode) {
+        Alert.alert(
+          'Zapisz kod odzyskiwania',
+          `Twój kod do przywrócenia kopii z chmury:\n\n${formattedCode}\n\nZachowaj go w bezpiecznym miejscu. Bez tego kodu nie da się odzyskać danych na nowym urządzeniu.`
+        );
+      }
+    } catch (e) {
+      console.error('Błąd zapisu kopii w chmurze:', e);
+      Alert.alert('Błąd', 'Nie udało się zapisać kopii danych w chmurze.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const restoreCloudBackupFromSupabase = async () => {
+    if (!cloudBackupFeatureEnabled) {
+      Alert.alert('Backup w chmurze', 'Ta funkcja jest wyłączona w tej konfiguracji aplikacji.');
+      return;
+    }
+    if (!cloudBackupRuntimeSupported) {
+      Alert.alert('Backup w chmurze', 'Ten build nie obsługuje szyfrowanego backupu w chmurze.');
+      return;
+    }
+
+    const normalizedCode = normalizeCloudBackupRecoveryCode(cloudBackupCode);
+    if (!isValidCloudBackupRecoveryCode(normalizedCode)) {
+      Alert.alert('Brak kodu', 'Wpisz poprawny kod odzyskiwania kopii z chmury.');
+      return;
+    }
+
+    setBusy(true);
+    setNotice('');
+
+    try {
+      const payload = ensureCurrentBackupSchema(await fetchCloudBackup(normalizedCode));
+      const summary = getAppBackupSummary(payload);
+
+      Alert.alert(
+        'Przywrócić kopię z chmury?',
+        `Kopia z ${formatBackupDateTime(summary.createdAt)}.\nObejmuje ${summary.keyCount} obszarów danych.${summary.appVersion ? `\nWersja aplikacji: ${summary.appVersion}.` : ''}\n\nTo nadpisze obecne lokalne dane na tym urządzeniu.`,
+        [
+          { text: 'Anuluj', style: 'cancel' },
+          {
+            text: 'Przywróć',
+            style: 'destructive',
+            onPress: () => {
+              void confirmRestoreBackup(payload, normalizedCode);
+            },
+          },
+        ]
+      );
+    } catch (e) {
+      console.error('Błąd pobierania kopii z chmury:', e);
+      Alert.alert('Błąd', e instanceof Error ? e.message : 'Nie udało się pobrać kopii danych z chmury.');
     } finally {
       setBusy(false);
     }
@@ -1182,6 +1395,78 @@ export default function UstawieniaScreen() {
               </Pressable>
             </>
           ) : null}
+        </View>
+        ) : null}
+
+        {!onboardingSettingsRequired ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Kopia danych</Text>
+          <Text style={styles.cardText}>
+            Wyeksportuj lokalne dane aplikacji do pliku JSON, żeby móc je odtworzyć po zmianie telefonu albo reinstalacji.
+          </Text>
+          <Text style={styles.warningText}>
+            Plik kopii może zawierać prywatne treści z dzienników, planu dnia i ustawień. Zachowaj go w bezpiecznym miejscu.
+          </Text>
+          <Pressable
+            style={[styles.buttonPrimary, busy && styles.buttonDisabled]}
+            disabled={busy}
+            onPress={() => void exportAppBackup()}
+          >
+            <Text style={styles.buttonPrimaryText}>Eksportuj kopię danych</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.buttonSecondary, busy && styles.buttonDisabled]}
+            disabled={busy}
+            onPress={() => void importAppBackup()}
+          >
+            <Text style={styles.buttonSecondaryText}>Przywróć dane z pliku</Text>
+          </Pressable>
+          {cloudBackupFeatureEnabled ? (
+            <>
+              <Text style={styles.fieldLabel}>Kod odzyskiwania kopii z chmury</Text>
+              <TextInput
+                style={[styles.input, busy && styles.inputDisabled, !cloudBackupRuntimeSupported && styles.inputDisabled]}
+                value={cloudBackupCode}
+                onChangeText={setCloudBackupCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder="np. A7KD-Q4M2-9PLX-T8RW"
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                editable={!busy && cloudBackupRuntimeSupported}
+                maxLength={23}
+              />
+              <Text style={styles.hintText}>
+                Jeśli pole zostanie puste, aplikacja wygeneruje nowy kod przy pierwszym zapisie kopii w chmurze.
+              </Text>
+              <Text style={styles.hintText}>
+                Backup w chmurze jest szyfrowany po stronie aplikacji przed wysłaniem do Supabase.
+              </Text>
+              {!cloudBackupRuntimeSupported ? (
+                <Text style={styles.warningText}>
+                  Ten build nie obsługuje jeszcze szyfrowanego backupu w chmurze. Funkcja pozostaje wyłączona.
+                </Text>
+              ) : null}
+              <Pressable
+                style={[styles.buttonPrimary, (!cloudBackupReady || busy) && styles.buttonDisabled]}
+                disabled={!cloudBackupReady || busy}
+                onPress={() => void saveCloudBackupToSupabase()}
+              >
+                <Text style={styles.buttonPrimaryText}>Zapisz kopię w chmurze</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.buttonSecondary, (!cloudBackupReady || busy) && styles.buttonDisabled]}
+                disabled={!cloudBackupReady || busy}
+                onPress={() => void restoreCloudBackupFromSupabase()}
+              >
+                <Text style={styles.buttonSecondaryText}>Przywróć z chmury</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={styles.hintText}>
+              Backup w chmurze jest przygotowany w kodzie, ale pozostaje wyłączony do czasu ustawienia
+              ` EXPO_PUBLIC_ENABLE_CLOUD_BACKUP=true ` i wdrożenia migracji Supabase.
+            </Text>
+          )}
         </View>
         ) : null}
 

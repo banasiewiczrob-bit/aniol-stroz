@@ -46,9 +46,9 @@ Obecny stan:
 - `Codzienne refleksje` maja juz aktywny ekran w aplikacji z tytulem, odtwarzaczem i sekcja `Tekst refleksji`
 - po kliknieciu `Odtworz` ekran przewija sie do tekstu, a tekst autoscrolluje lekko szybciej niz audio
 - user nie widzi, ze wybor jest losowaniem; w UI jest to po prostu `Refleksja na dzis`
-- wybor dziennej refleksji jest deterministyczny dla danej daty, wiec wszyscy userzy dostaja tego samego dnia ten sam wpis
-- publiczny bucket Supabase `daily-reflections` ma obecnie pliki audio `01-01.m4a` do `01-32.m4a`
-- manifest [daily-reflections.json](./daily-reflections.json) jest juz zsynchronizowany z Supabase i zawiera 32 aktywne wpisy z tekstami
+- wybor dziennej refleksji opiera sie na jednej stalej kolejce globalnej dla wszystkich userow, zeby wpisy nie lecialy blokami autorow i nurtow
+- publiczny bucket Supabase `daily-reflections` ma obecnie pliki audio `01-01.m4a` do `01-59.m4a`
+- manifest [daily-reflections.json](./daily-reflections.json) jest juz zsynchronizowany z Supabase i zawiera 59 aktywnych wpisow z tekstami
 - techniczne ID typu `01-01`, `01-02` sa nazwami plikow i kluczami manifestu; nie sa pokazywane userowi jako daty
 - archiwum pelnych 365 refleksji nadal nie jest jeszcze podpiete
 
@@ -121,10 +121,10 @@ Proponowane podfoldery w `single/`:
 
 ## Co jest do zrobienia dalej
 
-1. Kontynuowac ten sam proces dla kolejnych nagran `01-33+`.
+1. Kontynuowac ten sam proces dla kolejnych nagran `01-60+`.
 2. Po kazdej nowej paczce audio dopisac odpowiadajace teksty do [daily-reflections.json](./daily-reflections.json).
 3. Wrzucic zaktualizowany manifest do `daily-reflections/manifests/daily-reflections.json`.
-4. Docelowo rozszerzyc zestaw z 32 do pelnego roku `365 + bonus 29.02`.
+4. Docelowo rozszerzyc zestaw z 59 do pelnego roku `365 + bonus 29.02`.
 5. Osobno przygotowac `app-audio-library.json` dla biblioteki audio poza refleksjami dziennymi.
 
 ## Jak kontynuowac pozniej bez odtwarzania ustalen

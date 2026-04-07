@@ -14,8 +14,7 @@ type RoutePath =
   | '/wsparcie-24'
   | '/wsparcie-halt'
   | '/wsparcie-12-krokow'
-  | '/wsparcie-desiderata'
-  | '/codzienne-refleksje';
+  | '/wsparcie-desiderata';
 
 type TileItem = {
   title: string;
@@ -61,14 +60,10 @@ const ITEMS: TileItem[] = [
     accent: '#B8C6FF',
     glow: 'rgba(184,198,255,0.28)',
   },
-  {
-    title: 'Codzienne refleksje',
-    subtitle: 'Jedno nagranie na dziś. Krótko i blisko tego, z czym możesz dziś przychodzić.',
-    to: '/codzienne-refleksje',
-    accent: '#FFC7D9',
-    glow: 'rgba(255,199,217,0.28)',
-  },
 ];
+
+const FEATURED_ITEM = ITEMS[0];
+const GRID_ITEMS = ITEMS.slice(1);
 
 export default function TekstyCodzienneScreen() {
   const { isVisited, markVisited } = useVisitedTiles();
@@ -93,7 +88,7 @@ export default function TekstyCodzienneScreen() {
       >
         <Text style={[styles.title, compact && styles.titleCompact]}>Teksty codzienne</Text>
         <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>
-          Sześć miejsc, do których możesz wracać wtedy, gdy potrzebujesz zatrzymania, kierunku albo prostych słów.
+          Pięć tekstów, do których możesz wracać wtedy, gdy potrzebujesz zatrzymania, kierunku albo prostych słów.
         </Text>
 
         <View style={styles.instructionsCompact}>
@@ -103,7 +98,28 @@ export default function TekstyCodzienneScreen() {
         <Text style={styles.focusLine}>Do czego chcesz dziś wrócić?</Text>
 
         <View style={[styles.grid, styles.gridRaised]}>
-          {ITEMS.map((item) => (
+          <MenuSquareTile
+            key={FEATURED_ITEM.to}
+            title={FEATURED_ITEM.title}
+            subtitle={FEATURED_ITEM.subtitle}
+            accent={FEATURED_ITEM.accent}
+            glow={FEATURED_ITEM.glow}
+            openedToday={isVisited(FEATURED_ITEM.to)}
+            disabled={navigationLocked}
+            wide
+            titleLines={1}
+            subtitleLines={3}
+            onPress={async () => {
+              await runGuarded(async () => {
+                await markVisited(FEATURED_ITEM.to);
+                router.push({
+                  pathname: FEATURED_ITEM.to as any,
+                  params: { backTo: '/teksty-codzienne' },
+                });
+              });
+            }}
+          />
+          {GRID_ITEMS.map((item) => (
             <MenuSquareTile
               key={item.to}
               title={item.title}
@@ -197,6 +213,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     rowGap: 8,
+    columnGap: 0,
   },
   gridRaised: {
     marginTop: 4,

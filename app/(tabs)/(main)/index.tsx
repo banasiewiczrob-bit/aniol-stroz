@@ -50,7 +50,7 @@ const allTiles: DashboardTile[] = [
   { title: 'Kontrakt', subtitle: 'Umowa z samym sobą', to: '/kontrakt', accent: '#7ED9FF', glow: 'rgba(126,217,255,0.33)' },
   { title: 'Liczniki', subtitle: 'Zdrowienie i odrabianie strat', to: '/liczniki', accent: '#9EF3C7', glow: 'rgba(158,243,199,0.3)' },
   { title: 'Plan dnia', subtitle: 'Plan i HALT', to: '/plan-dnia', accent: '#FFD18A', glow: 'rgba(255,209,138,0.28)' },
-  { title: 'Teksty codzienne', subtitle: 'Modlitwa, refleksje, HALT, 12 kroków', to: '/teksty-codzienne', accent: '#C6B9FF', glow: 'rgba(198,185,255,0.28)' },
+  { title: 'Teksty codzienne', subtitle: 'Modlitwa, HALT, 12 kroków i inne teksty', to: '/teksty-codzienne', accent: '#C6B9FF', glow: 'rgba(198,185,255,0.28)' },
   { title: 'Obserwatorium 365', subtitle: 'Dzienniki', to: '/obserwatorium', accent: '#9AC7FF', glow: 'rgba(154,199,255,0.3)' },
   { title: 'Wsparcie', subtitle: 'Siatka, społeczność, kontakt', to: '/wsparcie', accent: '#FFC7D9', glow: 'rgba(255,199,217,0.28)' },
 ];

@@ -60,7 +60,7 @@ export default function DziennikiHomeScreen() {
   const { height } = useWindowDimensions();
   const compact = height <= 900;
   const { swipeHintInset } = useSwipeHintInset();
-  const { hasPremium, source } = usePremiumAccess();
+  const { hasPremium } = usePremiumAccess();
   const { isVisited, markVisited } = useVisitedTiles();
   const { navigationLocked, runGuarded } = useSingleNavigationPress();
 
@@ -81,18 +81,10 @@ export default function DziennikiHomeScreen() {
         <Text style={[styles.title, compact && styles.titleCompact]}>Obserwatorium 365</Text>
         <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>Trzy dzienniki i lista wyzwalaczy.</Text>
 
-        {source === 'tester_preview' ? (
-          <View style={styles.testerBanner}>
-            <Text style={styles.testerBannerText}>Tryb testerski premium: aktywny</Text>
-          </View>
-        ) : null}
-
         <View style={styles.instructionsCompact}>
           <Text style={styles.instructionsCompactTitle}>Opis i instrukcja</Text>
           <Text style={styles.instructionsCompactText}>Wybierz narzędzie, które najlepiej pasuje do tego, co dzieje się dziś.</Text>
         </View>
-        <Text style={styles.focusLine}>Co chcesz dziś zaobserwować?</Text>
-
         {!hasPremium ? (
           <View style={[styles.card, compact && styles.cardCompact]}>
             <Text style={[styles.cardTitle, compact && styles.cardTitleCompact]}>Ta część jest w premium</Text>
@@ -204,14 +196,6 @@ const styles = StyleSheet.create({
   },
   instructionsCompactTitle: { color: 'white', fontSize: 14, fontWeight: '800', marginBottom: 2 },
   instructionsCompactText: { color: 'rgba(232,245,255,0.82)', fontSize: 13, lineHeight: 18 },
-  focusLine: {
-    color: 'rgba(222,240,255,0.92)',
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginTop: 2,
-    marginBottom: 6,
-  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -221,16 +205,6 @@ const styles = StyleSheet.create({
   gridRaised: {
     marginTop: 4,
   },
-  testerBanner: {
-    backgroundColor: 'rgba(120, 200, 255, 0.18)',
-    borderColor: 'rgba(120, 200, 255, 0.4)',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-  },
-  testerBannerText: { color: '#CFEFFF', fontSize: 14, fontWeight: '700' },
   card: {
     backgroundColor: 'rgba(12,38,62,0.78)',
     borderWidth: 1,

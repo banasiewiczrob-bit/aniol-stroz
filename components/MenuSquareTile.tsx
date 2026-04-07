@@ -1,6 +1,6 @@
 import { SOFT_BADGE_BG, SOFT_BADGE_BORDER, SOFT_BADGE_TEXT } from '@/constants/ui';
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 const TILE_BG = 'rgba(12,38,62,0.78)';
 const TILE_BORDER = 'rgba(159,216,255,0.32)';
@@ -18,6 +18,8 @@ type MenuSquareTileProps = {
   badgeCount?: number;
   titleLines?: number;
   subtitleLines?: number;
+  wide?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function MenuSquareTile({
@@ -31,6 +33,8 @@ export function MenuSquareTile({
   badgeCount,
   titleLines = 2,
   subtitleLines = 2,
+  wide = false,
+  style,
 }: MenuSquareTileProps) {
   return (
     <Pressable
@@ -38,10 +42,12 @@ export function MenuSquareTile({
       onPress={onPress}
       style={({ pressed }) => [
         styles.squareTile,
+        wide && styles.squareTileWide,
         { borderColor: accent },
         openedToday && styles.squareTileOpened,
         openedToday && { backgroundColor: glow },
         pressed && styles.tilePressed,
+        style,
       ]}
     >
       <View style={[styles.tileGlow, { backgroundColor: glow }]} />
@@ -78,6 +84,12 @@ const styles = StyleSheet.create({
     borderColor: TILE_BORDER,
     overflow: 'hidden',
     position: 'relative',
+  },
+  squareTileWide: {
+    width: '100%',
+    minHeight: 144,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   squareTileOpened: {
     borderColor: 'rgba(222,244,255,0.98)',

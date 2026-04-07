@@ -1,0 +1,78 @@
+import { DAILY_TEXTS_STORAGE_KEY } from '@/constants/daily-texts';
+import { CONTRACT_SIGNED_STORAGE_KEY, JOURNALS_DRAFTS_STORAGE_KEY, JOURNALS_ENTRIES_STORAGE_KEY } from '@/constants/storageKeys';
+
+export const APP_SETTINGS_STORAGE_KEY = '@app_settings';
+export const SETTINGS_SECTIONS_STORAGE_KEY = '@settings_sections_expanded';
+export const START_DATE_STORAGE_KEY = 'startDate';
+export const ANNIVERSARY_SEEN_STORAGE_KEY = '@anniversary_seen_once';
+export const DAILY_PLAN_STORAGE_KEY = '@daily_task';
+export const DAILY_PLAN_ARCHIVE_STORAGE_KEY = '@daily_task_archive';
+export const MIGRATIONS_VERSION_KEY = '@migrations_version';
+export const DAILY_PLAN_NOTIFICATION_IDS_STORAGE_KEY = '@daily_plan_notification_ids';
+export const DAILY_PLAN_NOTIFICATION_SETTINGS_STORAGE_KEY = '@daily_plan_notification_settings';
+export const INTELLIGENT_SUPPORT_STATE_KEY = '@intelligent_support_state_v1';
+export const VISITED_TILES_STORAGE_KEY = '@visited_tiles_v1';
+export const SUPPORT_CONTACTS_STORAGE_KEY = '@support_contacts';
+export const SOS_CONTACT_STORAGE_KEY = '@sos_contact_v1';
+export const LOSS_COUNTER_STORAGE_KEY = '@loss_counter_v1';
+export const NOTE_STORAGE_KEY = 'single_note_v1';
+export const RECOVERY_SUPPORT_METHODS_STORAGE_KEY = 'recovery_support_methods_v1';
+export const EXPERIENCE_CONTRIBUTOR_ID_STORAGE_KEY = 'experience_contributor_id_v1';
+export const COMMUNITY_THREADS_STORAGE_KEY = '@community_threads_v1';
+export const COMMUNITY_COMMENTS_STORAGE_KEY = '@community_comments_v1';
+export const COMMUNITY_MAIN_ROOM_MESSAGES_STORAGE_KEY = '@community_main_room_messages_v1';
+export const COMMUNITY_SEEDED_STORAGE_KEY = '@community_seeded_v1';
+export const EMOTION_JOURNAL_LAB_STORAGE_KEY = '@emotion_journal_lab_v2';
+export const DAILY_REFLECTIONS_MANIFEST_CACHE_KEY = '@daily_reflections_manifest_cache_v1';
+export const DAILY_REFLECTIONS_FAVORITES_KEY = '@daily_reflections_favorites_v1';
+export const TRIGGER_LIST_DRAFT_STORAGE_KEY = '@trigger_list_draft_v1';
+export const TRIGGER_LIST_DESCRIPTION_DRAFT_STORAGE_KEY = '@trigger_list_description_draft_v1';
+export const TRIGGER_LIST_ITEMS_STORAGE_KEY = '@trigger_list_items_v1';
+export const TRIGGER_LIST_KIND_STORAGE_KEY = '@trigger_list_kind_v2';
+export const TRIGGER_LIST_LEGACY_CATEGORY_STORAGE_KEY = '@trigger_list_category_v1';
+export const CLOUD_BACKUP_RECOVERY_CODE_STORAGE_KEY = '@cloud_backup_recovery_code_v1';
+
+export const APP_BACKUP_STORAGE_KEYS = [
+  APP_SETTINGS_STORAGE_KEY,
+  START_DATE_STORAGE_KEY,
+  ANNIVERSARY_SEEN_STORAGE_KEY,
+  CONTRACT_SIGNED_STORAGE_KEY,
+  DAILY_PLAN_STORAGE_KEY,
+  DAILY_PLAN_ARCHIVE_STORAGE_KEY,
+  DAILY_TEXTS_STORAGE_KEY,
+  JOURNALS_ENTRIES_STORAGE_KEY,
+  JOURNALS_DRAFTS_STORAGE_KEY,
+  DAILY_PLAN_NOTIFICATION_SETTINGS_STORAGE_KEY,
+  INTELLIGENT_SUPPORT_STATE_KEY,
+  VISITED_TILES_STORAGE_KEY,
+  SUPPORT_CONTACTS_STORAGE_KEY,
+  SOS_CONTACT_STORAGE_KEY,
+  LOSS_COUNTER_STORAGE_KEY,
+  NOTE_STORAGE_KEY,
+  RECOVERY_SUPPORT_METHODS_STORAGE_KEY,
+  EXPERIENCE_CONTRIBUTOR_ID_STORAGE_KEY,
+  COMMUNITY_THREADS_STORAGE_KEY,
+  COMMUNITY_COMMENTS_STORAGE_KEY,
+  COMMUNITY_MAIN_ROOM_MESSAGES_STORAGE_KEY,
+  COMMUNITY_SEEDED_STORAGE_KEY,
+  EMOTION_JOURNAL_LAB_STORAGE_KEY,
+  DAILY_REFLECTIONS_MANIFEST_CACHE_KEY,
+  DAILY_REFLECTIONS_FAVORITES_KEY,
+  TRIGGER_LIST_DRAFT_STORAGE_KEY,
+  TRIGGER_LIST_DESCRIPTION_DRAFT_STORAGE_KEY,
+  TRIGGER_LIST_ITEMS_STORAGE_KEY,
+  TRIGGER_LIST_KIND_STORAGE_KEY,
+  TRIGGER_LIST_LEGACY_CATEGORY_STORAGE_KEY,
+] as const;
+
+export const APP_RESTORE_CLEAR_STORAGE_KEYS = [
+  ...APP_BACKUP_STORAGE_KEYS,
+  SETTINGS_SECTIONS_STORAGE_KEY,
+  DAILY_PLAN_NOTIFICATION_IDS_STORAGE_KEY,
+  MIGRATIONS_VERSION_KEY,
+] as const;
+
+export const APP_RESET_STORAGE_KEYS = [
+  ...APP_RESTORE_CLEAR_STORAGE_KEYS,
+  CLOUD_BACKUP_RECOVERY_CODE_STORAGE_KEY,
+] as const;

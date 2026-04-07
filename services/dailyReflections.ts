@@ -7,6 +7,8 @@ const REFLECTIONS_BUCKET = 'daily-reflections';
 const REFLECTIONS_MANIFEST_PATH = 'manifests/daily-reflections.json';
 const MANIFEST_CACHE_KEY = '@daily_reflections_manifest_cache_v1';
 const FAVORITE_REFLECTION_IDS_KEY = '@daily_reflections_favorites_v1';
+const GLOBAL_REFLECTION_QUEUE_ANCHOR = '2026-01-01';
+const GLOBAL_REFLECTION_QUEUE_SEED_KEY = '2026';
 
 export type DailyReflection = {
   id: string;
@@ -213,14 +215,88 @@ function getStableDailyHash(value: string) {
   return hash;
 }
 
+function createSeededRandom(seed: number) {
+  let state = seed >>> 0;
+  if (state === 0) {
+    state = 0x6d2b79f5;
+  }
+
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let next = Math.imul(state ^ (state >>> 15), 1 | state);
+    next ^= next + Math.imul(next ^ (next >>> 7), 61 | next);
+    return ((next ^ (next >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleReflections(reflections: DailyReflection[], seed: number) {
+  const shuffled = reflections.slice();
+  const random = createSeededRandom(seed);
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+function parseDateKey(dateKey: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return null;
+  }
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  return { year, month, day };
+}
+
+function getUtcDayTimestamp(year: number, month: number, day: number) {
+  return Date.UTC(year, month - 1, day);
+}
+
+function toPositiveModulo(value: number, divisor: number) {
+  return ((value % divisor) + divisor) % divisor;
+}
+
 function pickReflectionForDate(reflections: DailyReflection[], dateKey: string) {
   const selectable = getSelectableReflections(reflections)
     .slice()
     .sort((left, right) => left.id.localeCompare(right.id, 'pl'));
   if (selectable.length === 0) return null;
 
-  const index = getStableDailyHash(dateKey) % selectable.length;
-  return selectable[index] ?? null;
+  const parsedDate = parseDateKey(dateKey);
+  if (!parsedDate) {
+    const fallbackIndex = getStableDailyHash(dateKey) % selectable.length;
+    return selectable[fallbackIndex] ?? null;
+  }
+
+  const anchorDate = parseDateKey(GLOBAL_REFLECTION_QUEUE_ANCHOR);
+  if (!anchorDate) {
+    const fallbackIndex = getStableDailyHash(dateKey) % selectable.length;
+    return selectable[fallbackIndex] ?? null;
+  }
+
+  // We keep one fixed global queue for everyone and only move one step per day.
+  // The seed preserves the order introduced for 2026 instead of reshuffling yearly.
+  const shuffled = shuffleReflections(selectable, getStableDailyHash(GLOBAL_REFLECTION_QUEUE_SEED_KEY));
+  const dayOffset =
+    Math.floor(
+      (getUtcDayTimestamp(parsedDate.year, parsedDate.month, parsedDate.day) -
+        getUtcDayTimestamp(anchorDate.year, anchorDate.month, anchorDate.day)) /
+        86400000
+    );
+  const dayIndex = toPositiveModulo(dayOffset, shuffled.length);
+  return shuffled[dayIndex] ?? null;
 }
 
 function formatStorageErrorDetails(payload: StorageErrorPayload) {

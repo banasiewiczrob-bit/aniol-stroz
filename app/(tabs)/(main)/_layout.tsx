@@ -94,18 +94,17 @@ export default function MainTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="refleksje"
+        options={{
+          title: 'Refleksje',
+          tabBarIcon: ({ color }) => <Ionicons name="mic-outline" size={26} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="ustawienia"
         options={{
           title: 'Ustawienia',
           tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={26} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="refleksje"
-        options={{
-          title: 'Codzienne refleksje',
-          href: null,
-          tabBarIcon: ({ color }) => <Ionicons name="mic-outline" size={26} color={color} />,
         }}
       />
       <Tabs.Screen name="dzienniki" options={{ href: null }} />
