@@ -8,8 +8,6 @@ import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
 
-const SUB = 'rgba(255,255,255,0.88)';
-
 type TileRoute = '/dziennik-uczucia' | '/lista-wyzwalaczy' | '/dziennik-kryzysu' | '/dziennik-wdziecznosci';
 
 type ObservatoriumTile = {

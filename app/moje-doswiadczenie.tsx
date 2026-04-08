@@ -794,7 +794,7 @@ export default function MojeDoswiadczenieScreen() {
 
           {detailsOpen && (
             <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.88)", marginTop: 10 }}>
-              Opisz konkretnie, wszystko co Ci dziś pomogło. Im prostszy i bardziej konkretny opis, tym lepiej. Unikaj ogólnych haseł typu "wsparcie od bliskich" albo "zdrowe nawyki". Skup się na tym, co naprawdę zrobiłeś lub co naprawdę Ci pomogło, nawet jeśli to było coś bardzo prostego.
+              Opisz konkretnie, wszystko co Ci dziś pomogło. Im prostszy i bardziej konkretny opis, tym lepiej. Unikaj ogólnych haseł typu „wsparcie od bliskich” albo „zdrowe nawyki”. Skup się na tym, co naprawdę zrobiłeś lub co naprawdę Ci pomogło, nawet jeśli to było coś bardzo prostego.
               {"\n\n"}
               Np.
               {"\n"}

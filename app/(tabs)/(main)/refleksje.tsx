@@ -70,7 +70,7 @@ function ReflectionTextBlock({
   );
 }
 
-function joinReflectionText(parts: Array<string | null | undefined>) {
+function joinReflectionText(parts: (string | null | undefined)[]) {
   return parts.map((part) => (typeof part === 'string' ? part.trim() : '')).filter(Boolean).join('\n\n');
 }
 

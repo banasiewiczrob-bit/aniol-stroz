@@ -19,6 +19,7 @@ export type DailyReflection = {
   smallStep: string;
   closing: string;
   monthDay: string | null;
+  rotationGroup: string | null;
   tags: string[];
   durationSec: number | null;
   active: boolean;
@@ -67,6 +68,7 @@ const FALLBACK_DAILY_REFLECTIONS: DailyReflection[] = [
     smallStep: 'Powiedz na głos: "Tak." Potem dodaj: "Dziś moim małym krokiem w prawdzie będzie..." i zrób to.',
     closing: '',
     monthDay: null,
+    rotationGroup: 'fallback',
     tags: [],
     durationSec: null,
     active: true,
@@ -104,7 +106,15 @@ function slugify(value: string) {
 function normalizeMonthDay(value: unknown) {
   const raw = readOptionalText(value);
   if (!raw) return null;
-  return /^\d{2}-\d{2}$/.test(raw) ? raw : null;
+  if (!/^\d{2}-\d{2}$/.test(raw)) return null;
+
+  const [month, day] = raw.split('-').map(Number);
+  const probe = new Date(Date.UTC(2024, month - 1, day));
+  if (probe.getUTCMonth() + 1 !== month || probe.getUTCDate() !== day) {
+    return null;
+  }
+
+  return raw;
 }
 
 function normalizeTags(value: unknown) {
@@ -117,6 +127,18 @@ function resolveAudioUrl(audioPath: string | null) {
   if (/^https?:\/\//i.test(audioPath)) return audioPath;
   const normalized = audioPath.replace(/^\/+/, '');
   return `${PUBLIC_STORAGE_BASE}/${REFLECTIONS_BUCKET}/${normalized}`;
+}
+
+function inferRotationGroupFromId(id: string) {
+  const normalizedId = id.trim();
+  if (!normalizedId) return null;
+
+  const prefixed = /^([a-z0-9]+)-/i.exec(normalizedId);
+  if (prefixed) {
+    return prefixed[1].toLowerCase();
+  }
+
+  return null;
 }
 
 function parseReflectionEntry(value: unknown, index: number): DailyReflection | null {
@@ -152,6 +174,11 @@ function parseReflectionEntry(value: unknown, index: number): DailyReflection | 
   const fallbackTitle = title;
   const slugId = slugify(fallbackTitle || `reflection-${index + 1}`);
   const id = readOptionalText(row.id) ?? monthDay ?? (slugId || `reflection-${index + 1}`);
+  const rotationGroup =
+    readOptionalText(row.rotationGroup) ??
+    readOptionalText(row.group) ??
+    readOptionalText(row.block) ??
+    inferRotationGroupFromId(id);
 
   return {
     id,
@@ -162,6 +189,7 @@ function parseReflectionEntry(value: unknown, index: number): DailyReflection | 
     smallStep,
     closing,
     monthDay,
+    rotationGroup,
     tags,
     durationSec,
     active,
@@ -241,6 +269,63 @@ function shuffleReflections(reflections: DailyReflection[], seed: number) {
   return shuffled;
 }
 
+function buildRotatingQueue(reflections: DailyReflection[], seed: number) {
+  const groups = new Map<string, DailyReflection[]>();
+
+  for (const reflection of reflections) {
+    const groupKey = reflection.rotationGroup || 'default';
+    const existing = groups.get(groupKey);
+    if (existing) {
+      existing.push(reflection);
+      continue;
+    }
+    groups.set(groupKey, [reflection]);
+  }
+
+  const shuffledGroups = shuffleReflections(
+    [...groups.entries()]
+      .sort(([left], [right]) => left.localeCompare(right, 'pl'))
+      .map(([groupKey, items]) => ({
+        id: groupKey,
+        title: groupKey,
+        opening: '',
+        reflection: '',
+        question: '',
+        smallStep: '',
+        closing: '',
+        monthDay: null,
+        rotationGroup: groupKey,
+        tags: [],
+        durationSec: null,
+        active: true,
+        audioPath: null,
+        audioUrl: null,
+      })),
+    seed
+  ).map((item) => item.id);
+
+  const queues = shuffledGroups.map((groupKey) => ({
+    groupKey,
+    items: shuffleReflections(groups.get(groupKey) ?? [], getStableDailyHash(`${seed}:${groupKey}`)),
+  }));
+
+  const out: DailyReflection[] = [];
+  let cursor = 0;
+
+  while (queues.some((queue) => queue.items.length > 0)) {
+    const queue = queues[cursor % queues.length];
+    if (queue.items.length > 0) {
+      const next = queue.items.shift();
+      if (next) {
+        out.push(next);
+      }
+    }
+    cursor += 1;
+  }
+
+  return out;
+}
+
 function parseDateKey(dateKey: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
   if (!match) return null;
@@ -286,9 +371,9 @@ function pickReflectionForDate(reflections: DailyReflection[], dateKey: string) 
     return selectable[fallbackIndex] ?? null;
   }
 
-  // We keep one fixed global queue for everyone and only move one step per day.
-  // The seed preserves the order introduced for 2026 instead of reshuffling yearly.
-  const shuffled = shuffleReflections(selectable, getStableDailyHash(GLOBAL_REFLECTION_QUEUE_SEED_KEY));
+  // We keep one fixed global queue for everyone, but interleave rotation groups
+  // so reflections do not run in long streaks from the same author/theory block.
+  const shuffled = buildRotatingQueue(selectable, getStableDailyHash(GLOBAL_REFLECTION_QUEUE_SEED_KEY));
   const dayOffset =
     Math.floor(
       (getUtcDayTimestamp(parsedDate.year, parsedDate.month, parsedDate.day) -

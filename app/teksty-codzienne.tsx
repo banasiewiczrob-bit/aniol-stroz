@@ -7,8 +7,6 @@ import { MenuSquareTile } from '@/components/MenuSquareTile';
 import { useSingleNavigationPress } from '@/hooks/useSingleNavigationPress';
 import { useVisitedTiles } from '@/hooks/useVisitedTiles';
 
-const SUB = 'rgba(255,255,255,0.88)';
-
 type RoutePath =
   | '/wsparcie-modlitwa'
   | '/wsparcie-24'
