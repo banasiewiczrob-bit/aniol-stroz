@@ -15,6 +15,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
+import { DismissKeyboardView } from '@/components/DismissKeyboardView';
+import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 
 const DRAFT_KEY = '@trigger_list_draft_v1';
 const DESCRIPTION_DRAFT_KEY = '@trigger_list_description_draft_v1';
@@ -134,13 +136,8 @@ function getKindLabel(kind: TriggerKind) {
 
 export default function ListaWyzwalaczyScreen() {
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView | null>(null);
-  const archiveCardOffsetRef = useRef(0);
-  const sectionOffsetsRef = useRef<Record<TriggerKind, number>>({
-    internal: 0,
-    external: 0,
-  });
-  const pendingScrollKindRef = useRef<TriggerKind | null>(null);
+  const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
+    useScrollAnchors<'archive-internal' | 'archive-external'>();
   const [triggerName, setTriggerName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedKind, setSelectedKind] = useState<TriggerKind | null>(null);
@@ -254,24 +251,6 @@ export default function ListaWyzwalaczyScreen() {
     });
     return () => sub.remove();
   }, [description, loaded, selectedKind, triggerName]);
-
-  useEffect(() => {
-    const pendingKind = pendingScrollKindRef.current;
-    if (!pendingKind) return;
-
-    const expanded = pendingKind === 'internal' ? internalExpanded : externalExpanded;
-    if (!expanded) {
-      pendingScrollKindRef.current = null;
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      scrollToArchiveSection(pendingKind);
-      pendingScrollKindRef.current = null;
-    }, 80);
-
-    return () => clearTimeout(timer);
-  }, [externalExpanded, internalExpanded]);
 
   const persistItems = async (nextItems: TriggerItem[]) => {
     await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems));
@@ -419,9 +398,11 @@ export default function ListaWyzwalaczyScreen() {
         : 'Np. Kiedy się pojawia, z czym się wiąże, po czym poznajesz że to już ten schemat.';
 
   const scrollToArchiveSection = (kind: TriggerKind) => {
-    const y = Math.max(0, sectionOffsetsRef.current[kind] - ARCHIVE_SCROLL_TOP_OFFSET);
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ y, animated: true });
+    const anchor = kind === 'internal' ? 'archive-internal' : 'archive-external';
+    scrollToAnchor(anchor, {
+      offset: ARCHIVE_SCROLL_TOP_OFFSET,
+      onlyIfNeeded: true,
+      bottomMargin: 260,
     });
   };
 
@@ -430,7 +411,7 @@ export default function ListaWyzwalaczyScreen() {
       setInternalExpanded((prev) => {
         const next = !prev;
         if (next) {
-          pendingScrollKindRef.current = 'internal';
+          scrollToArchiveSection('internal');
         }
         return next;
       });
@@ -440,7 +421,7 @@ export default function ListaWyzwalaczyScreen() {
     setExternalExpanded((prev) => {
       const next = !prev;
       if (next) {
-        pendingScrollKindRef.current = 'external';
+        scrollToArchiveSection('external');
       }
       return next;
     });
@@ -455,10 +436,15 @@ export default function ListaWyzwalaczyScreen() {
       <BackButton />
       <ScrollView
         ref={scrollRef}
+        onLayout={onViewportLayout}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         contentContainerStyle={[styles.content, { paddingBottom: Math.max(64, insets.bottom + 40) }]}
         showsVerticalScrollIndicator={false}
       >
+        <DismissKeyboardView>
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
 
@@ -542,23 +528,13 @@ export default function ListaWyzwalaczyScreen() {
           </Pressable>
         </View>
 
-        <View
-          style={styles.archiveCard}
-          onLayout={(event) => {
-            archiveCardOffsetRef.current = event.nativeEvent.layout.y;
-          }}
-        >
+        <View style={styles.archiveCard}>
           <Text style={styles.archiveTitle}>Twoja lista ({items.length})</Text>
           {items.length === 0 ? (
             <Text style={styles.emptyText}>Na razie nic tu nie ma. Zacznij od pierwszej konkretnej rzeczy, która zwykle poprzedza gorszy moment.</Text>
           ) : (
             <>
-              <View
-                style={styles.archiveSection}
-                onLayout={(event) => {
-                  sectionOffsetsRef.current.internal = archiveCardOffsetRef.current + event.nativeEvent.layout.y;
-                }}
-              >
+              <View style={styles.archiveSection} onLayout={setAnchor('archive-internal')}>
                 <View style={styles.archiveSectionHeader}>
                   <Text style={styles.archiveSectionTitle}>Wewnętrzne ({internalItems.length})</Text>
                   <Pressable style={styles.archiveToggleButton} onPress={() => toggleArchiveSection('internal')}>
@@ -592,12 +568,7 @@ export default function ListaWyzwalaczyScreen() {
                 )}
               </View>
 
-              <View
-                style={styles.archiveSection}
-                onLayout={(event) => {
-                  sectionOffsetsRef.current.external = archiveCardOffsetRef.current + event.nativeEvent.layout.y;
-                }}
-              >
+              <View style={styles.archiveSection} onLayout={setAnchor('archive-external')}>
                 <View style={styles.archiveSectionHeader}>
                   <Text style={styles.archiveSectionTitle}>Zewnętrzne ({externalItems.length})</Text>
                   <Pressable style={styles.archiveToggleButton} onPress={() => toggleArchiveSection('external')}>
@@ -633,6 +604,7 @@ export default function ListaWyzwalaczyScreen() {
             </>
           )}
         </View>
+        </DismissKeyboardView>
       </ScrollView>
     </KeyboardAvoidingView>
   );

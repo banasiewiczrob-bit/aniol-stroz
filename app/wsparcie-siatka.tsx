@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BackButton, useSwipeHintInset } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
+import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 import * as Contacts from "expo-contacts";
 import React, { useEffect, useState } from "react";
 import {
@@ -293,6 +294,7 @@ export default function WsparcieSiatka() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       >
+        <DismissKeyboardView>
         <Text style={styles.title}>Siatka wsparcia</Text>
         <CoJakSection
           title="Opis i instrukcja"
@@ -386,6 +388,7 @@ export default function WsparcieSiatka() {
             ))
           )}
         </View>
+        </DismissKeyboardView>
       </ScrollView>
 
       <Modal visible={pickerOpen} animationType="slide" transparent onRequestClose={() => setPickerOpen(false)}>

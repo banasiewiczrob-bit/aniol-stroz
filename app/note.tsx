@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  View,
   Text,
   TextInput,
   KeyboardAvoidingView,
@@ -10,6 +9,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 
 const KEY = "single_note_v1";
 
@@ -80,7 +80,7 @@ export default function NoteScreen() {
       style={{ flex: 1, backgroundColor: "#0B1B2B" }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18 }}>
+      <DismissKeyboardView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18 }}>
         <Pressable onPress={handleBack} style={{ paddingVertical: 10 }}>
           <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 16 }}>←</Text>
         </Pressable>
@@ -114,7 +114,7 @@ export default function NoteScreen() {
             paddingVertical: 12,
           }}
         />
-      </View>
+      </DismissKeyboardView>
     </KeyboardAvoidingView>
   );
 }

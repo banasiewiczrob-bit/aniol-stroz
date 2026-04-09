@@ -1,5 +1,6 @@
 import { BackButton, useSwipeHintInset } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
+import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 import { TYPE } from "@/styles/typography";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Contacts from "expo-contacts";
@@ -247,6 +248,7 @@ export default function WsparcieKontakt() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       >
+        <DismissKeyboardView>
         <Text style={styles.title}>Kontakt</Text>
         <CoJakSection
           title="Opis i instrukcja"
@@ -412,6 +414,7 @@ export default function WsparcieKontakt() {
             </View>
           ) : null}
         </View>
+        </DismissKeyboardView>
       </ScrollView>
     </KeyboardAvoidingView>
   );

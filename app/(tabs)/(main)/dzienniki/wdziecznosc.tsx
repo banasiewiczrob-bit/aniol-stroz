@@ -1,4 +1,5 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { DismissKeyboardView } from '@/components/DismissKeyboardView';
 import { WeekCalendar } from '@/components/journals/WeekCalendar';
 import { getJournalDateKey, type GratitudeJournalEntry } from '@/constants/journals';
 import { createGratitudeJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
@@ -150,6 +151,7 @@ export default function DziennikWdziecznosciScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         >
+          <DismissKeyboardView>
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
           <Text style={styles.title}>Dziennik Wdzięczności</Text>
@@ -242,6 +244,7 @@ export default function DziennikWdziecznosciScreen() {
             })}
           </View>
         ) : null}
+          </DismissKeyboardView>
         </ScrollView>
       </KeyboardAvoidingView>
     </BackgroundWrapper>

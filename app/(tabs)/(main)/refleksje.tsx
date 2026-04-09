@@ -1,4 +1,5 @@
 import { BackButton } from '@/components/BackButton';
+import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import {
   DailyReflection,
   findDailyReflectionById,
@@ -154,11 +155,10 @@ function ReflectionPlaybackKeepAwake() {
 export default function RefleksjeScreen() {
   const params = useLocalSearchParams<{ reflectionId?: string | string[] }>();
   const insets = useSafeAreaInsets();
-  const mainScrollRef = useRef<ScrollView | null>(null);
   const readingScrollRef = useRef<ScrollView | null>(null);
   const shareCardRef = useRef<View | null>(null);
-  const readingSectionYRef = useRef(0);
-  const introCardYRef = useRef(0);
+  const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
+    useScrollAnchors<'intro-card' | 'reading-section'>();
   const didApplyInitialOffsetRef = useRef(false);
   const [currentReflection, setCurrentReflection] = useState<DailyReflection | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
@@ -197,11 +197,13 @@ export default function RefleksjeScreen() {
 
   const scrollToIntroCard = React.useCallback(
     (animated = false) => {
-      if (!mainScrollRef.current) return;
-      const targetY = Math.max(0, introCardYRef.current - INITIAL_VIEW_OFFSET);
-      mainScrollRef.current.scrollTo({ y: targetY, animated });
+      scrollToAnchor('intro-card', {
+        offset: INITIAL_VIEW_OFFSET,
+        animated,
+        waitForLayout: true,
+      });
     },
-    []
+    [scrollToAnchor]
   );
 
   const progress =
@@ -238,7 +240,6 @@ export default function RefleksjeScreen() {
 
   useEffect(() => {
     if (loading || didApplyInitialOffsetRef.current) return;
-    if (!mainScrollRef.current) return;
 
     didApplyInitialOffsetRef.current = true;
     scrollToIntroCard(false);
@@ -345,9 +346,10 @@ export default function RefleksjeScreen() {
       player.pause();
       return;
     }
-    mainScrollRef.current?.scrollTo({
-      y: Math.max(0, readingSectionYRef.current - TEXT_SECTION_SCROLL_OFFSET),
-      animated: true,
+    scrollToAnchor('reading-section', {
+      offset: TEXT_SECTION_SCROLL_OFFSET,
+      onlyIfNeeded: true,
+      bottomMargin: 240,
     });
     if (status.duration > 0 && status.currentTime >= status.duration - 0.25) {
       player.seekTo(0);
@@ -520,7 +522,10 @@ export default function RefleksjeScreen() {
         </View>
       </Modal>
       <ScrollView
-        ref={mainScrollRef}
+        ref={scrollRef}
+        onLayout={onViewportLayout}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: Math.max(140, insets.bottom + 110) }]}
         showsVerticalScrollIndicator={false}
@@ -530,12 +535,7 @@ export default function RefleksjeScreen() {
           Na dziś czeka tu jedna refleksja. Możesz jej posłuchać, spokojnie przeczytać tekst i wracać do niego w swoim rytmie przez cały dzień.
         </Text>
 
-        <View
-          style={styles.card}
-          onLayout={(event) => {
-            introCardYRef.current = event.nativeEvent.layout.y;
-          }}
-        >
+        <View style={styles.card} onLayout={setAnchor('intro-card')}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#8FAFD3' }]} />
           <View style={styles.titleRow}>
@@ -641,12 +641,7 @@ export default function RefleksjeScreen() {
           )}
         </View>
 
-        <View
-          style={styles.card}
-          onLayout={(event) => {
-            readingSectionYRef.current = event.nativeEvent.layout.y;
-          }}
-        >
+        <View style={styles.card} onLayout={setAnchor('reading-section')}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <View style={[styles.cardAccent, { backgroundColor: '#B8C6FF' }]} />
           <Text style={styles.cardTitle}>Tekst refleksji</Text>

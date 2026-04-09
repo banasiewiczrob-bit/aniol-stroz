@@ -1,4 +1,5 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { DismissKeyboardView } from '@/components/DismissKeyboardView';
 import { WeekCalendar } from '@/components/journals/WeekCalendar';
 import {
   BASE_EMOTIONS,
@@ -357,6 +358,7 @@ export default function DziennikUczucTestScreen() {
           onScroll={onScroll}
           scrollEventThrottle={16}
         >
+          <DismissKeyboardView>
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
           <Text style={styles.title}>Dziennik Uczuc</Text>
@@ -625,7 +627,8 @@ export default function DziennikUczucTestScreen() {
               );
             })}
           </View>
-        ) : null}
+          ) : null}
+          </DismissKeyboardView>
         </ScrollView>
       </KeyboardAvoidingView>
     </BackgroundWrapper>

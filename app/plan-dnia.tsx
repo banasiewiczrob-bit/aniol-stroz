@@ -1,4 +1,5 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { DismissKeyboardView } from '@/components/DismissKeyboardView';
 import { getLocalDateKey, type DateKey } from '@/constants/calendar';
 import {
   countCompletedDailyTexts,
@@ -772,6 +773,7 @@ export default function PlanScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         >
+          <DismissKeyboardView>
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
           <Text style={styles.title}>Plan dnia</Text>
@@ -1125,6 +1127,7 @@ export default function PlanScreen() {
           <Text style={styles.archiveHeaderChevron}>{chartOpen ? '▾' : '▸'}</Text>
         </Pressable>
           {chartOpen && <WeeklyLineChart points={weekPoints} />}
+          </DismissKeyboardView>
         </ScrollView>
       </KeyboardAvoidingView>
 

@@ -1,5 +1,7 @@
 import { BackButton } from "@/components/BackButton";
+import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from "@/hooks/useAppSettings";
+import { useScrollAnchors } from "@/hooks/useScrollAnchors";
 import {
   buildBadgeShareMessage,
   fetchContributorProgress,
@@ -15,12 +17,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Checkbox from "expo-checkbox";
 import * as Sharing from "expo-sharing";
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const DRAFT_KEY = "single_note_v1";
+const DRAFT_KEY = "recovery_support_method_draft_v1";
 const METHODS_KEY = "recovery_support_methods_v1";
 const ACCENT = "#FFD18A";
 const ACCENT_BG = "rgba(255,209,138,0.22)";
@@ -86,15 +88,27 @@ function getMethodsLabel(count: number) {
 }
 
 function getApprovedEntriesLabel(count: number) {
-  if (count === 1) return "1 zaakceptowany wpis";
+  if (count === 1) return "1 opublikowany wpis";
 
   const mod10 = count % 10;
   const mod100 = count % 100;
   if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
-    return `${count} zaakceptowane wpisy`;
+    return `${count} opublikowane wpisy`;
   }
 
-  return `${count} zaakceptowanych wpisów`;
+  return `${count} opublikowanych wpisów`;
+}
+
+function getEntriesCountLabel(count: number) {
+  if (count === 1) return "1 wpis";
+
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
+    return `${count} wpisy`;
+  }
+
+  return `${count} wpisów`;
 }
 
 function getBadgeShareCardCopy(
@@ -173,14 +187,13 @@ export default function MojeDoswiadczenieScreen() {
   const insets = useSafeAreaInsets();
   const [text, setText] = useState("");
   const [loaded, setLoaded] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [methods, setMethods] = useState<RecoveryMethod[]>([]);
   const [feedback, setFeedback] = useState("");
-  const [methodsOpen, setMethodsOpen] = useState(false);
-  const [sharingOpen, setSharingOpen] = useState(false);
-  const [selectedMethodIds, setSelectedMethodIds] = useState<string[]>([]);
   const [shareConsentDraft, setShareConsentDraft] = useState(false);
   const [shareConsentSaved, setShareConsentSaved] = useState(DEFAULT_APP_SETTINGS.privacyConsentSharedExperience);
+  const [publishingMethodId, setPublishingMethodId] = useState<string | null>(null);
+  const [methodsOpen, setMethodsOpen] = useState(false);
+  const [communityIdeasOpen, setCommunityIdeasOpen] = useState(false);
   const [contributorId, setContributorId] = useState<string | null>(null);
   const [contributionProgress, setContributionProgress] = useState<ContributorProgress>({
     approvedCount: 0,
@@ -191,7 +204,6 @@ export default function MojeDoswiadczenieScreen() {
   const [badgeShareSheetOpen, setBadgeShareSheetOpen] = useState(false);
   const [selectedBadgeCode, setSelectedBadgeCode] = useState<ContributorBadgeCode | null>(null);
   const [badgeShareVariant, setBadgeShareVariant] = useState<"soft" | "detailed">("soft");
-  const [communityIdeasOpen, setCommunityIdeasOpen] = useState(false);
   const [communityIdeasLoading, setCommunityIdeasLoading] = useState(false);
   const [communityIdeasLoaded, setCommunityIdeasLoaded] = useState(false);
   const [communityIdeasError, setCommunityIdeasError] = useState("");
@@ -200,10 +212,9 @@ export default function MojeDoswiadczenieScreen() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaved = useRef<string>("");
-  const scrollRef = useRef<ScrollView>(null);
+  const composerFocusedRef = useRef(false);
   const shareCardRef = useRef<View>(null);
-  const composerY = useRef(0);
-  const sharingSectionY = useRef(0);
+  const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } = useScrollAnchors<"composer">();
 
   useEffect(() => {
     let active = true;
@@ -276,17 +287,20 @@ export default function MojeDoswiadczenieScreen() {
     }, 2800);
   };
 
-  const saveDraftNow = async (value: string) => {
-    if (!loaded) return;
-    if (value === lastSaved.current) return;
+  const saveDraftNow = useCallback(
+    async (value: string) => {
+      if (!loaded) return;
+      if (value === lastSaved.current) return;
 
-    try {
-      await AsyncStorage.setItem(DRAFT_KEY, value);
-      lastSaved.current = value;
-    } catch {
-      // no-op
-    }
-  };
+      try {
+        await AsyncStorage.setItem(DRAFT_KEY, value);
+        lastSaved.current = value;
+      } catch {
+        // no-op
+      }
+    },
+    [loaded],
+  );
 
   useEffect(() => {
     if (!loaded) return;
@@ -299,14 +313,28 @@ export default function MojeDoswiadczenieScreen() {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [text, loaded]);
+  }, [text, loaded, saveDraftNow]);
 
   useEffect(() => {
-    const sub = Keyboard.addListener("keyboardDidHide", () => {
+    const keyboardShowEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const showSub = Keyboard.addListener(keyboardShowEvent, (event) => {
+      if (!composerFocusedRef.current) return;
+
+      const keyboardHeight = event.endCoordinates?.height ?? (Platform.OS === "ios" ? 320 : 260);
+      scrollToAnchor("composer", {
+        offset: 12,
+        bottomMargin: keyboardHeight + 36,
+      });
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
       void saveDraftNow(text);
     });
-    return () => sub.remove();
-  }, [text, loaded]);
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [saveDraftNow, scrollToAnchor, text]);
 
   const persistSharedExperienceConsent = async () => {
     if (shareConsentSaved) return true;
@@ -319,16 +347,14 @@ export default function MojeDoswiadczenieScreen() {
     return true;
   };
 
-  const toggleMethodSelection = (id: string) => {
-    setSelectedMethodIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-  };
-
   const handleSaveMethod = async () => {
     const trimmed = text.trim();
     if (!trimmed) {
       Alert.alert("Brak treści", "Najpierw zapisz jedną konkretną rzecz, która Ci pomaga.");
       return;
     }
+
+    Keyboard.dismiss();
 
     const nextMethod: RecoveryMethod = {
       id: `${Date.now()}`,
@@ -352,7 +378,7 @@ export default function MojeDoswiadczenieScreen() {
       lastSaved.current = "";
       showFeedback(
         nextMethods.length === 1
-          ? "Zapisane. To jest początek Twojej prywatnej listy wsparcia."
+          ? "Zapisane na Twojej liście."
           : `Zapisane. Masz już ${getMethodsLabel(nextMethods.length)}.`,
       );
     } catch {
@@ -362,24 +388,18 @@ export default function MojeDoswiadczenieScreen() {
     }
   };
 
-  const handleSubmitSelectedMethods = async () => {
-    const selectedMethods = methods.filter((item) => selectedMethodIds.includes(item.id) && !item.sharedToCommunityAt);
-
-    if (selectedMethods.length === 0) {
-      Alert.alert("Wybierz wpisy", "Zaznacz przynajmniej jeden wpis, który chcesz przekazać do wspólnej bazy sposobów.");
-      return;
-    }
-
+  const handlePublishMethod = async (method: RecoveryMethod) => {
+    if (method.sharedToCommunityAt) return;
     if (!shareConsentSaved && !shareConsentDraft) {
       Alert.alert(
         "Potwierdź zasady udostępniania",
-        "Jeśli chcesz przekazać wpisy anonimowo do wspólnej bazy doświadczeń, najpierw zaznacz potwierdzenie pod wyjaśnieniem."
+        "Jeśli chcesz przekazać wpis anonimowo do wspólnej bazy doświadczeń, najpierw zaznacz potwierdzenie pod listą."
       );
-      setSharingOpen(true);
       return;
     }
 
     try {
+      setPublishingMethodId(method.id);
       const nextContributorId = contributorId ?? (await getOrCreateContributorId());
       if (!contributorId) {
         setContributorId(nextContributorId);
@@ -389,83 +409,70 @@ export default function MojeDoswiadczenieScreen() {
         await persistSharedExperienceConsent();
       }
 
-      const results = await Promise.allSettled(
-        selectedMethods.map((item) =>
-          submitExperienceSubmission({
-            content: item.text.trim(),
-            contributorId: nextContributorId,
-            clientEntryId: item.id,
-          }),
-        ),
+      await submitExperienceSubmission({
+        content: method.text.trim(),
+        contributorId: nextContributorId,
+        clientEntryId: method.id,
+      });
+
+      const sharedAt = new Date().toISOString();
+      const optimisticApprovedCount = contributionProgress.approvedCount + 1;
+      const nextMethods = methods.map((item) =>
+        item.id === method.id ? { ...item, sharedToCommunityAt: sharedAt } : item,
       );
 
-      const successfulIds = selectedMethods
-        .filter((_, index) => results[index]?.status === "fulfilled")
-        .map((item) => item.id);
-
-      const failedCount = results.length - successfulIds.length;
-
-      if (successfulIds.length > 0) {
-        const sharedAt = new Date().toISOString();
-        const nextMethods = methods.map((item) =>
-          successfulIds.includes(item.id) ? { ...item, sharedToCommunityAt: sharedAt } : item,
-        );
-
-        setMethods(nextMethods);
-        setSelectedMethodIds((current) => current.filter((id) => !successfulIds.includes(id)));
-        await AsyncStorage.setItem(METHODS_KEY, JSON.stringify(nextMethods));
-
-        setContributionLoading(true);
-        try {
-          const nextProgress = await fetchContributorProgress(nextContributorId);
-          setContributionProgress(nextProgress);
-        } catch (error) {
-          console.error("Błąd odświeżenia wkładu użytkownika:", error);
-        } finally {
-          setContributionLoading(false);
+      setMethods(nextMethods);
+      await AsyncStorage.setItem(METHODS_KEY, JSON.stringify(nextMethods));
+      setContributionProgress((prev) => ({
+        ...prev,
+        approvedCount: Math.max(prev.approvedCount, optimisticApprovedCount),
+      }));
+      setCommunityIdeas((current) => {
+        const normalizedMethodText = method.text.trim().toLocaleLowerCase("pl-PL");
+        if (current.some((item) => item.tresc.trim().toLocaleLowerCase("pl-PL") === normalizedMethodText)) {
+          return current;
         }
+
+        return [
+          {
+            id: `local_${method.id}`,
+            tresc: method.text.trim(),
+            dodanoO: sharedAt,
+          },
+          ...current,
+        ].slice(0, 12);
+      });
+
+      if (communityIdeasLoaded) {
+        void zaladujWspolneSposoby();
       }
 
-      if (successfulIds.length > 0 && failedCount === 0) {
-        showFeedback(
-          successfulIds.length === 1
-            ? "Wpis został przekazany anonimowo do przeglądu."
-            : `Przekazałem anonimowo ${successfulIds.length} wpisy do przeglądu.`,
-        );
-        return;
+      setContributionLoading(true);
+      try {
+        const nextProgress = await fetchContributorProgress(nextContributorId);
+        setContributionProgress((prev) => ({
+          ...nextProgress,
+          approvedCount: Math.max(nextProgress.approvedCount, optimisticApprovedCount, prev.approvedCount),
+        }));
+      } catch (error) {
+        console.error("Błąd odświeżenia wkładu użytkownika:", error);
+      } finally {
+        setContributionLoading(false);
       }
 
-      if (successfulIds.length > 0) {
-        showFeedback(
-          `Przekazałem anonimowo ${successfulIds.length} wpisy. ${failedCount} nie udało się wysłać w tej chwili.`,
-        );
-        return;
-      }
-
-      Alert.alert("Nie udało się wysłać", "Spróbuj ponownie za chwilę.");
+      showFeedback("Wpis został opublikowany anonimowo.");
     } catch (error) {
       console.error("Błąd anonimowego przekazania doświadczeń:", error);
-      Alert.alert("Nie udało się wysłać", "Spróbuj ponownie za chwilę.");
+      const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Spróbuj ponownie za chwilę.";
+      Alert.alert("Nie udało się wysłać", message);
+    } finally {
+      setPublishingMethodId((current) => (current === method.id ? null : current));
     }
   };
 
   const handleOpenBadgeShareSheet = (badgeCode: ContributorBadgeCode) => {
     setSelectedBadgeCode(badgeCode);
     setBadgeShareSheetOpen(true);
-  };
-
-  const handleShareBadge = async (variant: "soft" | "detailed") => {
-    if (!selectedBadgeCode) return;
-
-    try {
-      await Share.share({
-        message: buildBadgeShareMessage(selectedBadgeCode, contributionProgress.approvedCount, variant),
-      });
-    } catch {
-      Alert.alert("Nie udało się udostępnić", "Spróbuj ponownie za chwilę.");
-    } finally {
-      setBadgeShareSheetOpen(false);
-    }
   };
 
   const handleDeleteMethod = (id: string) => {
@@ -480,11 +487,16 @@ export default function MojeDoswiadczenieScreen() {
         onPress: () => {
           void (async () => {
             const previousMethods = methods;
-            const previousSelectedIds = selectedMethodIds;
             const previousProgress = contributionProgress;
+            const previousCommunityIdeas = communityIdeas;
             const nextMethods = methods.filter((item) => item.id !== id);
+            const normalizedTargetText = target.text.trim().toLocaleLowerCase("pl-PL");
             setMethods(nextMethods);
-            setSelectedMethodIds((current) => current.filter((itemId) => itemId !== id));
+            if (target.sharedToCommunityAt) {
+              setCommunityIdeas((current) =>
+                current.filter((item) => item.tresc.trim().toLocaleLowerCase("pl-PL") !== normalizedTargetText),
+              );
+            }
 
             try {
               if (target.sharedToCommunityAt) {
@@ -500,6 +512,9 @@ export default function MojeDoswiadczenieScreen() {
                 try {
                   const nextProgress = await fetchContributorProgress(contributorId);
                   setContributionProgress(nextProgress);
+                  if (communityIdeasLoaded) {
+                    void zaladujWspolneSposoby();
+                  }
                 } catch (error) {
                   console.error("Błąd odświeżenia wkładu po usunięciu wpisu:", error);
                 }
@@ -513,8 +528,8 @@ export default function MojeDoswiadczenieScreen() {
               );
             } catch {
               setMethods(previousMethods);
-              setSelectedMethodIds(previousSelectedIds);
               setContributionProgress(previousProgress);
+              setCommunityIdeas(previousCommunityIdeas);
               Alert.alert("Błąd zapisu", "Nie udało się usunąć wpisu. Spróbuj ponownie.");
             }
           })();
@@ -523,41 +538,24 @@ export default function MojeDoswiadczenieScreen() {
     ]);
   };
 
-  const toggleDetails = () => {
-    setDetailsOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        setTimeout(() => {
-          scrollRef.current?.scrollTo({ y: 0, animated: true });
-        }, 180);
-      }
-      return next;
-    });
-  };
-
-  const openSharingSelector = () => {
-    setSharingOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        setTimeout(() => {
-          scrollRef.current?.scrollTo({
-            y: Math.max(0, composerY.current + sharingSectionY.current - 12),
-            animated: true,
-          });
-        }, 120);
-      }
-      return next;
-    });
-  };
-
+  const normalizedMethodTexts = new Set(methods.map((item) => item.text.trim().toLocaleLowerCase("pl-PL")));
+  const unpublishedMethodsCount = methods.filter((item) => !item.sharedToCommunityAt).length;
+  const canPublishMethods = shareConsentSaved || shareConsentDraft;
+  const hasAnyNewCommunityIdea = communityIdeas.some(
+    (item) => !normalizedMethodTexts.has(item.tresc.trim().toLocaleLowerCase("pl-PL")),
+  );
   const summaryText =
     methods.length === 0
-      ? "Na początek zapisz 2-3 małe rzeczy, które pomagają Ci wrócić do równowagi."
-      : `Masz już ${getMethodsLabel(methods.length)}. W trudniejszym momencie nie musisz zaczynać od zera.`;
+      ? "Zapisz pierwszą rzecz, która naprawdę Ci pomaga."
+      : `Masz już ${getMethodsLabel(methods.length)}.`;
   const communitySummaryText =
-    communityIdeasLoaded && communityIdeas.length > 0
-      ? "Anonimowe wpisy ze wspólnej bazy, które możesz dodać do swojej listy."
-      : "Anonimowe, zaakceptowane wpisy ze wspólnej bazy doświadczeń.";
+    communityIdeasLoaded && communityIdeas.length > 0 && hasAnyNewCommunityIdea
+      ? "Anonimowe wpisy, które możesz dodać do swojej listy."
+      : communityIdeasLoaded && communityIdeas.length > 0
+        ? "To wpisy ze wspólnej bazy. Te, które już masz, są oznaczone niżej."
+      : communityIdeasLoaded
+        ? "Na razie nie ma tu jeszcze wpisów."
+        : "Krótka lista anonimowych wpisów innych osób.";
   const latestBadgeAward = contributionProgress.badges[0] ?? null;
   const latestBadge = latestBadgeAward ? getContributionBadgeDefinition(latestBadgeAward.badgeCode) : null;
   const selectedBadge = selectedBadgeCode ? getContributionBadgeDefinition(selectedBadgeCode) : null;
@@ -567,6 +565,10 @@ export default function MojeDoswiadczenieScreen() {
     ? getBadgeShareCardCopy(selectedBadge.code, contributionProgress.approvedCount, badgeShareVariant)
     : { headline: "", detail: "" };
   const hasContributionBadge = Boolean(latestBadge && latestBadgeAward);
+  const contributionStatusText =
+    contributionProgress.approvedCount > 0
+      ? `Masz już ${getEntriesCountLabel(contributionProgress.approvedCount)} we wspólnej bazie.`
+      : "Twoje wpisy zostają prywatne, dopóki nie klikniesz publikacji.";
 
   const pokazKrotkiKomunikat = (message: string) => {
     setFeedback(message);
@@ -576,10 +578,10 @@ export default function MojeDoswiadczenieScreen() {
 
   const czySposobJuzJestNaLiscie = (value: string) => {
     const normalized = value.trim().toLocaleLowerCase("pl-PL");
-    return methods.some((item) => item.text.trim().toLocaleLowerCase("pl-PL") === normalized);
+    return normalizedMethodTexts.has(normalized);
   };
 
-  const zaladujWspolneSposoby = async () => {
+  const zaladujWspolneSposoby = useCallback(async () => {
     if (communityIdeasLoading) return;
 
     try {
@@ -594,17 +596,13 @@ export default function MojeDoswiadczenieScreen() {
     } finally {
       setCommunityIdeasLoading(false);
     }
-  };
+  }, [communityIdeasLoading]);
 
-  const przelaczWspolneSposoby = () => {
-    setCommunityIdeasOpen((prev) => {
-      const next = !prev;
-      if (next && !communityIdeasLoaded && !communityIdeasLoading) {
-        void zaladujWspolneSposoby();
-      }
-      return next;
-    });
-  };
+  useEffect(() => {
+    if (!communityIdeasLoaded && !communityIdeasLoading) {
+      void zaladujWspolneSposoby();
+    }
+  }, [communityIdeasLoaded, communityIdeasLoading, zaladujWspolneSposoby]);
 
   const dodajWspolnySposobDoListy = async (entry: WspolnySposob) => {
     if (czySposobJuzJestNaLiscie(entry.tresc)) {
@@ -678,24 +676,459 @@ export default function MojeDoswiadczenieScreen() {
       <BackButton />
       <ScrollView
         ref={scrollRef}
+        onLayout={onViewportLayout}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 18,
           paddingBottom: Math.max(64, insets.bottom + 40),
         }}
       >
+        <DismissKeyboardView>
         <View style={{ position: "absolute", width: 260, height: 260, borderRadius: 130, backgroundColor: "rgba(255,209,138,0.1)", top: -70, right: -88 }} />
         <View style={{ position: "absolute", width: 220, height: 220, borderRadius: 110, backgroundColor: "rgba(255,226,174,0.09)", bottom: 110, left: -80 }} />
 
         <Text style={{ ...TYPE.h1, color: "white", marginTop: 10, marginBottom: 6 }}>
           Napisz, co Ci pomaga
         </Text>
+        <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginTop: 6 }}>
+          Zapisz swój sposób. Jeśli chcesz, opublikujesz go potem anonimowo jednym kliknięciem.
+        </Text>
+
+        <View onLayout={setAnchor("composer")} style={{ marginTop: 12 }}>
+          <Text
+            style={{
+              marginBottom: 6,
+              color: "rgba(255,255,255,0.92)",
+              ...TYPE.bodyStrong,
+            }}
+          >
+            Co dziś mi pomogło?
+          </Text>
+
+          <View
+            style={{
+              marginTop: 8,
+              minHeight: 180,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: ACCENT_BORDER,
+              backgroundColor: "rgba(255,255,255,0.06)",
+            }}
+          >
+            <TextInput
+              value={text}
+              onChangeText={setText}
+              onBlur={() => {
+                composerFocusedRef.current = false;
+                void saveDraftNow(text);
+              }}
+              onFocus={() => {
+                composerFocusedRef.current = true;
+                scrollToAnchor("composer", {
+                  offset: 12,
+                  bottomMargin: Platform.OS === "ios" ? 300 : 240,
+                });
+              }}
+              placeholder="Np. spacer, telefon, meeting, modlitwa, oddech 4-6..."
+              placeholderTextColor="rgba(255,255,255,0.55)"
+              multiline
+              textAlignVertical="top"
+              style={{
+                minHeight: 180,
+                color: "white",
+                ...TYPE.body,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+              }}
+            />
+          </View>
+
+          <Pressable
+            disabled={!loaded || !text.trim()}
+            onPress={() => {
+              void handleSaveMethod();
+            }}
+            style={{
+              marginTop: 10,
+              marginBottom: 10,
+              backgroundColor: !loaded || !text.trim() ? "rgba(255,255,255,0.08)" : ACCENT_BG,
+              borderWidth: 1,
+              borderColor: !loaded || !text.trim() ? "rgba(255,255,255,0.12)" : ACCENT_BORDER,
+              borderRadius: 12,
+              paddingVertical: 14,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ ...TYPE.button, color: !loaded || !text.trim() ? "rgba(255,255,255,0.55)" : "white" }}>
+              Zapisz na mojej liście
+            </Text>
+          </Pressable>
+        </View>
+
+        {!!feedback && (
+          <Text style={{ ...TYPE.caption, color: ACCENT, marginTop: 2, marginBottom: 8 }}>
+            {feedback}
+          </Text>
+        )}
+
+        <View style={{ marginTop: 8 }}>
+          <View
+            style={{
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: ACCENT_BORDER,
+              backgroundColor: "rgba(12,38,62,0.78)",
+              padding: 12,
+              overflow: "hidden",
+            }}
+          >
+            <Image
+              source={Watermark}
+              resizeMode="contain"
+              style={{
+                position: "absolute",
+                right: -18,
+                bottom: -22,
+                width: 120,
+                height: 120,
+                opacity: 0.11,
+                tintColor: "white",
+                transform: [{ rotate: "16deg" }],
+              }}
+            />
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Moje sprawdzone sposoby</Text>
+                <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.72)", marginTop: 4 }}>
+                  {summaryText}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setMethodsOpen((prev) => !prev)}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.18)",
+                  borderRadius: 999,
+                  paddingHorizontal: 11,
+                  paddingVertical: 6,
+                }}
+              >
+                <Text style={{ ...TYPE.caption, color: ACCENT }}>{methodsOpen ? "Mniej" : "Więcej"}</Text>
+              </Pressable>
+            </View>
+
+            {methodsOpen ? (
+              <>
+                <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.82)", marginTop: 10, lineHeight: 18 }}>
+                  {contributionStatusText}
+                </Text>
+
+                {methods.length === 0 ? (
+                  <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginTop: 12 }}>
+                    Na razie nie masz tu żadnego wpisu.
+                  </Text>
+                ) : (
+                  <>
+                    {unpublishedMethodsCount > 0 ? (
+                      shareConsentSaved ? (
+                        <Text style={{ ...TYPE.caption, color: "#F3FFF8", marginTop: 10, lineHeight: 18 }}>
+                          Prywatny wpis opublikujesz jednym kliknięciem przy danej pozycji.
+                        </Text>
+                      ) : (
+                        <View
+                          style={{
+                            marginTop: 10,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: "rgba(255,255,255,0.12)",
+                            backgroundColor: "rgba(255,255,255,0.04)",
+                            padding: 10,
+                          }}
+                        >
+                          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+                            <Checkbox
+                              value={shareConsentDraft}
+                              onValueChange={setShareConsentDraft}
+                              color={shareConsentDraft ? ACCENT : undefined}
+                              style={{ marginTop: 2 }}
+                            />
+                            <Pressable style={{ flex: 1 }} onPress={() => setShareConsentDraft((prev) => !prev)}>
+                              <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.82)", lineHeight: 20 }}>
+                                Chcę samodzielnie publikować wybrane wpisy anonimowo.
+                              </Text>
+                            </Pressable>
+                          </View>
+
+                          <Pressable
+                            onPress={() => router.push("/polityka-prywatnosci")}
+                            style={{
+                              marginTop: 10,
+                              alignSelf: "flex-start",
+                              borderWidth: 1,
+                              borderColor: "rgba(255,255,255,0.18)",
+                              borderRadius: 999,
+                              paddingHorizontal: 11,
+                              paddingVertical: 6,
+                            }}
+                          >
+                            <Text style={{ ...TYPE.caption, color: "white" }}>Polityka prywatności</Text>
+                          </Pressable>
+                        </View>
+                      )
+                    ) : null}
+
+                    <View style={{ marginTop: 10 }}>
+                      {methods.map((item, index) => {
+                        const isPublishingThisMethod = publishingMethodId === item.id;
+                        const publishDisabled = !canPublishMethods || publishingMethodId !== null;
+
+                        return (
+                          <View
+                            key={item.id}
+                            style={{
+                              paddingTop: index === 0 ? 0 : 10,
+                              marginTop: index === 0 ? 0 : 10,
+                              borderTopWidth: index === 0 ? 0 : 1,
+                              borderTopColor: "rgba(255,255,255,0.09)",
+                            }}
+                          >
+                            <Text style={{ ...TYPE.bodyStrong, color: "white" }}>{item.text}</Text>
+                            <Text
+                              style={{
+                                ...TYPE.caption,
+                                color: item.sharedToCommunityAt ? ACCENT : "rgba(255,255,255,0.6)",
+                                marginTop: 4,
+                              }}
+                            >
+                              {item.sharedToCommunityAt
+                                ? `Opublikowany ${formatSavedDate(item.sharedToCommunityAt)}`
+                                : `Prywatny wpis z ${formatSavedDate(item.createdAt)}`}
+                            </Text>
+                          <View
+                            style={{
+                              marginTop: 6,
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                                gap: 8,
+                              }}
+                            >
+                              {!item.sharedToCommunityAt ? (
+                                <Pressable
+                                  disabled={publishDisabled}
+                                  onPress={() => {
+                                    void handlePublishMethod(item);
+                                  }}
+                                  style={{
+                                    borderWidth: 1,
+                                  borderColor: publishDisabled ? "rgba(255,255,255,0.12)" : ACCENT_BORDER,
+                                  backgroundColor: publishDisabled ? "rgba(255,255,255,0.05)" : ACCENT_BG,
+                                  borderRadius: 999,
+                                  paddingVertical: 5,
+                                  paddingHorizontal: 10,
+                                }}
+                              >
+                                <Text style={{ ...TYPE.caption, color: publishDisabled ? "rgba(255,255,255,0.52)" : "white" }}>
+                                    {isPublishingThisMethod ? "Publikuję..." : "Opublikuj anonimowo"}
+                                  </Text>
+                                </Pressable>
+                              ) : null}
+                              <Pressable
+                                onPress={() => {
+                                  handleDeleteMethod(item.id);
+                                }}
+                                style={{
+                                borderWidth: 1,
+                                borderColor: "rgba(255,255,255,0.18)",
+                                borderRadius: 999,
+                                paddingVertical: 5,
+                                paddingHorizontal: 10,
+                              }}
+                            >
+                              <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)" }}>Usuń</Text>
+                              </Pressable>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
+              </>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={{ marginTop: 8 }}>
+          <View
+            style={{
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: COMMUNITY_ACCENT_BORDER,
+              backgroundColor: "rgba(8,40,52,0.82)",
+              padding: 12,
+              overflow: "hidden",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: -26,
+                right: -18,
+                width: 110,
+                height: 110,
+                borderRadius: 55,
+                backgroundColor: "rgba(142,217,197,0.1)",
+              }}
+            />
+            <Image
+              source={Watermark}
+              resizeMode="contain"
+              style={{
+                position: "absolute",
+                right: -18,
+                bottom: -20,
+                width: 120,
+                height: 120,
+                opacity: 0.11,
+                tintColor: COMMUNITY_ACCENT,
+                transform: [{ rotate: "16deg" }],
+              }}
+            />
+            <View>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Co pomaga innym</Text>
+                  <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.72)", marginTop: 4 }}>
+                    {communityIdeasLoaded ? `${communityIdeas.length} inspiracje` : "Inspiracje"}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setCommunityIdeasOpen((prev) => !prev)}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.18)",
+                    borderRadius: 999,
+                    paddingHorizontal: 11,
+                    paddingVertical: 6,
+                  }}
+                >
+                  <Text style={{ ...TYPE.caption, color: COMMUNITY_ACCENT }}>{communityIdeasOpen ? "Mniej" : "Więcej"}</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {communityIdeasOpen ? (
+              <View
+                style={{
+                  marginTop: 10,
+                  paddingTop: 10,
+                  borderTopWidth: 1,
+                  borderTopColor: "rgba(142,217,197,0.14)",
+                }}
+              >
+                <View
+                  style={{
+                    alignSelf: "flex-start",
+                    marginBottom: 10,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: COMMUNITY_ACCENT_BORDER,
+                    backgroundColor: COMMUNITY_ACCENT_BG,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ ...TYPE.caption, color: COMMUNITY_ACCENT }}>Inspiracje</Text>
+                </View>
+                <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)", marginBottom: 10, lineHeight: 18 }}>
+                  {communitySummaryText}
+                </Text>
+                <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginBottom: 10 }}>
+                  Jeśli coś Ci pasuje, dodaj to do swojej listy.
+                </Text>
+                {communityIdeasLoading ? (
+                  <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>Ładuję wpisy...</Text>
+                ) : communityIdeasError ? (
+                  <View>
+                    <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>{communityIdeasError}</Text>
+                    <Pressable
+                      onPress={() => {
+                        void zaladujWspolneSposoby();
+                      }}
+                      style={{
+                        marginTop: 10,
+                        alignSelf: "flex-start",
+                        borderWidth: 1,
+                        borderColor: COMMUNITY_ACCENT_BORDER,
+                        borderRadius: 999,
+                        backgroundColor: COMMUNITY_ACCENT_BG,
+                        paddingVertical: 7,
+                        paddingHorizontal: 12,
+                      }}
+                    >
+                      <Text style={{ ...TYPE.caption, color: "white" }}>Spróbuj ponownie</Text>
+                    </Pressable>
+                  </View>
+                ) : communityIdeas.length === 0 ? (
+                  <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>
+                    Na razie nie ma tu jeszcze wpisów.
+                  </Text>
+                ) : (
+                  communityIdeas.map((item, index) => {
+                    const alreadySaved = czySposobJuzJestNaLiscie(item.tresc);
+
+                    return (
+                      <View
+                        key={item.id}
+                        style={{
+                          paddingTop: index === 0 ? 0 : 10,
+                          marginTop: index === 0 ? 0 : 10,
+                          borderTopWidth: index === 0 ? 0 : 1,
+                          borderTopColor: "rgba(255,255,255,0.09)",
+                        }}
+                      >
+                        <Text style={{ ...TYPE.bodyStrong, color: "white" }}>{item.tresc}</Text>
+                        <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>
+                          {item.dodanoO ? `Dodano do bazy ${formatSavedDate(item.dodanoO)}` : "Anonimowy wpis ze wspólnej bazy"}
+                        </Text>
+                        <Pressable
+                          disabled={alreadySaved}
+                          onPress={() => {
+                            void dodajWspolnySposobDoListy(item);
+                          }}
+                          style={{
+                            marginTop: 12,
+                            alignSelf: "flex-start",
+                            borderWidth: 1,
+                            borderColor: alreadySaved ? "rgba(255,255,255,0.14)" : COMMUNITY_ACCENT_BORDER,
+                            borderRadius: 999,
+                            backgroundColor: alreadySaved ? "rgba(255,255,255,0.05)" : COMMUNITY_ACCENT_BG,
+                            paddingVertical: 7,
+                            paddingHorizontal: 12,
+                          }}
+                        >
+                          <Text style={{ ...TYPE.caption, color: alreadySaved ? "rgba(255,255,255,0.52)" : COMMUNITY_ACCENT }}>
+                            {alreadySaved ? "Masz już na liście" : "Dodaj do mojej listy"}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+            ) : null}
+          </View>
+        </View>
         {hasContributionBadge && latestBadge && latestBadgeAward ? (
           <Pressable
             onPress={() => handleOpenBadgeShareSheet(latestBadge.code)}
             style={{
-              marginTop: 14,
+              marginTop: 8,
               borderRadius: 14,
               borderWidth: 1,
               borderColor: ACCENT_BORDER,
@@ -720,7 +1153,7 @@ export default function MojeDoswiadczenieScreen() {
             />
             <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
               <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Twoja odznaka</Text>
-              <Text style={{ ...TYPE.caption, color: ACCENT }}>Dotknij, aby otworzyć</Text>
+              <Text style={{ ...TYPE.caption, color: ACCENT }}>Dotknij, aby udostępnić</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 12 }}>
               {latestBadgeImage ? (
@@ -755,561 +1188,7 @@ export default function MojeDoswiadczenieScreen() {
             </View>
           </Pressable>
         ) : null}
-        <View
-          style={{
-            marginTop: hasContributionBadge ? 10 : 14,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: ACCENT_BORDER,
-            backgroundColor: "rgba(12,38,62,0.78)",
-            padding: 12,
-            overflow: "hidden",
-          }}
-        >
-          <Image source={Watermark} resizeMode="contain" style={{ position: "absolute", right: -18, bottom: -20, width: 120, height: 120, opacity: 0.11, tintColor: "white", transform: [{ rotate: "16deg" }] }} />
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <Text style={{ ...TYPE.h3, color: "white" }}>Opis i instrukcja</Text>
-            <Pressable
-              onPress={toggleDetails}
-              style={{
-                borderWidth: 1,
-                borderColor: ACCENT_BORDER,
-                backgroundColor: ACCENT_BG,
-                borderRadius: 999,
-                paddingVertical: 6,
-                paddingHorizontal: 12,
-              }}
-            >
-              <Text style={{ ...TYPE.caption, color: ACCENT }}>{detailsOpen ? "Mniej" : "Czytaj więcej"}</Text>
-            </Pressable>
-          </View>
-
-          {detailsOpen ? (
-            <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.88)", marginTop: 12 }}>
-              To jest Twoja prywatna lista sprawdzonych sposobów.
-              {"\n\n"}
-              Gdy przyjdzie trudniejszy moment, łatwiej wrócisz do sparwdzonych rozwiązań.
-            </Text>
-          ) : null}
-
-          {detailsOpen && (
-            <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.88)", marginTop: 10 }}>
-              Opisz konkretnie, wszystko co Ci dziś pomogło. Im prostszy i bardziej konkretny opis, tym lepiej. Unikaj ogólnych haseł typu „wsparcie od bliskich” albo „zdrowe nawyki”. Skup się na tym, co naprawdę zrobiłeś lub co naprawdę Ci pomogło, nawet jeśli to było coś bardzo prostego.
-              {"\n\n"}
-              Np.
-              {"\n"}
-              • spacer bez telefonu
-              {"\n"}
-              • telefon do zaufanej osoby
-              {"\n"}
-              • spotkanie online lub meeting
-              {"\n"}
-              • modlitwa albo medytacja
-              {"\n"}
-              • zimny prysznic
-              {"\n"}
-              • plan na najbliższą godzinę
-              {"\n\n"}
-              Te wpisy zostają u Ciebie w aplikacji. To ma być Twoja własna baza rzeczy, które realnie działają.
-            </Text>
-          )}
-        </View>
-
-        <View
-          onLayout={(event) => {
-            composerY.current = event.nativeEvent.layout.y;
-          }}
-        >
-          <Text
-            style={{
-              marginTop: 16,
-              marginBottom: 6,
-              color: "rgba(255,255,255,0.92)",
-              ...TYPE.bodyStrong,
-            }}
-          >
-            Mój sposób w jaki dziś sobie poradziłem w sytuacji dla mnie trudnej to...
-          </Text>
-
-          <View
-            style={{
-              marginTop: 8,
-              minHeight: 180,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: ACCENT_BORDER,
-              backgroundColor: "rgba(255,255,255,0.06)",
-            }}
-          >
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              onBlur={() => {
-                void saveDraftNow(text);
-              }}
-              onFocus={() => {
-                setTimeout(() => {
-                  scrollRef.current?.scrollTo({ y: Math.max(0, composerY.current - 12), animated: true });
-                }, 120);
-              }}
-              placeholder="Np. 15 minut spaceru, telefon do sponsora, modlitwa, meeting, oddech 4-6..."
-              placeholderTextColor="rgba(255,255,255,0.55)"
-              multiline
-              textAlignVertical="top"
-              style={{
-                minHeight: 180,
-                color: "white",
-                ...TYPE.body,
-                paddingVertical: 12,
-                paddingHorizontal: 14,
-              }}
-            />
-          </View>
-
-          <Pressable
-            disabled={!loaded || !text.trim()}
-            onPress={() => {
-              void handleSaveMethod();
-            }}
-            style={{
-              marginTop: 10,
-              marginBottom: 10,
-              backgroundColor: !loaded || !text.trim() ? "rgba(255,255,255,0.08)" : ACCENT_BG,
-              borderWidth: 1,
-              borderColor: !loaded || !text.trim() ? "rgba(255,255,255,0.12)" : ACCENT_BORDER,
-              borderRadius: 12,
-              paddingVertical: 14,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ ...TYPE.button, color: !loaded || !text.trim() ? "rgba(255,255,255,0.55)" : "white" }}>
-              Zapisz do mojej listy sposobów
-            </Text>
-          </Pressable>
-
-          <View
-            style={{ marginTop: 12 }}
-            onLayout={(event) => {
-              sharingSectionY.current = event.nativeEvent.layout.y;
-            }}
-          >
-            <View
-              style={{
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: ACCENT_BORDER,
-                backgroundColor: "rgba(12,38,62,0.78)",
-                padding: 14,
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                source={Watermark}
-                resizeMode="contain"
-                style={{
-                  position: "absolute",
-                  right: -18,
-                  bottom: -22,
-                  width: 120,
-                  height: 120,
-                  opacity: 0.11,
-                  tintColor: "white",
-                  transform: [{ rotate: "16deg" }],
-                }}
-              />
-              <Pressable onPress={openSharingSelector}>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Możesz także pomóc innym...</Text>
-                    <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.72)", marginTop: 4 }}>
-                      Anonimowo, bezpiecznie we wspólnej bazie....
-                    </Text>
-                  </View>
-                  <Text style={{ ...TYPE.caption, color: ACCENT, fontWeight: "700" }}>{sharingOpen ? "Zwiń" : "Wybierz wpisy"}</Text>
-                </View>
-              </Pressable>
-
-            {sharingOpen ? (
-              <View style={{ marginTop: 14 }}>
-                <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.82)" }}>
-                  Zaznacz wpisy i wyślij je anonimowo.
-                </Text>
-
-                {shareConsentSaved ? (
-                  <View
-                    style={{
-                      marginTop: 12,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: "rgba(176,236,201,0.42)",
-                      backgroundColor: "rgba(74,139,105,0.18)",
-                      paddingHorizontal: 12,
-                      paddingVertical: 10,
-                    }}
-                  >
-                    <Text style={{ ...TYPE.caption, color: "#F3FFF8" }}>
-                      Masz już zapisaną zgodę na anonimowe przekazywanie wpisów. Nadal decydujesz osobno przy każdym wpisie.
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={{ marginTop: 12, flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
-                    <Checkbox
-                      value={shareConsentDraft}
-                      onValueChange={setShareConsentDraft}
-                      color={shareConsentDraft ? ACCENT : undefined}
-                      style={{ marginTop: 2 }}
-                    />
-                    <Pressable style={{ flex: 1 }} onPress={() => setShareConsentDraft((prev) => !prev)}>
-                      <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.82)", lineHeight: 20 }}>
-                        Rozumiem, że wysyłam anonimowo tylko zaznaczone wpisy i bez danych osobowych.
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
-
-                <Pressable
-                  onPress={() => router.push("/polityka-prywatnosci")}
-                  style={{
-                    marginTop: 12,
-                    alignSelf: "flex-start",
-                    borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.18)",
-                    borderRadius: 999,
-                    paddingHorizontal: 12,
-                    paddingVertical: 7,
-                  }}
-                >
-                  <Text style={{ ...TYPE.caption, color: "white" }}>Polityka prywatności</Text>
-                </Pressable>
-                {methods.length > 0 ? (
-                  <>
-                    <Text style={{ ...TYPE.bodyStrong, color: "white", marginTop: 16 }}>
-                      Wybierz wpisy, którymi chcesz się podzielić z innymi użytkownikami. Każdy wpis zostanie przekazany anonimowo do przeglądu, ale nadal pozostanie u Ciebie w aplikacji. Jeśli wpis został już przekazany, zobaczysz informację pod nim i nie będzie można go ponownie zaznaczyć. Możesz też bez problemu usunąć każdy wpis ze swojej listy - wtedy zniknie on też z bazy doświadczeń, jeśli wcześniej był tam przekazany.
-                    </Text>
-
-                    <View style={{ marginTop: 10, gap: 10 }}>
-                      {methods.map((item) => {
-                        const isShared = Boolean(item.sharedToCommunityAt);
-                        const isSelected = selectedMethodIds.includes(item.id);
-
-                        return (
-                          <Pressable
-                            key={item.id}
-                            disabled={isShared}
-                            onPress={() => {
-                              if (!isShared) toggleMethodSelection(item.id);
-                            }}
-                            style={{
-                              borderRadius: 14,
-                              borderWidth: 1,
-                              borderColor: isSelected ? ACCENT_BORDER : "rgba(255,255,255,0.12)",
-                              backgroundColor: isSelected ? ACCENT_BG : "rgba(255,255,255,0.05)",
-                              paddingHorizontal: 12,
-                              paddingVertical: 12,
-                              opacity: isShared ? 0.68 : 1,
-                              flexDirection: "row",
-                              alignItems: "flex-start",
-                              gap: 10,
-                            }}
-                          >
-                            <Checkbox
-                              value={isShared || isSelected}
-                              onValueChange={() => {
-                                if (!isShared) toggleMethodSelection(item.id);
-                              }}
-                              disabled={isShared}
-                              color={isSelected || isShared ? ACCENT : undefined}
-                              style={{ marginTop: 2 }}
-                            />
-                            <View style={{ flex: 1 }}>
-                              <Text style={{ ...TYPE.body, color: "white" }}>{item.text}</Text>
-                              <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.72)", marginTop: 6 }}>
-                                {isShared ? "Ten wpis został już przekazany do przeglądu." : "Ten wpis pozostaje anonimowy."}
-                              </Text>
-                            </View>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-
-                    <Pressable
-                      disabled={selectedMethodIds.length === 0}
-                      onPress={() => {
-                        void handleSubmitSelectedMethods();
-                      }}
-                      style={{
-                        marginTop: 14,
-                        backgroundColor: selectedMethodIds.length === 0 ? "rgba(255,255,255,0.08)" : ACCENT_BG,
-                        borderWidth: 1,
-                        borderColor: selectedMethodIds.length === 0 ? "rgba(255,255,255,0.12)" : ACCENT_BORDER,
-                        borderRadius: 12,
-                        paddingVertical: 14,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          ...TYPE.button,
-                          color: selectedMethodIds.length === 0 ? "rgba(255,255,255,0.55)" : "white",
-                        }}
-                      >
-                        Wyślij do bazy sposobów
-                      </Text>
-                    </Pressable>
-                  </>
-                ) : (
-                  <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.72)", marginTop: 16 }}>
-                    Najpierw zapisz u siebie przynajmniej jeden sposób. Potem tutaj wybierzesz, co chcesz przekazać innym.
-                  </Text>
-                )}
-              </View>
-            ) : null}
-            </View>
-          </View>
-
-          {!!feedback && (
-            <Text style={{ ...TYPE.caption, color: ACCENT, marginTop: -2, marginBottom: 8 }}>
-              {feedback}
-            </Text>
-          )}
-        </View>
-
-        <View style={{ marginTop: 8 }}>
-          <View
-            style={{
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: COMMUNITY_ACCENT_BORDER,
-              backgroundColor: "rgba(8,40,52,0.82)",
-              padding: 14,
-              overflow: "hidden",
-            }}
-          >
-            <View
-              style={{
-                position: "absolute",
-                top: -26,
-                right: -18,
-                width: 110,
-                height: 110,
-                borderRadius: 55,
-                backgroundColor: "rgba(142,217,197,0.1)",
-              }}
-            />
-            <Image
-              source={Watermark}
-              resizeMode="contain"
-              style={{
-                position: "absolute",
-                right: -18,
-                bottom: -20,
-                width: 120,
-                height: 120,
-                opacity: 0.11,
-                tintColor: COMMUNITY_ACCENT,
-                transform: [{ rotate: "16deg" }],
-              }}
-            />
-            <Pressable onPress={przelaczWspolneSposoby}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <View style={{ flex: 1, paddingRight: 10 }}>
-                  <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Co pomaga innym</Text>
-                  <View
-                    style={{
-                      alignSelf: "flex-start",
-                      marginTop: 8,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: COMMUNITY_ACCENT_BORDER,
-                      backgroundColor: COMMUNITY_ACCENT_BG,
-                      paddingHorizontal: 10,
-                      paddingVertical: 5,
-                    }}
-                  >
-                    <Text style={{ ...TYPE.caption, color: COMMUNITY_ACCENT }}>Wspólna baza inspiracji</Text>
-                  </View>
-                </View>
-                <Text style={{ ...TYPE.caption, color: COMMUNITY_ACCENT }}>{communityIdeasOpen ? "Mniej" : "Czytaj więcej"}</Text>
-              </View>
-              <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginTop: 6 }}>
-                {communitySummaryText}
-              </Text>
-            </Pressable>
-
-            {communityIdeasOpen ? (
-              <View
-              style={{
-                marginTop: 14,
-                paddingTop: 14,
-                borderTopWidth: 1,
-                borderTopColor: "rgba(142,217,197,0.14)",
-              }}
-            >
-              <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginBottom: 14 }}>
-                To anonimowe, zaakceptowane wpisy ze wspólnej bazy. Jeśli coś do Ciebie pasuje, możesz dodać to do swojej listy.
-              </Text>
-
-              {communityIdeasLoading ? (
-                <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>Ładuję wpisy...</Text>
-              ) : communityIdeasError ? (
-                <View>
-                  <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>{communityIdeasError}</Text>
-                  <Pressable
-                    onPress={() => {
-                      void zaladujWspolneSposoby();
-                    }}
-                    style={{
-                      marginTop: 12,
-                      alignSelf: "flex-start",
-                      borderWidth: 1,
-                      borderColor: COMMUNITY_ACCENT_BORDER,
-                      borderRadius: 999,
-                      backgroundColor: COMMUNITY_ACCENT_BG,
-                      paddingVertical: 8,
-                      paddingHorizontal: 14,
-                    }}
-                  >
-                    <Text style={{ ...TYPE.caption, color: "white" }}>Spróbuj ponownie</Text>
-                  </Pressable>
-                </View>
-              ) : communityIdeas.length === 0 ? (
-                <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>
-                  Na razie nie ma tu jeszcze zaakceptowanych wpisów.
-                </Text>
-              ) : (
-                communityIdeas.map((item, index) => {
-                  const alreadySaved = czySposobJuzJestNaLiscie(item.tresc);
-
-                  return (
-                    <View
-                      key={item.id}
-                      style={{
-                        paddingTop: index === 0 ? 0 : 12,
-                        marginTop: index === 0 ? 0 : 12,
-                        borderTopWidth: index === 0 ? 0 : 1,
-                        borderTopColor: "rgba(255,255,255,0.09)",
-                      }}
-                    >
-                      <Text style={{ ...TYPE.bodyStrong, color: "white" }}>{item.tresc}</Text>
-                      <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>
-                        {item.dodanoO ? `Dodano do bazy ${formatSavedDate(item.dodanoO)}` : "Anonimowy wpis ze wspólnej bazy"}
-                      </Text>
-                      <Pressable
-                        disabled={alreadySaved}
-                        onPress={() => {
-                          void dodajWspolnySposobDoListy(item);
-                        }}
-                        style={{
-                          marginTop: 12,
-                          alignSelf: "flex-start",
-                          borderWidth: 1,
-                          borderColor: alreadySaved ? "rgba(255,255,255,0.14)" : COMMUNITY_ACCENT_BORDER,
-                          borderRadius: 999,
-                          backgroundColor: alreadySaved ? "rgba(255,255,255,0.05)" : COMMUNITY_ACCENT_BG,
-                          paddingVertical: 8,
-                          paddingHorizontal: 14,
-                        }}
-                      >
-                        <Text style={{ ...TYPE.caption, color: alreadySaved ? "rgba(255,255,255,0.52)" : COMMUNITY_ACCENT }}>
-                          {alreadySaved ? "Już masz na liście" : "Dodaj do mojej listy"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  );
-                })
-              )}
-              </View>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={{ marginTop: 8 }}>
-          <Pressable
-            onPress={() => setMethodsOpen((prev) => !prev)}
-            style={{
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: ACCENT_BORDER,
-              backgroundColor: "rgba(12,38,62,0.62)",
-              padding: 14,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-              <Text style={{ ...TYPE.bodyStrong, color: "white" }}>Moje sprawdzone sposoby</Text>
-              <Text style={{ ...TYPE.caption, color: ACCENT }}>{methodsOpen ? "Mniej" : "Czytaj więcej"}</Text>
-            </View>
-            <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)", marginTop: 6 }}>
-              {summaryText}
-            </Text>
-          </Pressable>
-
-          {methodsOpen ? (
-            <View
-              style={{
-                marginTop: 10,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: ACCENT_BORDER,
-                backgroundColor: "rgba(12,38,62,0.78)",
-                padding: 14,
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                source={Watermark}
-                resizeMode="contain"
-                style={{
-                  position: "absolute",
-                  right: -18,
-                  bottom: -22,
-                  width: 120,
-                  height: 120,
-                  opacity: 0.11,
-                  tintColor: "white",
-                  transform: [{ rotate: "16deg" }],
-                }}
-              />
-              {methods.length === 0 ? (
-                <Text style={{ ...TYPE.body, color: "rgba(255,255,255,0.78)" }}>
-                  Na razie nie masz tu żadnego wpisu.
-                </Text>
-              ) : (
-                methods.map((item, index) => (
-                  <View
-                    key={item.id}
-                    style={{
-                      paddingTop: index === 0 ? 0 : 12,
-                      marginTop: index === 0 ? 0 : 12,
-                      borderTopWidth: index === 0 ? 0 : 1,
-                      borderTopColor: "rgba(255,255,255,0.09)",
-                    }}
-                  >
-                    <Text style={{ ...TYPE.bodyStrong, color: "white" }}>{item.text}</Text>
-                    <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                      <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.6)" }}>
-                        Dodano {formatSavedDate(item.createdAt)}
-                      </Text>
-                      <Pressable
-                        onPress={() => {
-                          handleDeleteMethod(item.id);
-                        }}
-                        style={{
-                          borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.18)",
-                          borderRadius: 999,
-                          paddingVertical: 6,
-                          paddingHorizontal: 12,
-                        }}
-                      >
-                        <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)" }}>Usuń</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                ))
-              )}
-            </View>
-          ) : null}
-        </View>
+        </DismissKeyboardView>
       </ScrollView>
 
       <Modal
