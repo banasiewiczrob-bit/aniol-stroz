@@ -295,19 +295,22 @@ function wholeDaysSinceDateInput(value: string) {
 
 function resolveRecoveredForCategory({
   monthlyValue,
+  historicalTotal,
   stillActive,
   stoppedSince,
   defaultDaysFromStart,
 }: {
   monthlyValue: number;
+  historicalTotal: number;
   stillActive: boolean;
   stoppedSince: string;
   defaultDaysFromStart: number;
 }) {
-  if (monthlyValue <= 0 || stillActive) return 0;
+  if (monthlyValue <= 0 || historicalTotal <= 0 || stillActive) return 0;
   const overrideDays = wholeDaysSinceDateInput(stoppedSince);
   const recoveryDays = overrideDays ?? defaultDaysFromStart;
-  return (monthlyValue / 30.4) * recoveryDays;
+  const recoveredFromTime = (monthlyValue / 30.4) * recoveryDays;
+  return Math.min(historicalTotal, recoveredFromTime);
 }
 
 function ResultRow({ label, value }: { label: string; value: string }) {
@@ -400,41 +403,51 @@ export default function LicznikKosztowKryzysuScreen() {
       drugsMonthly +
       gamblingMonthly;
     const dailyTotal = monthlyTotal / 30.4;
+    const cigarettesHistoricalTotal = cigarettesMonthly * cigarettesMonths;
+    const vapeHistoricalTotal = vapeMonthly * vapeMonths;
+    const alcoholHistoricalTotal = alcoholMonthly * alcoholMonths;
+    const drugsHistoricalTotal = drugsMonthly * drugsMonths;
+    const gamblingHistoricalTotal = gamblingMonthly * gamblingMonths;
     const historyTypical =
-      cigarettesMonthly * cigarettesMonths +
-      vapeMonthly * vapeMonths +
-      alcoholMonthly * alcoholMonths +
-      drugsMonthly * drugsMonths +
-      gamblingMonthly * gamblingMonths +
+      cigarettesHistoricalTotal +
+      vapeHistoricalTotal +
+      alcoholHistoricalTotal +
+      drugsHistoricalTotal +
+      gamblingHistoricalTotal +
       interventionsTotal +
       additionalCrisisCostsTotal;
     const recoveredTypical =
       resolveRecoveredForCategory({
         monthlyValue: cigarettesMonthly,
+        historicalTotal: cigarettesHistoricalTotal,
         stillActive: inputs.cigarettesStillActive,
         stoppedSince: inputs.cigarettesStoppedSince,
         defaultDaysFromStart: daysFromStart,
       }) +
       resolveRecoveredForCategory({
         monthlyValue: vapeMonthly,
+        historicalTotal: vapeHistoricalTotal,
         stillActive: inputs.vapeStillActive,
         stoppedSince: inputs.vapeStoppedSince,
         defaultDaysFromStart: daysFromStart,
       }) +
       resolveRecoveredForCategory({
         monthlyValue: alcoholMonthly,
+        historicalTotal: alcoholHistoricalTotal,
         stillActive: inputs.alcoholStillActive,
         stoppedSince: inputs.alcoholStoppedSince,
         defaultDaysFromStart: daysFromStart,
       }) +
       resolveRecoveredForCategory({
         monthlyValue: drugsMonthly,
+        historicalTotal: drugsHistoricalTotal,
         stillActive: inputs.drugsStillActive,
         stoppedSince: inputs.drugsStoppedSince,
         defaultDaysFromStart: daysFromStart,
       }) +
       resolveRecoveredForCategory({
         monthlyValue: gamblingMonthly,
+        historicalTotal: gamblingHistoricalTotal,
         stillActive: inputs.gamblingStillActive,
         stoppedSince: inputs.gamblingStoppedSince,
         defaultDaysFromStart: daysFromStart,

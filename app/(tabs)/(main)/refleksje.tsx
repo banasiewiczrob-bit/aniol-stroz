@@ -40,9 +40,9 @@ const INITIAL_VIEW_OFFSET = 18;
 const TEXT_SECTION_SCROLL_OFFSET = 18;
 const TEXT_AUTO_SCROLL_MULTIPLIER = 1.2;
 const SMALL_STEP_ENDING_LINE = 'I niech to będzie Twój mały krok na dziś.';
-const SHARE_CARD_CHAR_LIMIT = 280;
 const CAPTURE_TIMEOUT_MS = 12000;
 const APP_NAME = 'Anioł Stróż';
+const APP_SHARE_SERIES_NAME = 'Dzień po dniu. Anioł Stróż';
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 function formatTime(value: number) {
@@ -92,15 +92,18 @@ function formatSmallStepText(content: string) {
   return `${trimmed}\n\n${SMALL_STEP_ENDING_LINE}`;
 }
 
-function buildShareCardExcerpt(content: string) {
-  const normalized = content.replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-  if (!normalized) return 'Kilka spokojnych zdań, do których można wracać w swoim rytmie.';
-  if (normalized.length <= SHARE_CARD_CHAR_LIMIT) return normalized;
+function buildShareCardBody(reflection: DailyReflection | null) {
+  if (!reflection) return 'Kilka spokojnych zdań, do których można wracać w swoim rytmie.';
 
-  const clipped = normalized.slice(0, SHARE_CARD_CHAR_LIMIT);
-  const boundary = Math.max(clipped.lastIndexOf('. '), clipped.lastIndexOf('! '), clipped.lastIndexOf('? '), clipped.lastIndexOf(' '));
-  const safeEnd = boundary > SHARE_CARD_CHAR_LIMIT * 0.55 ? boundary : SHARE_CARD_CHAR_LIMIT;
-  return `${clipped.slice(0, safeEnd).trim().replace(/[.,;:!?]+$/, '')}…`;
+  const content = joinReflectionText([
+    joinReflectionText([reflection.opening, reflection.reflection]),
+    reflection.question ? `Pytanie do siebie:\n${reflection.question}` : '',
+    reflection.smallStep ? `Mały krok:\n${formatSmallStepText(reflection.smallStep)}` : '',
+    reflection.closing ? `Domknięcie:\n${reflection.closing}` : '',
+  ]);
+
+  const normalized = content.replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return normalized || 'Kilka spokojnych zdań, do których można wracać w swoim rytmie.';
 }
 
 function buildReflectionShareMessage(reflection: DailyReflection) {
@@ -110,22 +113,14 @@ function buildReflectionShareMessage(reflection: DailyReflection) {
     reflection.question ? `Pytanie do siebie:\n${reflection.question}` : '',
     reflection.smallStep ? `Mały krok:\n${formatSmallStepText(reflection.smallStep)}` : '',
     reflection.closing ? `Domknięcie:\n${reflection.closing}` : '',
-    reflection.audioUrl
-      ? `Tej refleksji możesz też posłuchać w aplikacji ${APP_NAME}.`
-      : `Znajdziesz tę refleksję w aplikacji ${APP_NAME}.`,
+    `Posłuchaj w aplikacji ${APP_SHARE_SERIES_NAME}.`,
   ].filter(Boolean);
 
   return sections.join('\n\n');
 }
 
-function buildReflectionShareCallout(reflection: DailyReflection | null) {
-  if (!reflection) {
-    return `Znajdziesz tę refleksję w aplikacji ${APP_NAME}.`;
-  }
-
-  return reflection.audioUrl
-    ? `Tej refleksji możesz też posłuchać w aplikacji ${APP_NAME}.`
-    : `Znajdziesz tę refleksję w aplikacji ${APP_NAME}.`;
+function buildReflectionShareCallout() {
+  return `Posłuchaj w aplikacji\n${APP_SHARE_SERIES_NAME}`;
 }
 
 async function withTimeout<T>(promise: Promise<T>, message: string, timeoutMs = CAPTURE_TIMEOUT_MS) {
@@ -190,8 +185,8 @@ export default function RefleksjeScreen() {
   const showingSelectedReflection = Boolean(selectedReflectionId && currentReflection?.id === selectedReflectionId);
   const eyebrowLabel = showingSelectedReflection ? 'Wybrana refleksja' : 'Refleksja na dziś';
   const shareMessage = currentReflection ? buildReflectionShareMessage(currentReflection) : '';
-  const shareCardExcerpt = buildShareCardExcerpt(readingText);
-  const shareCardCallout = buildReflectionShareCallout(currentReflection);
+  const shareCardBody = buildShareCardBody(currentReflection);
+  const shareCardCallout = buildReflectionShareCallout();
   const isExpoGo = Constants.executionEnvironment === 'storeClient';
   const canShareGraphicCard = !isExpoGo;
 
@@ -701,13 +696,12 @@ export default function RefleksjeScreen() {
             <Text style={styles.shareCardTitle}>{displayTitle}</Text>
             <View style={styles.shareQuoteWrap}>
               <Text style={styles.shareQuoteMark}>“</Text>
-              <Text style={styles.shareCardBody}>{shareCardExcerpt}</Text>
+              <Text style={styles.shareCardBody}>{shareCardBody}</Text>
             </View>
             <View style={styles.shareCalloutWrap}>
-              <Text style={styles.shareCalloutLabel}>Posłuchaj dalej</Text>
               <Text style={styles.shareCalloutText}>{shareCardCallout}</Text>
             </View>
-            <Text style={styles.shareCardFooter}>{APP_NAME} • codzienne refleksje</Text>
+            <Text style={styles.shareCardFooter}>{APP_SHARE_SERIES_NAME}</Text>
           </View>
         </View>
       ) : null}
@@ -1147,8 +1141,8 @@ const styles = StyleSheet.create({
   },
   shareCardBody: {
     color: 'rgba(232,245,255,0.94)',
-    fontSize: 36,
-    lineHeight: 52,
+    fontSize: 30,
+    lineHeight: 44,
   },
   shareCalloutWrap: {
     borderRadius: 28,
@@ -1157,18 +1151,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(120,200,255,0.08)',
     padding: 24,
   },
-  shareCalloutLabel: {
-    color: '#78C8FF',
-    fontSize: 22,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
   shareCalloutText: {
     color: 'white',
-    fontSize: 30,
-    lineHeight: 42,
+    fontSize: 32,
+    lineHeight: 44,
+    fontWeight: '800',
   },
   shareCardFooter: {
     color: 'rgba(232,245,255,0.64)',
