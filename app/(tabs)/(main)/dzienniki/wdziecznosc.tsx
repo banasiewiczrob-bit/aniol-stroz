@@ -8,6 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -44,6 +45,23 @@ export default function DziennikWdziecznosciScreen() {
   const [allGratitudeEntries, setAllGratitudeEntries] = useState<GratitudeJournalEntry[]>([]);
   const [openDates, setOpenDates] = useState<Record<string, boolean>>({});
   const [openHours, setOpenHours] = useState<Record<string, boolean>>({});
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  React.useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const loadDayEntries = useCallback(async () => {
     const all = (await listJournalEntries('gratitude')) as GratitudeJournalEntry[];
@@ -136,17 +154,24 @@ export default function DziennikWdziecznosciScreen() {
     ]);
   };
 
+  const scrollToInput = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), Platform.OS === 'ios' ? 180 : 260);
+  };
+
   return (
     <BackgroundWrapper>
       <KeyboardAvoidingView
         style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
         <ScrollView
           ref={scrollRef}
           style={styles.screen}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: keyboardInset > 0 ? keyboardInset + 96 : 40 },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -175,6 +200,7 @@ export default function DziennikWdziecznosciScreen() {
             style={styles.input}
             placeholder="Np. dobra rozmowa, spacer, spokojny wieczór..."
             placeholderTextColor="rgba(255,255,255,0.45)"
+            onFocus={scrollToInput}
           />
           <Pressable style={[styles.plusBtn, busy && styles.btnDisabled]} onPress={onSave} disabled={busy}>
             <Text style={styles.plusBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>

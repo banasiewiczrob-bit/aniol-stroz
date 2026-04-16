@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   LayoutAnimation,
   Modal,
@@ -168,6 +169,25 @@ function toPlanText(items: PlanItem[]) {
     .join('\n');
 }
 
+function normalizePlanItemIds(items: PlanItem[], dateKey: DateKey) {
+  const used = new Set<string>();
+
+  return items.map((item, index) => {
+    const fallbackId = `${dateKey}_${index + 1}`;
+    const preferredId = item.id.trim().length > 0 ? item.id.trim() : fallbackId;
+    let id = preferredId;
+    let suffix = 2;
+
+    while (used.has(id)) {
+      id = `${fallbackId}_${suffix}`;
+      suffix += 1;
+    }
+
+    used.add(id);
+    return { ...item, id };
+  });
+}
+
 function sanitizePlan(value: Partial<DailyPlan> | undefined, dateKey: DateKey): DailyPlan {
   const halt =
     value?.halt && typeof value.halt === 'object'
@@ -255,6 +275,7 @@ function sanitizePlan(value: Partial<DailyPlan> | undefined, dateKey: DateKey): 
     }
   }
 
+  items = normalizePlanItemIds(items, dateKey);
   const planText = toPlanText(items);
 
   return {
@@ -379,7 +400,8 @@ function WeeklyLineChart({ points }: { points: Array<{ label: string; score: num
 }
 
 export default function PlanScreen() {
-  const { scrollRef, setAnchor, scrollToAnchor, clearPendingScroll, scrollToTop } = useScrollAnchors<'day-view' | 'archive-section'>();
+  const { scrollRef, setAnchor, scrollToAnchor, clearPendingScroll, scrollToTop, onScroll, onViewportLayout } =
+    useScrollAnchors<'day-view' | 'archive-section'>();
   const { height } = useWindowDimensions();
   const compact = height <= 900;
   const [calendarNow, setCalendarNow] = useState(() => new Date());
@@ -396,6 +418,7 @@ export default function PlanScreen() {
   const [textsStore, setTextsStore] = useState<DailyTextsStore>(createEmptyDailyTextsStore());
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
   const [instructionOpen, setInstructionOpen] = useState(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
   const [summary, setSummary] = useState<{ emoji: string; message: string; score: number; completedCount: number; readCount: number; haltCount: number }>({
     emoji: '🙂',
     message: '',
@@ -541,6 +564,22 @@ export default function PlanScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const savePlanStore = async (nextStore: PlanStore) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore));
@@ -572,9 +611,11 @@ export default function PlanScreen() {
     }
   };
 
-  const updatePlanItemText = (dateKey: DateKey, itemId: string, value: string) => {
+  const updatePlanItemText = (dateKey: DateKey, itemId: string, itemIndex: number, value: string) => {
     patchPlan(dateKey, (current) => {
-      const items = current.items.map((item) => (item.id === itemId ? { ...item, text: value } : item));
+      const items = current.items.map((item, index) =>
+        index === itemIndex || (itemIndex < 0 && item.id === itemId) ? { ...item, text: value } : item
+      );
       return { ...current, items, planText: toPlanText(items) };
     });
   };
@@ -587,17 +628,21 @@ export default function PlanScreen() {
     });
   };
 
-  const removePlanItem = (dateKey: DateKey, itemId: string) => {
+  const removePlanItem = (dateKey: DateKey, itemId: string, itemIndex: number) => {
     patchPlan(dateKey, (current) => {
-      const remaining = current.items.filter((item) => item.id !== itemId);
+      const remaining = current.items.filter(
+        (item, index) => index !== itemIndex && !(itemIndex < 0 && item.id === itemId)
+      );
       const items = remaining.length > 0 ? remaining : [{ id: `${dateKey}_1`, text: '', done: false }];
       return { ...current, items, planText: toPlanText(items) };
     });
   };
 
-  const togglePlanItemDone = (dateKey: DateKey, itemId: string) => {
+  const togglePlanItemDone = (dateKey: DateKey, itemId: string, itemIndex: number) => {
     patchPlan(dateKey, (current) => {
-      const items = current.items.map((item) => (item.id === itemId ? { ...item, done: !item.done } : item));
+      const items = current.items.map((item, index) =>
+        index === itemIndex || (itemIndex < 0 && item.id === itemId) ? { ...item, done: !item.done } : item
+      );
       return { ...current, items, planText: toPlanText(items) };
     });
   };
@@ -726,6 +771,18 @@ export default function PlanScreen() {
     });
   };
 
+  const scrollPlanInputIntoView = () => {
+    setTimeout(
+      () =>
+        scrollToAnchor('day-view', {
+          offset: 12,
+          onlyIfNeeded: true,
+          bottomMargin: keyboardInset > 0 ? keyboardInset + 180 : 280,
+        }),
+      Platform.OS === 'ios' ? 180 : 260
+    );
+  };
+
   const renderPlanForm = (params: {
     dateKey: DateKey;
     plan: DailyPlan;
@@ -745,9 +802,10 @@ export default function PlanScreen() {
             value={item.text}
             placeholder={DEFAULT_PLAN_PLACEHOLDERS[index] ?? `Element ${index + 1}`}
             placeholderTextColor="rgba(255,255,255,0.45)"
-            onChangeText={(v) => updatePlanItemText(params.dateKey, item.id, v)}
+            onChangeText={(v) => updatePlanItemText(params.dateKey, item.id, index, v)}
+            onFocus={scrollPlanInputIntoView}
           />
-          <Pressable style={styles.planItemDeleteBtn} onPress={() => removePlanItem(params.dateKey, item.id)}>
+          <Pressable style={styles.planItemDeleteBtn} onPress={() => removePlanItem(params.dateKey, item.id, index)}>
             <Text style={styles.planItemDeleteText}>Usuń</Text>
           </Pressable>
         </View>
@@ -762,16 +820,22 @@ export default function PlanScreen() {
     <BackgroundWrapper>
       <KeyboardAvoidingView
         style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        onLayout={onViewportLayout}
       >
         <ScrollView
           ref={scrollRef}
           style={styles.screen}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: keyboardInset > 0 ? keyboardInset + 96 : 40 },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
           <DismissKeyboardView>
           <View style={styles.bgOrbA} />
@@ -1008,9 +1072,14 @@ export default function PlanScreen() {
                         <Text style={styles.previewPlanText}>Brak wpisanych elementów planu.</Text>
                       ) : (
                         selectedPlan.items
-                          .filter((item) => item.text.trim().length > 0)
-                          .map((item, index) => (
-                            <Pressable key={item.id} style={styles.previewItem} onPress={() => togglePlanItemDone(selectedDateKey, item.id)}>
+                          .map((item, itemIndex) => ({ item, itemIndex }))
+                          .filter(({ item }) => item.text.trim().length > 0)
+                          .map(({ item, itemIndex }, index) => (
+                            <Pressable
+                              key={item.id}
+                              style={styles.previewItem}
+                              onPress={() => togglePlanItemDone(selectedDateKey, item.id, itemIndex)}
+                            >
                               <Text style={styles.previewCheck}>{item.done ? '☑' : '☐'}</Text>
                               <Text style={[styles.previewLine, item.done && styles.previewLineDone]}>
                                 {index + 1}. {item.text}

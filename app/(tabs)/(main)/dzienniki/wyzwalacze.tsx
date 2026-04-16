@@ -137,7 +137,7 @@ function getKindLabel(kind: TriggerKind) {
 export default function ListaWyzwalaczyScreen() {
   const insets = useSafeAreaInsets();
   const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
-    useScrollAnchors<'archive-internal' | 'archive-external'>();
+    useScrollAnchors<'input-card' | 'archive-internal' | 'archive-external'>();
   const [triggerName, setTriggerName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedKind, setSelectedKind] = useState<TriggerKind | null>(null);
@@ -148,6 +148,7 @@ export default function ListaWyzwalaczyScreen() {
   const [externalExpanded, setExternalExpanded] = useState(false);
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -251,6 +252,22 @@ export default function ListaWyzwalaczyScreen() {
     });
     return () => sub.remove();
   }, [description, loaded, selectedKind, triggerName]);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const persistItems = async (nextItems: TriggerItem[]) => {
     await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems));
@@ -427,10 +444,22 @@ export default function ListaWyzwalaczyScreen() {
     });
   };
 
+  const scrollInputIntoView = () => {
+    setTimeout(
+      () =>
+        scrollToAnchor('input-card', {
+          offset: 12,
+          onlyIfNeeded: true,
+          bottomMargin: keyboardInset > 0 ? keyboardInset + 180 : 280,
+        }),
+      Platform.OS === 'ios' ? 180 : 260
+    );
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
     >
       <BackButton />
@@ -441,7 +470,10 @@ export default function ListaWyzwalaczyScreen() {
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(64, insets.bottom + 40) }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: Math.max(64, insets.bottom + 40, keyboardInset > 0 ? keyboardInset + 96 : 0) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <DismissKeyboardView>
@@ -467,7 +499,7 @@ export default function ListaWyzwalaczyScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.inputCard}>
+        <View style={styles.inputCard} onLayout={setAnchor('input-card')}>
           <View style={styles.cardAccent} />
           <Text style={styles.sectionTitle}>Dodaj wyzwalacz i jego opis</Text>
           <Text style={styles.sectionText}>
@@ -500,6 +532,7 @@ export default function ListaWyzwalaczyScreen() {
             placeholder={triggerNamePlaceholder}
             placeholderTextColor="rgba(255,255,255,0.45)"
             style={[styles.input, styles.inputCompact]}
+            onFocus={scrollInputIntoView}
           />
 
           <Text style={styles.inputLabel}>Opis / schemat</Text>
@@ -515,6 +548,7 @@ export default function ListaWyzwalaczyScreen() {
             multiline
             textAlignVertical="top"
             style={styles.input}
+            onFocus={scrollInputIntoView}
           />
 
           {feedback ? (

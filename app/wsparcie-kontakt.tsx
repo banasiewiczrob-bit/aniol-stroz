@@ -387,7 +387,8 @@ export default function WsparcieKontakt() {
             <View style={styles.domRehabHeaderRow}>
               <Image source={DomRehabLogo} resizeMode="contain" style={styles.domRehabHeaderLogo} />
               <View style={styles.domRehabHeaderTextWrap}>
-                <Text style={styles.cardTitle}>dom-REHAB Robert Banasiewicz</Text>
+                <Text style={styles.cardTitle}>dom-REHAB</Text>
+                <Text style={styles.domRehabOwnerName}>Robert Banasiewicz</Text>
                 <Text style={styles.cardSubtitle}>Terapia stacjonarna i wsparcie</Text>
               </View>
             </View>
@@ -534,13 +535,14 @@ const styles = StyleSheet.create({
   email: { ...TYPE.bodyStrong, color: "white", marginTop: 8 },
   note: { ...TYPE.caption, color: MUTED, marginTop: 4 },
   domRehabToggleCard: {
-    justifyContent: "space-between",
+    flexDirection: "column",
+    alignItems: "stretch",
+    justifyContent: "flex-start",
   },
   domRehabHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    flex: 1,
   },
   domRehabHeaderLogo: {
     width: 56,
@@ -548,11 +550,20 @@ const styles = StyleSheet.create({
   },
   domRehabHeaderTextWrap: {
     flex: 1,
+    minWidth: 0,
+  },
+  domRehabOwnerName: {
+    ...TYPE.bodyStrong,
+    color: "white",
+    marginTop: 2,
+    flexShrink: 1,
   },
   domRehabToggleText: {
     ...TYPE.caption,
     color: ACCENT,
     fontWeight: "700",
+    marginTop: 8,
+    alignSelf: "flex-end",
   },
   domRehabCard: {
     flexDirection: "column",

@@ -16,6 +16,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -87,10 +88,10 @@ function getMoodBarColor(score: number) {
 
 function getMoodSummaryLabel(score: number | null) {
   if (score === null) return 'Brak danych';
-  if (score >= 1) return 'Wiecej lekkosci';
+  if (score >= 1) return 'Więcej lekkości';
   if (score >= 0.1) return 'Raczej stabilnie';
   if (score > -1) return 'Mieszany okres';
-  return 'Wiecej napiecia';
+  return 'Więcej napięcia';
 }
 
 function formatTrendLabel(dateKey: string) {
@@ -106,7 +107,7 @@ function shouldShowTrendTick(index: number, total: number, windowDays: TrendWind
 
 export default function DziennikUczucTestScreen() {
   const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
-    useScrollAnchors<'detail-card' | 'archive-section'>();
+    useScrollAnchors<'detail-card' | 'selected-feelings' | 'archive-section'>();
   const insets = useSafeAreaInsets();
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [baseEmotion, setBaseEmotion] = useState<BaseEmotion>('Strach');
@@ -121,6 +122,23 @@ export default function DziennikUczucTestScreen() {
   const [openDates, setOpenDates] = useState<Record<string, boolean>>({});
   const [openHours, setOpenHours] = useState<Record<string, boolean>>({});
   const [trendWindowDays, setTrendWindowDays] = useState<TrendWindowDays>(14);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  React.useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const detailOptions = useMemo(() => EMOTION_DETAILS_BY_BASE[baseEmotion], [baseEmotion]);
 
@@ -140,8 +158,8 @@ export default function DziennikUczucTestScreen() {
       const all = (await listJournalEntries('emotion')) as EmotionJournalEntry[];
       setEntries(all);
     } catch (e) {
-      console.error('Blad odczytu dziennika uczuc:', e);
-      Alert.alert('Blad', 'Nie udalo sie odczytac wpisow.');
+      console.error('Błąd odczytu dziennika uczuć:', e);
+      Alert.alert('Błąd', 'Nie udało się odczytać wpisów.');
     }
   }, []);
 
@@ -169,14 +187,22 @@ export default function DziennikUczucTestScreen() {
     });
   };
 
-  const updateDraftFeeling = (key: string, patch: Partial<Pick<DraftFeeling, 'situation' | 'expression'>>) => {
+  const updateDraftFeeling = (
+    key: string,
+    itemIndex: number,
+    patch: Partial<Pick<DraftFeeling, 'situation' | 'expression'>>
+  ) => {
     setDraftFeelings((prev) =>
-      prev.map((item) => (item.key === key ? { ...item, ...patch } : item))
+      prev.map((item, index) =>
+        index === itemIndex || (itemIndex < 0 && item.key === key) ? { ...item, ...patch } : item
+      )
     );
   };
 
-  const removeDraftFeeling = (key: string) => {
-    setDraftFeelings((prev) => prev.filter((item) => item.key !== key));
+  const removeDraftFeeling = (key: string, itemIndex: number) => {
+    setDraftFeelings((prev) =>
+      prev.filter((item, index) => index !== itemIndex && !(itemIndex < 0 && item.key === key))
+    );
   };
 
   const focusBaseEmotion = (emotion: BaseEmotion) => {
@@ -212,18 +238,18 @@ export default function DziennikUczucTestScreen() {
       await loadEntries();
       Alert.alert('Zapisano', 'Zapisano wpisy Dziennika Uczuć.');
     } catch (e) {
-      console.error('Blad zapisu dziennika uczuc:', e);
-      Alert.alert('Blad', 'Nie udalo sie zapisac wpisu.');
+      console.error('Błąd zapisu dziennika uczuć:', e);
+      Alert.alert('Błąd', 'Nie udało się zapisać wpisu.');
     } finally {
       setBusy(false);
     }
   };
 
   const onDelete = (id: string) => {
-    Alert.alert('Usunac wpis?', 'Tej operacji nie mozna cofnac.', [
+    Alert.alert('Usunąć wpis?', 'Tej operacji nie można cofnąć.', [
       { text: 'Anuluj', style: 'cancel' },
       {
-        text: 'Usun',
+        text: 'Usuń',
         style: 'destructive',
         onPress: async () => {
           await deleteJournalEntry(id);
@@ -340,18 +366,33 @@ export default function DziennikUczucTestScreen() {
     });
   };
 
+  const scrollSelectedInputsIntoView = () => {
+    setTimeout(
+      () =>
+        scrollToAnchor('selected-feelings', {
+          offset: 12,
+          onlyIfNeeded: true,
+          bottomMargin: keyboardInset > 0 ? keyboardInset + 180 : 280,
+        }),
+      Platform.OS === 'ios' ? 180 : 260
+    );
+  };
+
   return (
     <BackgroundWrapper>
       <KeyboardAvoidingView
         style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
         onLayout={onViewportLayout}
       >
         <ScrollView
           ref={scrollRef}
           style={styles.screen}
-          contentContainerStyle={[styles.content, { paddingBottom: Math.max(72, insets.bottom + 44) }]}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: Math.max(72, insets.bottom + 44, keyboardInset > 0 ? keyboardInset + 96 : 0) },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -361,15 +402,15 @@ export default function DziennikUczucTestScreen() {
           <DismissKeyboardView>
           <View style={styles.bgOrbA} />
           <View style={styles.bgOrbB} />
-          <Text style={styles.title}>Dziennik Uczuc</Text>
-          <Text style={styles.subtitle}>Wybieraj uczucia podwojnym kliknieciem i dopisz sytuacje oraz sposob okazania.</Text>
+          <Text style={styles.title}>Dziennik Uczuć</Text>
+          <Text style={styles.subtitle}>Wybieraj uczucia podwójnym kliknięciem i dopisz sytuację oraz sposób okazania.</Text>
 
         <WeekCalendar selectedDateKey={selectedDateKey} onChangeDateKey={setSelectedDateKey} title="Kalendarz uczuć" />
 
         <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>1. Emocja bazowa</Text>
-          <Text style={styles.helper}>Jedno klikniecie podswietla emocje bazowa, podwojne klikniecie dodaje ja do wpisu.</Text>
+          <Text style={styles.helper}>Jedno kliknięcie podświetla emocję bazową, podwójne kliknięcie dodaje ją do wpisu.</Text>
           <View style={styles.chipWrap}>
             {BASE_EMOTIONS.map((emotion) => (
               <Pressable
@@ -405,8 +446,8 @@ export default function DziennikUczucTestScreen() {
 
         <View style={styles.card} onLayout={setAnchor('detail-card')}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
-          <Text style={styles.sectionTitle}>2. Odcien emocji</Text>
-          <Text style={styles.helper}>Jedno klikniecie podswietla odcien, podwojne klikniecie dodaje go do wpisu.</Text>
+          <Text style={styles.sectionTitle}>2. Odcień emocji</Text>
+          <Text style={styles.helper}>Jedno kliknięcie podświetla odcień, podwójne kliknięcie dodaje go do wpisu.</Text>
           <View style={styles.chipWrap}>
             {detailOptions.map((detail) => {
               const active = detailEmotion === detail;
@@ -434,35 +475,37 @@ export default function DziennikUczucTestScreen() {
           </View>
         </View>
 
-        <View style={styles.card}>
+        <View style={styles.card} onLayout={setAnchor('selected-feelings')}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>3. Wybrane uczucia i opisy</Text>
-          {draftFeelings.length === 0 ? <Text style={styles.helpText}>Brak wybranych uczuc.</Text> : null}
+          {draftFeelings.length === 0 ? <Text style={styles.helpText}>Brak wybranych uczuć.</Text> : null}
           {draftFeelings.map((item, index) => (
             <View key={item.key} style={styles.selectedItemBox}>
               <View style={styles.selectedRow}>
                 <Text style={styles.entryTitle}>
                   {index + 1}. {item.detailEmotion || item.baseEmotion}
                 </Text>
-                <Pressable style={styles.removeBtn} onPress={() => removeDraftFeeling(item.key)}>
-                  <Text style={styles.removeBtnText}>Usun</Text>
+                <Pressable style={styles.removeBtn} onPress={() => removeDraftFeeling(item.key, index)}>
+                  <Text style={styles.removeBtnText}>Usuń</Text>
                 </Pressable>
               </View>
               <TextInput
                 value={item.situation}
-                onChangeText={(value) => updateDraftFeeling(item.key, { situation: value })}
+                onChangeText={(value) => updateDraftFeeling(item.key, index, { situation: value })}
                 placeholder="Opis sytuacji dla tego uczucia"
                 placeholderTextColor="rgba(255,255,255,0.45)"
                 multiline
                 style={styles.input}
+                onFocus={scrollSelectedInputsIntoView}
               />
               <TextInput
                 value={item.expression}
-                onChangeText={(value) => updateDraftFeeling(item.key, { expression: value })}
-                placeholder="Jak okazales/as to uczucie?"
+                onChangeText={(value) => updateDraftFeeling(item.key, index, { expression: value })}
+                placeholder="Jak okazałeś/aś to uczucie?"
                 placeholderTextColor="rgba(255,255,255,0.45)"
                 multiline
                 style={styles.input}
+                onFocus={scrollSelectedInputsIntoView}
               />
             </View>
           ))}
@@ -478,7 +521,7 @@ export default function DziennikUczucTestScreen() {
             <View style={styles.trendHeaderTextWrap}>
               <Text style={styles.sectionTitle}>Trend samopoczucia</Text>
               <Text style={styles.helper}>
-                Na podstawie emocji bazowych z wpisow. Wyzej = lzej, nizej = trudniej.
+                Na podstawie emocji bazowych z wpisów. Wyżej = lżej, niżej = trudniej.
               </Text>
             </View>
             <View style={styles.trendToggleWrap}>
@@ -498,7 +541,7 @@ export default function DziennikUczucTestScreen() {
 
           <View style={styles.trendSummaryRow}>
             <View style={styles.trendStatCard}>
-              <Text style={styles.trendStatLabel}>Srednia</Text>
+              <Text style={styles.trendStatLabel}>Średnia</Text>
               <Text style={styles.trendStatValue}>{getMoodSummaryLabel(moodTrend.averageScore)}</Text>
             </View>
             <View style={styles.trendStatCard}>
@@ -510,14 +553,14 @@ export default function DziennikUczucTestScreen() {
           </View>
 
           {moodTrend.leadingEmotion ? (
-            <Text style={styles.helpText}>Najczesciej wracalo: {moodTrend.leadingEmotion}.</Text>
+            <Text style={styles.helpText}>Najczęściej wracało: {moodTrend.leadingEmotion}.</Text>
           ) : (
-            <Text style={styles.helpText}>W tym okresie nie ma jeszcze wpisow do pokazania trendu.</Text>
+            <Text style={styles.helpText}>W tym okresie nie ma jeszcze wpisów do pokazania trendu.</Text>
           )}
 
           {moodTrend.selectedDateEntryCount > 0 ? (
             <Text style={styles.helpText}>
-              Dla wybranego dnia {selectedDateKey}: {moodTrend.selectedDateDominantEmotion ?? 'wiele roznych emocji'} (
+              Dla wybranego dnia {selectedDateKey}: {moodTrend.selectedDateDominantEmotion ?? 'wiele różnych emocji'} (
               {moodTrend.selectedDateEntryCount} wpis{moodTrend.selectedDateEntryCount === 1 ? '' : 'y'}).
             </Text>
           ) : (
@@ -552,7 +595,7 @@ export default function DziennikUczucTestScreen() {
 
           <View style={styles.trendLegendRow}>
             <Text style={styles.trendLegendText}>Trudniej</Text>
-            <Text style={styles.trendLegendText}>Lzej</Text>
+            <Text style={styles.trendLegendText}>Lżej</Text>
           </View>
         </View>
 
@@ -569,14 +612,14 @@ export default function DziennikUczucTestScreen() {
             })
           }
         >
-          <Text style={styles.archiveHeaderText}>Historia wpisow ({archiveEntryCount})</Text>
+          <Text style={styles.archiveHeaderText}>Historia wpisów ({archiveEntryCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
         </Pressable>
 
         {archiveOpen ? (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Archiwum wedlug dat</Text>
-            {archiveByDate.length === 0 ? <Text style={styles.helpText}>Brak wpisow.</Text> : null}
+            <Text style={styles.sectionTitle}>Archiwum według dat</Text>
+            {archiveByDate.length === 0 ? <Text style={styles.helpText}>Brak wpisów.</Text> : null}
             {archiveByDate.map(({ dateKey, hours }) => {
               const dateOpen = openDates[dateKey] === true;
               return (
@@ -609,12 +652,12 @@ export default function DziennikUczucTestScreen() {
                                         <Text style={styles.helpText}>Sytuacja: {entry.triggerNote}</Text>
                                       ) : null}
                                       {entry.actionNote.trim().length > 0 ? (
-                                        <Text style={styles.helpText}>Wyrazenie: {entry.actionNote}</Text>
+                                        <Text style={styles.helpText}>Wyrażenie: {entry.actionNote}</Text>
                                       ) : null}
                                       <Text style={styles.helpText}>{formatTime(entry.createdAt)}</Text>
                                     </View>
                                     <Pressable style={styles.deleteBtn} onPress={() => onDelete(entry.id)}>
-                                      <Text style={styles.deleteBtnText}>Usun</Text>
+                                      <Text style={styles.deleteBtnText}>Usuń</Text>
                                     </Pressable>
                                   </View>
                                 ))
