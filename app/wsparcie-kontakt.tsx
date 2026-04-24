@@ -4,10 +4,11 @@ import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 import { TYPE } from "@/styles/typography";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Contacts from "expo-contacts";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -77,10 +78,12 @@ const HOTLINES = [
 
 export default function WsparcieKontakt() {
   const { swipeHintInset } = useSwipeHintInset();
+  const scrollRef = useRef<ScrollView | null>(null);
   const [sosName, setSosName] = useState("");
   const [sosPhone, setSosPhone] = useState("");
   const [sosFormOpen, setSosFormOpen] = useState(false);
   const [domRehabExpanded, setDomRehabExpanded] = useState(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
 
   useEffect(() => {
     const loadSosContact = async () => {
@@ -97,6 +100,33 @@ export default function WsparcieKontakt() {
 
     void loadSosContact();
   }, []);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollSosFormIntoView = () => {
+    setTimeout(
+      () =>
+        scrollRef.current?.scrollTo({
+          y: 240,
+          animated: true,
+        }),
+      Platform.OS === "ios" ? 180 : 260
+    );
+  };
 
   const handleCall = async (phone: string) => {
     const normalized = phone.replace(/[^\d+]/g, "");
@@ -220,14 +250,26 @@ export default function WsparcieKontakt() {
 
   const openSosActions = () => {
     if (!hasSosContact) {
-      setSosFormOpen((prev) => !prev);
+      setSosFormOpen((prev) => {
+        const next = !prev;
+        if (next) {
+          scrollSosFormIntoView();
+        }
+        return next;
+      });
       return;
     }
 
     Alert.alert("S.O.S", "Wybierz działanie.", [
       { text: "Dzwoń 112", onPress: () => void handleCall("112") },
       { text: `Dzwoń do: ${sosName}`, onPress: () => void handleCall(sosPhone) },
-      { text: "Edytuj kontakt S.O.S", onPress: () => setSosFormOpen(true) },
+      {
+        text: "Edytuj kontakt S.O.S",
+        onPress: () => {
+          setSosFormOpen(true);
+          scrollSosFormIntoView();
+        },
+      },
       { text: "Anuluj", style: "cancel" },
     ]);
   };
@@ -235,15 +277,19 @@ export default function WsparcieKontakt() {
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
     >
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(56, swipeHintInset + 18) }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: Math.max(56, swipeHintInset + 18, keyboardInset > 0 ? keyboardInset + 96 : 0) },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
@@ -299,6 +345,7 @@ export default function WsparcieKontakt() {
                   placeholder="Imię / rola (np. Sponsor A.A.)"
                   placeholderTextColor="rgba(255,255,255,0.45)"
                   style={styles.input}
+                  onFocus={scrollSosFormIntoView}
                 />
                 <TextInput
                   value={sosPhone}
@@ -307,6 +354,7 @@ export default function WsparcieKontakt() {
                   placeholderTextColor="rgba(255,255,255,0.45)"
                   keyboardType="phone-pad"
                   style={styles.input}
+                  onFocus={scrollSosFormIntoView}
                 />
                 <View style={styles.sosButtonsWrap}>
                   <Pressable style={[styles.callButton, styles.sosPickButton]} onPress={() => void pickSosFromPhoneContacts()}>

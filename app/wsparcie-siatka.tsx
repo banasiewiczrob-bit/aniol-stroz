@@ -3,11 +3,12 @@ import { BackButton, useSwipeHintInset } from "@/components/BackButton";
 import { CoJakSection } from "@/components/CoJakSection";
 import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 import * as Contacts from "expo-contacts";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Linking,
   Modal,
@@ -96,6 +97,7 @@ async function pickContactsFromDevice(): Promise<DeviceContactsPickResult> {
 
 export default function WsparcieSiatka() {
   const { swipeHintInset } = useSwipeHintInset();
+  const scrollRef = useRef<ScrollView | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [contacts, setContacts] = useState<SupportContact[]>([]);
@@ -107,22 +109,52 @@ export default function WsparcieSiatka() {
   const [loadingDeviceContacts, setLoadingDeviceContacts] = useState(false);
   const [phonePickerOpen, setPhonePickerOpen] = useState(false);
   const [selectedDeviceContact, setSelectedDeviceContact] = useState<DeviceContact | null>(null);
+  const [keyboardInset, setKeyboardInset] = useState(0);
 
   useEffect(() => {
-    loadContacts();
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
-  const sortContacts = (items: SupportContact[]) =>
-    [...items].sort((a, b) => a.name.localeCompare(b.name, "pl", { sensitivity: "base" }));
+  const sortContacts = useCallback(
+    (items: SupportContact[]) => [...items].sort((a, b) => a.name.localeCompare(b.name, "pl", { sensitivity: "base" })),
+    []
+  );
 
-  const loadContacts = async () => {
+  const scrollFormIntoView = () => {
+    setTimeout(
+      () =>
+        scrollRef.current?.scrollTo({
+          y: 120,
+          animated: true,
+        }),
+      Platform.OS === "ios" ? 180 : 260
+    );
+  };
+
+  const loadContacts = useCallback(async () => {
     try {
       const saved = await AsyncStorage.getItem(STORAGE_KEY);
       if (saved) setContacts(sortContacts(JSON.parse(saved)));
     } catch (e) {
       console.error("Błąd ładowania kontaktów:", e);
     }
-  };
+  }, [sortContacts]);
+
+  useEffect(() => {
+    void loadContacts();
+  }, [loadContacts]);
 
   const saveContacts = async (items: SupportContact[]) => {
     try {
@@ -168,6 +200,7 @@ export default function WsparcieSiatka() {
     setEditingId(item.id);
     setName(item.name);
     setPhone(item.phone);
+    scrollFormIntoView();
   };
 
   const handleDelete = async (id: string) => {
@@ -281,15 +314,19 @@ export default function WsparcieSiatka() {
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
     >
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <BackButton />
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(56, swipeHintInset + 18) }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: Math.max(56, swipeHintInset + 18, keyboardInset > 0 ? keyboardInset + 96 : 0) },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
@@ -312,6 +349,7 @@ export default function WsparcieSiatka() {
           placeholder="Szukaj po imieniu lub numerze"
           placeholderTextColor="rgba(255,255,255,0.35)"
           style={styles.searchInput}
+          onFocus={scrollFormIntoView}
         />
 
         <View style={styles.form}>
@@ -322,6 +360,7 @@ export default function WsparcieSiatka() {
             placeholder="Imię, nazwisko lub pseudonim"
             placeholderTextColor="rgba(255,255,255,0.35)"
             style={styles.input}
+            onFocus={scrollFormIntoView}
           />
           <TextInput
             value={phone}
@@ -330,6 +369,7 @@ export default function WsparcieSiatka() {
             placeholderTextColor="rgba(255,255,255,0.35)"
             keyboardType="phone-pad"
             style={styles.input}
+            onFocus={scrollFormIntoView}
           />
           <View style={styles.formActions}>
             <Pressable style={styles.addButton} onPress={handleAddOrSave}>

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "aniol-stroz",
+    "name": "Anioł Stróż",
     "slug": "aniol-stroz",
     "icon": "./assets/images/aniol_stroz_app_icon-iOS-Default-1024x1024.png",
     "version": "1.0.0",
@@ -14,6 +14,7 @@
     },
     "android": {
       "package": "com.robert.aniolstroz",
+      "blockedPermissions": ["android.permission.WRITE_CONTACTS"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/aniol_stroz_app_icon-iOS-Default-1024x1024.png",
         "backgroundColor": "#071826"
@@ -29,13 +30,13 @@
           "imageWidth": 180
         }
       ],
-        [
-          "expo-contacts",
-          {
-            "contactsPermission": "Aplikacja potrzebuje dostępu do kontaktów, aby dodać osoby do Siatki wsparcia."
-          }
-        ]
-      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Aplikacja potrzebuje dostępu do kontaktów, aby dodać osoby do Siatki wsparcia."
+        }
+      ]
+    ],
     "extra": {
       "router": {},
       "eas": {

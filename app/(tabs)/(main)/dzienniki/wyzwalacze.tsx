@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Keyboard,
-  KeyboardAvoidingView,
+  KeyboardEvent,
   Platform,
   Pressable,
   ScrollView,
@@ -15,7 +15,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
-import { DismissKeyboardView } from '@/components/DismissKeyboardView';
 import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 
 const DRAFT_KEY = '@trigger_list_draft_v1';
@@ -28,8 +27,11 @@ const ACCENT_BG = 'rgba(198,215,255,0.22)';
 const ACCENT_BORDER = 'rgba(198,215,255,0.55)';
 const SUB = 'rgba(233,239,255,0.88)';
 const ARCHIVE_SCROLL_TOP_OFFSET = 72;
+const INPUT_SCROLL_TOP_OFFSET = 12;
+const INPUT_SCROLL_EXTRA_MARGIN = 64;
 
 type TriggerKind = 'internal' | 'external';
+type FocusedInputAnchor = 'trigger-name-input' | 'description-input';
 
 type TriggerItem = {
   id: string;
@@ -137,7 +139,7 @@ function getKindLabel(kind: TriggerKind) {
 export default function ListaWyzwalaczyScreen() {
   const insets = useSafeAreaInsets();
   const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
-    useScrollAnchors<'input-card' | 'archive-internal' | 'archive-external'>();
+    useScrollAnchors<FocusedInputAnchor | 'archive-internal' | 'archive-external'>();
   const [triggerName, setTriggerName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedKind, setSelectedKind] = useState<TriggerKind | null>(null);
@@ -152,9 +154,51 @@ export default function ListaWyzwalaczyScreen() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedName = useRef('');
   const lastSavedDescription = useRef('');
   const lastSavedKind = useRef<TriggerKind | null>(null);
+  const keyboardInsetRef = useRef(0);
+  const focusedInputAnchorRef = useRef<FocusedInputAnchor | null>(null);
+
+  const clearFocusScrollTimer = useCallback(() => {
+    if (!focusScrollTimer.current) return;
+    clearTimeout(focusScrollTimer.current);
+    focusScrollTimer.current = null;
+  }, []);
+
+  const scheduleFocusedInputScroll = useCallback(
+    (anchor: FocusedInputAnchor, keyboardHeight: number, delay: number) => {
+      clearFocusScrollTimer();
+      focusScrollTimer.current = setTimeout(() => {
+        scrollToAnchor(anchor, {
+          offset: INPUT_SCROLL_TOP_OFFSET,
+          onlyIfNeeded: true,
+          topMargin: INPUT_SCROLL_TOP_OFFSET,
+          bottomMargin: keyboardHeight > 0 ? keyboardHeight + INPUT_SCROLL_EXTRA_MARGIN : 220,
+        });
+        focusScrollTimer.current = null;
+      }, delay);
+    },
+    [clearFocusScrollTimer, scrollToAnchor],
+  );
+
+  const getKeyboardScrollDelay = useCallback((event?: KeyboardEvent) => {
+    if (Platform.OS !== 'ios') return 48;
+    const duration = event?.duration ?? 160;
+    return Math.max(120, Math.min(220, duration));
+  }, []);
+
+  const handleInputFocus = useCallback(
+    (anchor: FocusedInputAnchor) => {
+      focusedInputAnchorRef.current = anchor;
+
+      if (keyboardInsetRef.current > 0) {
+        scheduleFocusedInputScroll(anchor, keyboardInsetRef.current, 48);
+      }
+    },
+    [scheduleFocusedInputScroll],
+  );
 
   useEffect(() => {
     let active = true;
@@ -197,8 +241,9 @@ export default function ListaWyzwalaczyScreen() {
       active = false;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+      clearFocusScrollTimer();
     };
-  }, []);
+  }, [clearFocusScrollTimer]);
 
   const showFeedback = (message: string) => {
     setFeedback(message);
@@ -208,30 +253,33 @@ export default function ListaWyzwalaczyScreen() {
     }, 2800);
   };
 
-  const saveDraftNow = async (nameValue: string, descriptionValue: string, kind: TriggerKind | null) => {
-    if (!loaded) return;
-    if (
-      nameValue === lastSavedName.current &&
-      descriptionValue === lastSavedDescription.current &&
-      kind === lastSavedKind.current
-    ) {
-      return;
-    }
+  const saveDraftNow = useCallback(
+    async (nameValue: string, descriptionValue: string, kind: TriggerKind | null) => {
+      if (!loaded) return;
+      if (
+        nameValue === lastSavedName.current &&
+        descriptionValue === lastSavedDescription.current &&
+        kind === lastSavedKind.current
+      ) {
+        return;
+      }
 
-    try {
-      await Promise.all([
-        AsyncStorage.setItem(DRAFT_KEY, nameValue),
-        AsyncStorage.setItem(DESCRIPTION_DRAFT_KEY, descriptionValue),
-        kind ? AsyncStorage.setItem(KIND_KEY, kind) : AsyncStorage.removeItem(KIND_KEY),
-        AsyncStorage.removeItem(LEGACY_CATEGORY_KEY),
-      ]);
-      lastSavedName.current = nameValue;
-      lastSavedDescription.current = descriptionValue;
-      lastSavedKind.current = kind;
-    } catch {
-      // no-op
-    }
-  };
+      try {
+        await Promise.all([
+          AsyncStorage.setItem(DRAFT_KEY, nameValue),
+          AsyncStorage.setItem(DESCRIPTION_DRAFT_KEY, descriptionValue),
+          kind ? AsyncStorage.setItem(KIND_KEY, kind) : AsyncStorage.removeItem(KIND_KEY),
+          AsyncStorage.removeItem(LEGACY_CATEGORY_KEY),
+        ]);
+        lastSavedName.current = nameValue;
+        lastSavedDescription.current = descriptionValue;
+        lastSavedKind.current = kind;
+      } catch {
+        // no-op
+      }
+    },
+    [loaded],
+  );
 
   useEffect(() => {
     if (!loaded) return;
@@ -244,30 +292,41 @@ export default function ListaWyzwalaczyScreen() {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [description, loaded, selectedKind, triggerName]);
+  }, [description, loaded, saveDraftNow, selectedKind, triggerName]);
 
   useEffect(() => {
     const sub = Keyboard.addListener('keyboardDidHide', () => {
       void saveDraftNow(triggerName, description, selectedKind);
     });
     return () => sub.remove();
-  }, [description, loaded, selectedKind, triggerName]);
+  }, [description, saveDraftNow, selectedKind, triggerName]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showSub = Keyboard.addListener(showEvent, (event) => {
-      setKeyboardInset(event.endCoordinates.height);
+      const keyboardHeight = event.endCoordinates.height;
+      keyboardInsetRef.current = keyboardHeight;
+      setKeyboardInset(keyboardHeight);
+      if (focusedInputAnchorRef.current) {
+        scheduleFocusedInputScroll(
+          focusedInputAnchorRef.current,
+          keyboardHeight,
+          getKeyboardScrollDelay(event),
+        );
+      }
     });
     const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardInsetRef.current = 0;
       setKeyboardInset(0);
+      clearFocusScrollTimer();
     });
 
     return () => {
       showSub.remove();
       hideSub.remove();
     };
-  }, []);
+  }, [clearFocusScrollTimer, getKeyboardScrollDelay, scheduleFocusedInputScroll]);
 
   const persistItems = async (nextItems: TriggerItem[]) => {
     await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(nextItems));
@@ -444,24 +503,8 @@ export default function ListaWyzwalaczyScreen() {
     });
   };
 
-  const scrollInputIntoView = () => {
-    setTimeout(
-      () =>
-        scrollToAnchor('input-card', {
-          offset: 12,
-          onlyIfNeeded: true,
-          bottomMargin: keyboardInset > 0 ? keyboardInset + 180 : 280,
-        }),
-      Platform.OS === 'ios' ? 180 : 260
-    );
-  };
-
   return (
-    <KeyboardAvoidingView
-      style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
-    >
+    <View style={styles.screen}>
       <BackButton />
       <ScrollView
         ref={scrollRef}
@@ -476,7 +519,6 @@ export default function ListaWyzwalaczyScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <DismissKeyboardView>
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
 
@@ -499,7 +541,7 @@ export default function ListaWyzwalaczyScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.inputCard} onLayout={setAnchor('input-card')}>
+        <View style={styles.inputCard}>
           <View style={styles.cardAccent} />
           <Text style={styles.sectionTitle}>Dodaj wyzwalacz i jego opis</Text>
           <Text style={styles.sectionText}>
@@ -524,32 +566,47 @@ export default function ListaWyzwalaczyScreen() {
             })}
           </View>
 
-          <Text style={styles.inputLabel}>Wyzwalacz</Text>
-          <TextInput
-            value={triggerName}
-            onChangeText={setTriggerName}
-            onBlur={() => void saveDraftNow(triggerName, description, selectedKind)}
-            placeholder={triggerNamePlaceholder}
-            placeholderTextColor="rgba(255,255,255,0.45)"
-            style={[styles.input, styles.inputCompact]}
-            onFocus={scrollInputIntoView}
-          />
+          <View onLayout={setAnchor('trigger-name-input')}>
+            <Text style={styles.inputLabel}>Wyzwalacz</Text>
+            <TextInput
+              value={triggerName}
+              onChangeText={setTriggerName}
+              onBlur={() => {
+                if (focusedInputAnchorRef.current === 'trigger-name-input') {
+                  focusedInputAnchorRef.current = null;
+                }
+                void saveDraftNow(triggerName, description, selectedKind);
+              }}
+              placeholder={triggerNamePlaceholder}
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              style={[styles.input, styles.inputCompact]}
+              onFocus={() => handleInputFocus('trigger-name-input')}
+            />
+          </View>
 
-          <Text style={styles.inputLabel}>Opis / schemat</Text>
-          <Text style={styles.inputHint}>
-            To pole jest opcjonalne, ale pomaga zobaczyć kiedy ten wyzwalacz naprawdę działa.
-          </Text>
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            onBlur={() => void saveDraftNow(triggerName, description, selectedKind)}
-            placeholder={descriptionPlaceholder}
-            placeholderTextColor="rgba(255,255,255,0.45)"
-            multiline
-            textAlignVertical="top"
-            style={styles.input}
-            onFocus={scrollInputIntoView}
-          />
+          <View onLayout={setAnchor('description-input')}>
+            <Text style={styles.inputLabel}>Opis / schemat</Text>
+            <Text style={styles.inputHint}>
+              To pole jest opcjonalne, ale pomaga zobaczyć kiedy ten wyzwalacz naprawdę działa.
+            </Text>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              onBlur={() => {
+                if (focusedInputAnchorRef.current === 'description-input') {
+                  focusedInputAnchorRef.current = null;
+                }
+                void saveDraftNow(triggerName, description, selectedKind);
+              }}
+              placeholder={descriptionPlaceholder}
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              multiline
+              scrollEnabled
+              textAlignVertical="top"
+              style={[styles.input, styles.inputDescription]}
+              onFocus={() => handleInputFocus('description-input')}
+            />
+          </View>
 
           {feedback ? (
             <View style={styles.feedbackCard}>
@@ -638,9 +695,8 @@ export default function ListaWyzwalaczyScreen() {
             </>
           )}
         </View>
-        </DismissKeyboardView>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -811,8 +867,11 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   inputCompact: {
-    minHeight: 58,
+    height: 58,
     marginBottom: 12,
+  },
+  inputDescription: {
+    height: 140,
   },
   feedbackCard: {
     marginTop: 12,
