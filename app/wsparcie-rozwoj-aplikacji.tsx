@@ -1,6 +1,5 @@
 import { BackButton, useSwipeHintInset } from '@/components/BackButton';
 import { getSupportPaymentUrl, type SupportPaymentAmountKey } from '@/constants/support';
-import { openBrowserAsync, WebBrowserPresentationStyle } from 'expo-web-browser';
 import React, { useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -51,14 +50,12 @@ export default function WsparcieRozwojAplikacjiScreen() {
     try {
       setOpeningKey(amount);
 
-      if (Platform.OS === 'web') {
+      if (Platform.OS === 'web' || Platform.OS === 'ios') {
         await Linking.openURL(paymentUrl);
         return;
       }
 
-      await openBrowserAsync(paymentUrl, {
-        presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-      });
+      await Linking.openURL(paymentUrl);
     } catch (error) {
       console.error('Błąd otwierania płatności wsparcia:', error);
       Alert.alert('Błąd', 'Nie udało się otworzyć strony płatności. Spróbuj ponownie za chwilę.');
