@@ -1,11 +1,11 @@
-import { router, Stack, usePathname } from 'expo-router';
-import { useDailyPlanNotifications } from '@/hooks/useDailyPlanNotifications';
-import { useIntelligentSupportEngine } from '@/hooks/useIntelligentSupportEngine';
-import { runMigrationsIfNeeded } from '@/hooks/useDataMigrations';
 import { AppSettings, DEFAULT_APP_SETTINGS, loadAppSettings, subscribeAppSettingsChanges } from '@/hooks/useAppSettings';
+import { useDailyPlanNotifications } from '@/hooks/useDailyPlanNotifications';
+import { runMigrationsIfNeeded } from '@/hooks/useDataMigrations';
+import { useIntelligentSupportEngine } from '@/hooks/useIntelligentSupportEngine';
+import { router, Stack, usePathname } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {
   // If the splash is already controlled by the native layer, we can continue quietly.
@@ -200,6 +200,14 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="wsparcie-desiderata"
+            options={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="wsparcie-rozwoj-aplikacji"
             options={{
               gestureEnabled: true,
               fullScreenGestureEnabled: true,
