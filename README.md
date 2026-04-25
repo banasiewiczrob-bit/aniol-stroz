@@ -3,6 +3,12 @@
 ## Project Notes
 
 - Technical notes: `NOTATKI_TECHNICZNE.md`
+- Optional support payment links:
+  - `EXPO_PUBLIC_SUPPORT_PAYMENT_URL`
+  - `EXPO_PUBLIC_SUPPORT_PAYMENT_URL_10`
+  - `EXPO_PUBLIC_SUPPORT_PAYMENT_URL_25`
+  - `EXPO_PUBLIC_SUPPORT_PAYMENT_URL_50`
+  - `EXPO_PUBLIC_SUPPORT_PAYMENT_URL_CUSTOM`
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 

@@ -31,6 +31,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type HaltState = {
   hungry: boolean;
@@ -400,6 +401,7 @@ function WeeklyLineChart({ points }: { points: Array<{ label: string; score: num
 }
 
 export default function PlanScreen() {
+  const insets = useSafeAreaInsets();
   const { scrollRef, setAnchor, scrollToAnchor, clearPendingScroll, scrollToTop, onScroll, onViewportLayout } =
     useScrollAnchors<'day-view' | 'archive-section'>();
   const { height } = useWindowDimensions();
@@ -771,18 +773,6 @@ export default function PlanScreen() {
     });
   };
 
-  const scrollPlanInputIntoView = () => {
-    setTimeout(
-      () =>
-        scrollToAnchor('day-view', {
-          offset: 12,
-          onlyIfNeeded: true,
-          bottomMargin: keyboardInset > 0 ? keyboardInset + 180 : 280,
-        }),
-      Platform.OS === 'ios' ? 180 : 260
-    );
-  };
-
   const renderPlanForm = (params: {
     dateKey: DateKey;
     plan: DailyPlan;
@@ -803,7 +793,6 @@ export default function PlanScreen() {
             placeholder={DEFAULT_PLAN_PLACEHOLDERS[index] ?? `Element ${index + 1}`}
             placeholderTextColor="rgba(255,255,255,0.45)"
             onChangeText={(v) => updatePlanItemText(params.dateKey, item.id, index, v)}
-            onFocus={scrollPlanInputIntoView}
           />
           <Pressable style={styles.planItemDeleteBtn} onPress={() => removePlanItem(params.dateKey, item.id, index)}>
             <Text style={styles.planItemDeleteText}>Usuń</Text>
@@ -829,7 +818,7 @@ export default function PlanScreen() {
           style={styles.screen}
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: keyboardInset > 0 ? keyboardInset + 96 : 40 },
+            { paddingBottom: Math.max(72, insets.bottom + 44, keyboardInset > 0 ? keyboardInset + 112 : 0) },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"

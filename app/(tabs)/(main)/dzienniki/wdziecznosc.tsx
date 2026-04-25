@@ -1,5 +1,4 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
-import { DismissKeyboardView } from '@/components/DismissKeyboardView';
 import { WeekCalendar } from '@/components/journals/WeekCalendar';
 import { getJournalDateKey, type GratitudeJournalEntry } from '@/constants/journals';
 import { createGratitudeJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
@@ -9,7 +8,6 @@ import {
   Alert,
   Image,
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BG_CARD = 'rgba(12,38,62,0.78)';
 const BORDER = 'rgba(159,216,255,0.32)';
@@ -36,6 +35,7 @@ function toHourKey(iso: string) {
 }
 
 export default function DziennikWdziecznosciScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [item, setItem] = useState('');
   const [busy, setBusy] = useState(false);
@@ -143,26 +143,20 @@ export default function DziennikWdziecznosciScreen() {
 
   return (
     <BackgroundWrapper>
-      <KeyboardAvoidingView
+      <ScrollView
         style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: Math.max(72, insets.bottom + 44, keyboardInset > 0 ? keyboardInset + 112 : 0) },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       >
-        <ScrollView
-          style={styles.screen}
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: keyboardInset > 0 ? keyboardInset + 96 : 40 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-        >
-          <DismissKeyboardView>
-          <View style={styles.bgOrbA} />
-          <View style={styles.bgOrbB} />
-          <Text style={styles.title}>Dziennik Wdzięczności</Text>
-          <Text style={styles.subtitle}>Dodawaj tyle wpisów dziennie, ile potrzebujesz.</Text>
+        <View style={styles.bgOrbA} />
+        <View style={styles.bgOrbB} />
+        <Text style={styles.title}>Dziennik Wdzięczności</Text>
+        <Text style={styles.subtitle}>Dodawaj tyle wpisów dziennie, ile potrzebujesz.</Text>
 
         <WeekCalendar
           selectedDateKey={selectedDateKey}
@@ -180,8 +174,10 @@ export default function DziennikWdziecznosciScreen() {
             value={item}
             onChangeText={setItem}
             style={styles.input}
+            multiline
+            numberOfLines={3}
             placeholder="Np. dobra rozmowa, spacer, spokojny wieczór..."
-            placeholderTextColor="rgba(255,255,255,0.45)"
+            placeholderTextColor="rgba(255,255,255,0.56)"
           />
           <Pressable style={[styles.plusBtn, busy && styles.btnDisabled]} onPress={onSave} disabled={busy}>
             <Text style={styles.plusBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>
@@ -243,9 +239,7 @@ export default function DziennikWdziecznosciScreen() {
             })}
           </View>
         ) : null}
-          </DismissKeyboardView>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </ScrollView>
     </BackgroundWrapper>
   );
 }
@@ -349,8 +343,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
     color: 'white',
     fontSize: 15,
+    lineHeight: 22,
+    minHeight: 92,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingTop: 12,
+    paddingBottom: 12,
+    textAlignVertical: 'top',
   },
   plusBtn: {
     marginTop: 10,

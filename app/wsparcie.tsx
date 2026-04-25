@@ -6,13 +6,12 @@ import { useVisitedTiles } from '@/hooks/useVisitedTiles';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
-const SUB = 'rgba(255,255,255,0.88)';
-
 type SupportRoute = {
   title: string;
   subtitle: string;
   accent: string;
   glow: string;
+  wide?: boolean;
   route:
     | '/wsparcie-24'
     | '/wsparcie-12-krokow'
@@ -22,7 +21,8 @@ type SupportRoute = {
     | '/wsparcie-modlitwa'
     | '/wsparcie-siatka'
     | '/moje-doswiadczenie'
-    | '/wsparcie-spolecznosc';
+    | '/wsparcie-spolecznosc'
+    | '/wsparcie-rozwoj-aplikacji';
 };
 
 const ITEMS: SupportRoute[] = [
@@ -30,6 +30,14 @@ const ITEMS: SupportRoute[] = [
   { title: 'Społeczność', subtitle: 'Discord i grupy wsparcia', accent: '#9AC7FF', glow: 'rgba(154,199,255,0.28)', route: '/wsparcie-spolecznosc' },
   { title: 'Kontakt', subtitle: 'Numery i szybkie akcje', accent: '#FFD18A', glow: 'rgba(255,209,138,0.28)', route: '/wsparcie-kontakt' },
   { title: 'Napisz, co Ci pomaga', subtitle: 'Twoja lista sprawdzonych sposobów', accent: '#FFC7D9', glow: 'rgba(255,199,217,0.28)', route: '/moje-doswiadczenie' },
+  {
+    title: 'Wesprzyj rozwój aplikacji',
+    subtitle: 'Dobrowolna wpłata na rozwój i utrzymanie',
+    accent: '#FFE39B',
+    glow: 'rgba(255,227,155,0.2)',
+    route: '/wsparcie-rozwoj-aplikacji',
+    wide: true,
+  },
 ];
 
 export default function WsparcieScreen() {
@@ -68,6 +76,7 @@ export default function WsparcieScreen() {
               subtitle={item.subtitle}
               accent={item.accent}
               glow={item.glow}
+              wide={item.wide}
               openedToday={isVisited(item.route)}
               disabled={navigationLocked}
               onPress={async () => {
