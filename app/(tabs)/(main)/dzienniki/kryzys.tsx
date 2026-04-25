@@ -27,7 +27,6 @@ function toHourKey(iso: string) {
 }
 
 export default function DziennikKryzysuScreen() {
-  const scrollRef = useRef<ScrollView | null>(null);
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [focusedSymptom, setFocusedSymptom] = useState<string | null>(null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
@@ -88,24 +87,12 @@ export default function DziennikKryzysuScreen() {
   }, [allCravingEntries]);
 
   const toggleDateOpen = (dateKey: string) => {
-    setOpenDates((prev) => {
-      const nextOpen = !prev[dateKey];
-      if (nextOpen) {
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-      }
-      return { ...prev, [dateKey]: nextOpen };
-    });
+    setOpenDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
   const toggleHourOpen = (dateKey: string, hourKey: string) => {
     const key = `${dateKey}|${hourKey}`;
-    setOpenHours((prev) => {
-      const nextOpen = !prev[key];
-      if (nextOpen) {
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-      }
-      return { ...prev, [key]: nextOpen };
-    });
+    setOpenHours((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const saveEntry = async (symptoms: string[], cravingReported: boolean, successMessage: string) => {
@@ -160,7 +147,7 @@ export default function DziennikKryzysuScreen() {
 
   return (
     <BackgroundWrapper>
-      <ScrollView ref={scrollRef} style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.bgOrbA} />
         <View style={styles.bgOrbB} />
         <Text style={styles.title}>Dziennik Głodu/Kryzysu</Text>
@@ -216,15 +203,7 @@ export default function DziennikKryzysuScreen() {
 
         <Pressable
           style={styles.archiveHeader}
-          onPress={() =>
-            setArchiveOpen((prev) => {
-              const next = !prev;
-              if (next) {
-                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-              }
-              return next;
-            })
-          }
+          onPress={() => setArchiveOpen((prev) => !prev)}
         >
           <Text style={styles.archiveHeaderText}>Archiwum wpisów ({archiveDateCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>

@@ -10,7 +10,6 @@ import {
   type EmotionJournalEntry,
 } from '@/constants/journals';
 import { createEmotionJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
-import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -106,8 +105,6 @@ function shouldShowTrendTick(index: number, total: number, windowDays: TrendWind
 }
 
 export default function DziennikUczucTestScreen() {
-  const { scrollRef, setAnchor, scrollToAnchor, onScroll, onViewportLayout } =
-    useScrollAnchors<'detail-card' | 'selected-feelings' | 'archive-section'>();
   const insets = useSafeAreaInsets();
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [baseEmotion, setBaseEmotion] = useState<BaseEmotion>('Strach');
@@ -346,36 +343,12 @@ export default function DziennikUczucTestScreen() {
   }, [entries, selectedDateKey, trendWindowDays]);
 
   const toggleDateOpen = (dateKey: string) => {
-    setOpenDates((prev) => {
-      const nextOpen = !prev[dateKey];
-      if (nextOpen) {
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-      }
-      return { ...prev, [dateKey]: nextOpen };
-    });
+    setOpenDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
   const toggleHourOpen = (dateKey: string, hourKey: string) => {
     const key = `${dateKey}|${hourKey}`;
-    setOpenHours((prev) => {
-      const nextOpen = !prev[key];
-      if (nextOpen) {
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-      }
-      return { ...prev, [key]: nextOpen };
-    });
-  };
-
-  const scrollSelectedInputsIntoView = () => {
-    setTimeout(
-      () =>
-        scrollToAnchor('selected-feelings', {
-          offset: 12,
-          onlyIfNeeded: true,
-          bottomMargin: keyboardInset > 0 ? keyboardInset + 180 : 280,
-        }),
-      Platform.OS === 'ios' ? 180 : 260
-    );
+    setOpenHours((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   return (
@@ -384,10 +357,8 @@ export default function DziennikUczucTestScreen() {
         style={styles.screen}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
-        onLayout={onViewportLayout}
       >
         <ScrollView
-          ref={scrollRef}
           style={styles.screen}
           contentContainerStyle={[
             styles.content,
@@ -396,8 +367,6 @@ export default function DziennikUczucTestScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
         >
           <DismissKeyboardView>
           <View style={styles.bgOrbA} />
@@ -423,10 +392,7 @@ export default function DziennikUczucTestScreen() {
                   void onChipTap(
                     `base:${emotion}`,
                     () => focusBaseEmotion(emotion),
-                    async () => {
-                      addDraftFeeling(emotion, '');
-                      scrollToAnchor('detail-card', { offset: 10, onlyIfNeeded: true });
-                    }
+                    async () => addDraftFeeling(emotion, '')
                   )
                 }
               >
@@ -444,7 +410,7 @@ export default function DziennikUczucTestScreen() {
           </View>
         </View>
 
-        <View style={styles.card} onLayout={setAnchor('detail-card')}>
+        <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>2. Odcień emocji</Text>
           <Text style={styles.helper}>Jedno kliknięcie podświetla odcień, podwójne kliknięcie dodaje go do wpisu.</Text>
@@ -475,7 +441,7 @@ export default function DziennikUczucTestScreen() {
           </View>
         </View>
 
-        <View style={styles.card} onLayout={setAnchor('selected-feelings')}>
+        <View style={styles.card}>
           <Image source={Watermark} resizeMode="contain" style={styles.cardWatermark} />
           <Text style={styles.sectionTitle}>3. Wybrane uczucia i opisy</Text>
           {draftFeelings.length === 0 ? <Text style={styles.helpText}>Brak wybranych uczuć.</Text> : null}
@@ -496,7 +462,6 @@ export default function DziennikUczucTestScreen() {
                 placeholderTextColor="rgba(255,255,255,0.45)"
                 multiline
                 style={styles.input}
-                onFocus={scrollSelectedInputsIntoView}
               />
               <TextInput
                 value={item.expression}
@@ -505,7 +470,6 @@ export default function DziennikUczucTestScreen() {
                 placeholderTextColor="rgba(255,255,255,0.45)"
                 multiline
                 style={styles.input}
-                onFocus={scrollSelectedInputsIntoView}
               />
             </View>
           ))}
@@ -601,16 +565,7 @@ export default function DziennikUczucTestScreen() {
 
         <Pressable
           style={styles.archiveHeader}
-          onLayout={setAnchor('archive-section')}
-          onPress={() =>
-            setArchiveOpen((prev) => {
-              const next = !prev;
-              if (next) {
-                scrollToAnchor('archive-section', { offset: 12 });
-              }
-              return next;
-            })
-          }
+          onPress={() => setArchiveOpen((prev) => !prev)}
         >
           <Text style={styles.archiveHeaderText}>Historia wpisów ({archiveEntryCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>

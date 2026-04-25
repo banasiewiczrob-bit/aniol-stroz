@@ -13,7 +13,6 @@ import {
   DailyPlanNotificationSettings,
   ensureDailyPlanNotifications,
   loadDailyPlanNotificationSettings,
-  resetDailyPlanNotificationSettings,
   saveDailyPlanNotificationSettings,
 } from '@/hooks/useDailyPlanNotifications';
 import { runMigrationsIfNeeded } from '@/hooks/useDataMigrations';
@@ -39,16 +38,15 @@ import {
   saveCloudBackup,
 } from '@/services/cloudBackup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Checkbox from 'expo-checkbox';
+import ExpoCheckbox from 'expo-checkbox';
 import Constants from 'expo-constants';
 import * as Sharing from 'expo-sharing';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
   Easing,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -220,7 +218,7 @@ export default function UstawieniaScreen() {
     return isExpoGo || isSimulator;
   }, []);
 
-  const persistSectionExpandedState = async (next: SectionExpandedState) => {
+  const persistSectionExpandedState = useCallback(async (next: SectionExpandedState) => {
     sectionExpandedRef.current = next;
     setSectionExpanded(next);
     try {
@@ -228,16 +226,16 @@ export default function UstawieniaScreen() {
     } catch {
       // Ignorujemy błąd zapisu preferencji UI; stan w pamięci pozostaje aktualny.
     }
-  };
+  }, []);
 
-  const updateSectionExpanded = async (patch: Partial<SectionExpandedState>) => {
+  const updateSectionExpanded = useCallback(async (patch: Partial<SectionExpandedState>) => {
     const next = { ...sectionExpandedRef.current, ...patch };
     await persistSectionExpandedState(next);
-  };
+  }, [persistSectionExpandedState]);
 
-  const focusSingleSection = async (key: SettingsSectionKey) => {
+  const focusSingleSection = useCallback(async (key: SettingsSectionKey) => {
     await persistSectionExpandedState(getSingleSectionExpanded(key));
-  };
+  }, [persistSectionExpandedState]);
 
   useEffect(() => {
     if (!fullAccessModalVisible) {
@@ -443,7 +441,7 @@ export default function UstawieniaScreen() {
     }
     const next = { ...sectionExpandedRef.current, [params.openSection as SettingsSectionKey]: true };
     void persistSectionExpandedState(next);
-  }, [loading, onboardingSettingsRequired, params.openSection]);
+  }, [focusSingleSection, loading, onboardingSettingsRequired, params.openSection, persistSectionExpandedState]);
 
   const setAppSettings = (patch: Partial<AppSettings>) => {
     setAppSettingsState((prev) => ({ ...prev, ...patch }));
@@ -575,14 +573,10 @@ export default function UstawieniaScreen() {
     setBusy(true);
     setNotice('');
     try {
-      const notificationsReady = await resetDailyPlanNotificationSettings();
-      const restored = await loadDailyPlanNotificationSettings();
-
+      const restored = { ...DEFAULT_DAILY_PLAN_NOTIFICATION_SETTINGS };
       const next = notificationsConsentEnabled ? restored : { ...restored, enabled: false };
-      if (!notificationsConsentEnabled) {
-        await saveDailyPlanNotificationSettings(next);
-        await ensureDailyPlanNotifications(next);
-      }
+      await saveDailyPlanNotificationSettings(next);
+      const notificationsReady = await ensureDailyPlanNotifications(next);
 
       setNotificationSettings(next);
       setMorningTime(`${pad(next.morningHour)}:${pad(next.morningMinute)}`);
@@ -1014,7 +1008,7 @@ export default function UstawieniaScreen() {
               </Text>
 
               <View style={styles.checkboxRow}>
-                <Checkbox
+                <ExpoCheckbox
                   style={styles.checkbox}
                   value={appSettings.privacyConsentLocalStorage}
                   onValueChange={(v) => toggleConsent('privacyConsentLocalStorage', v)}
@@ -1029,7 +1023,7 @@ export default function UstawieniaScreen() {
 
               {!onboardingSettingsRequired ? (
                 <View style={styles.checkboxRow}>
-                  <Checkbox
+                  <ExpoCheckbox
                     style={styles.checkbox}
                     value={appSettings.privacyConsentNotifications}
                     onValueChange={(v) => toggleConsent('privacyConsentNotifications', v)}
@@ -1048,7 +1042,7 @@ export default function UstawieniaScreen() {
               ) : null}
 
               <View style={styles.checkboxRow}>
-                <Checkbox
+                <ExpoCheckbox
                   style={styles.checkbox}
                   value={appSettings.privacyConsentRegulations}
                   onValueChange={(v) => toggleConsent('privacyConsentRegulations', v)}
@@ -1063,7 +1057,7 @@ export default function UstawieniaScreen() {
 
               {!onboardingSettingsRequired ? (
                 <View style={styles.checkboxRow}>
-                  <Checkbox
+                  <ExpoCheckbox
                     style={styles.checkbox}
                     value={appSettings.privacyConsentSharedExperience}
                     onValueChange={(v) => toggleConsent('privacyConsentSharedExperience', v)}

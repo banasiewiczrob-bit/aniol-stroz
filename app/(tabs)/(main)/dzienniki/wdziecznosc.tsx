@@ -4,7 +4,7 @@ import { WeekCalendar } from '@/components/journals/WeekCalendar';
 import { getJournalDateKey, type GratitudeJournalEntry } from '@/constants/journals';
 import { createGratitudeJournalEntry, deleteJournalEntry, listJournalEntries } from '@/hooks/useJournals';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -36,7 +36,6 @@ function toHourKey(iso: string) {
 }
 
 export default function DziennikWdziecznosciScreen() {
-  const scrollRef = useRef<ScrollView | null>(null);
   const [selectedDateKey, setSelectedDateKey] = useState(getJournalDateKey());
   const [item, setItem] = useState('');
   const [busy, setBusy] = useState(false);
@@ -96,24 +95,12 @@ export default function DziennikWdziecznosciScreen() {
   }, [allGratitudeEntries]);
 
   const toggleDateOpen = (dateKey: string) => {
-    setOpenDates((prev) => {
-      const nextOpen = !prev[dateKey];
-      if (nextOpen) {
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-      }
-      return { ...prev, [dateKey]: nextOpen };
-    });
+    setOpenDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
   const toggleHourOpen = (dateKey: string, hourKey: string) => {
     const key = `${dateKey}|${hourKey}`;
-    setOpenHours((prev) => {
-      const nextOpen = !prev[key];
-      if (nextOpen) {
-        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-      }
-      return { ...prev, [key]: nextOpen };
-    });
+    setOpenHours((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const onSave = async () => {
@@ -154,10 +141,6 @@ export default function DziennikWdziecznosciScreen() {
     ]);
   };
 
-  const scrollToInput = () => {
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), Platform.OS === 'ios' ? 180 : 260);
-  };
-
   return (
     <BackgroundWrapper>
       <KeyboardAvoidingView
@@ -166,7 +149,6 @@ export default function DziennikWdziecznosciScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
         <ScrollView
-          ref={scrollRef}
           style={styles.screen}
           contentContainerStyle={[
             styles.content,
@@ -200,7 +182,6 @@ export default function DziennikWdziecznosciScreen() {
             style={styles.input}
             placeholder="Np. dobra rozmowa, spacer, spokojny wieczór..."
             placeholderTextColor="rgba(255,255,255,0.45)"
-            onFocus={scrollToInput}
           />
           <Pressable style={[styles.plusBtn, busy && styles.btnDisabled]} onPress={onSave} disabled={busy}>
             <Text style={styles.plusBtnText}>{busy ? 'Zapisywanie...' : 'Zapisz wpis'}</Text>
@@ -209,15 +190,7 @@ export default function DziennikWdziecznosciScreen() {
 
         <Pressable
           style={styles.archiveHeader}
-          onPress={() =>
-            setArchiveOpen((prev) => {
-              const next = !prev;
-              if (next) {
-                setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 140);
-              }
-              return next;
-            })
-          }
+          onPress={() => setArchiveOpen((prev) => !prev)}
         >
           <Text style={styles.archiveHeaderText}>Archiwum wpisów ({archiveDateCount})</Text>
           <Text style={styles.archiveHeaderChevron}>{archiveOpen ? '▾' : '▸'}</Text>
