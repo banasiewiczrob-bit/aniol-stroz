@@ -2,6 +2,7 @@ import { AnimatedAngel } from '@/components/AnimatedAngel';
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { markAnniversarySeen } from '@/hooks/useFirstSteps';
 import { TYPE } from '@/styles/typography';
+import { getPolishDayUnit, getPolishMonthUnit, getPolishYearUnit } from '@/utils/polishDuration';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
@@ -76,7 +77,7 @@ export default function LicznikNagrody() {
   }, [coinBounce]);
 
   const toRoman = (num: number) => {
-    const map: Array<[number, string]> = [
+    const map: [number, string][] = [
       [1000, 'M'],
       [900, 'CM'],
       [500, 'D'],
@@ -132,8 +133,8 @@ export default function LicznikNagrody() {
 
   const handleShare = async () => {
     const startDateLabel = startDate ? startDate.toLocaleDateString('pl-PL') : '—';
-    const ymdLabel = `${ymd.years} lat ${ymd.months} mies. ${ymd.days} dni`;
-    const badgeLabel = yearsPassed < 1 ? 'Właśnie dzisiaj' : `${toRoman(Math.min(yearsPassed, 40))} lat`;
+    const ymdLabel = formatYmdLabel(ymd);
+    const badgeLabel = yearsPassed < 1 ? 'Właśnie dzisiaj' : formatRomanYearsLabel(yearsPassed);
     const message = `Moje rocznice - Anioł Stróż\n${badgeLabel}\n${ymdLabel}\nPierwszy dzień nowego życia: ${startDateLabel}`;
 
     try {
@@ -165,8 +166,14 @@ export default function LicznikNagrody() {
     }
   };
 
+  function formatRomanYearsLabel(years: number) {
+    const displayYears = Math.min(years, 40);
+    return `${toRoman(displayYears)} ${getPolishYearUnit(displayYears)}`;
+  }
+
   const startDateLabel = startDate ? startDate.toLocaleDateString('pl-PL') : '—';
-  const ymdLabel = `${ymd.years} lat ${ymd.months} mies. ${ymd.days} dni`;
+  const ymdLabel = formatYmdLabel(ymd);
+  const anniversaryLabel = formatRomanYearsLabel(yearsPassed);
 
   return (
     <BackgroundWrapper>
@@ -200,7 +207,7 @@ export default function LicznikNagrody() {
                 }}
               >
                 <Image source={getCoinAsset(yearsPassed)} style={[styles.shareCoinIcon, compact && styles.shareCoinIconCompact]} />
-                <Text style={styles.shareLabel}>{toRoman(Math.min(yearsPassed, 40))} lat</Text>
+                <Text style={styles.shareLabel}>{anniversaryLabel}</Text>
               </Animated.View>
             )}
             <View style={styles.shareMeta}>
@@ -218,6 +225,10 @@ export default function LicznikNagrody() {
       </ScrollView>
     </BackgroundWrapper>
   );
+}
+
+function formatYmdLabel(ymd: { years: number; months: number; days: number }) {
+  return `${ymd.years} ${getPolishYearUnit(ymd.years)} ${ymd.months} ${getPolishMonthUnit(ymd.months)} ${ymd.days} ${getPolishDayUnit(ymd.days)}`;
 }
 
 const styles = StyleSheet.create({

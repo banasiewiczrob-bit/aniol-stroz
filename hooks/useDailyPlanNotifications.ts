@@ -9,6 +9,7 @@ const SETTINGS_STORAGE_KEY = '@daily_plan_notification_settings';
 const CHANNEL_ID = 'daily-plan-reminders';
 const MORNING_KIND = 'daily_plan_morning';
 const EVENING_KIND = 'daily_plan_evening';
+const ANDROID_REMINDER_PRIORITY = 'max';
 
 type NotificationsModule = any;
 let notificationsModuleCache: NotificationsModule | null | undefined;
@@ -130,13 +131,19 @@ async function scheduleReminder(
   const notifications = getNotificationsModule();
   if (!notifications) return '';
 
+  const content: Record<string, unknown> = {
+    title,
+    body,
+    sound: playSound ? 'default' : undefined,
+    data: { kind },
+  };
+
+  if (Platform.OS === 'android') {
+    content.priority = notifications.AndroidNotificationPriority?.MAX ?? ANDROID_REMINDER_PRIORITY;
+  }
+
   return notifications.scheduleNotificationAsync({
-    content: {
-      title,
-      body,
-      sound: playSound ? 'default' : undefined,
-      data: { kind },
-    },
+    content,
     trigger:
       typeof weekday === 'number'
         ? {

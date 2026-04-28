@@ -24,6 +24,14 @@
       "ios": {
         "simulator": false
       }
+    },
+    "open-testing": {
+      "autoIncrement": true,
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      }
     }
   },
   "submit": {

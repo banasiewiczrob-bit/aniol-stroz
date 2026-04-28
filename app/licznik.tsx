@@ -10,6 +10,7 @@ import {
 } from '@/hooks/useFirstSteps';
 import { SCREEN_PADDING } from '@/styles/screenStyles';
 import { TYPE } from '@/styles/typography';
+import { capitalizeFirst, getPolishDayUnit, getPolishMonthUnit, getPolishYearUnit } from '@/utils/polishDuration';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -487,9 +488,9 @@ export default function LicznikScreen() {
         )}
 
         <View style={[styles.grid, compact && styles.gridCompact]}>
-          <StatBox label="Lat" value={stats.years} compact={compact} />
-          <StatBox label="Miesięcy" value={stats.months} compact={compact} />
-          <StatBox label="Dni" value={stats.days} compact={compact} />
+          <StatBox label={capitalizeFirst(getPolishYearUnit(stats.years))} value={stats.years} compact={compact} />
+          <StatBox label={capitalizeFirst(getPolishMonthUnit(stats.months))} value={stats.months} compact={compact} />
+          <StatBox label={capitalizeFirst(getPolishDayUnit(stats.days))} value={stats.days} compact={compact} />
         </View>
 
         <Pressable onPress={() => router.push('/licznik-nagrody')} style={[styles.rewardsTile, compact && styles.rewardsTileCompact]}>

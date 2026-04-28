@@ -5,7 +5,7 @@
     "icon": "./assets/images/aniol_stroz_app_icon-iOS-Default-1024x1024.png",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "scheme": "aniol-stroz",
     "ios": {
