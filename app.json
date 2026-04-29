@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "scheme": "aniol-stroz",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.robert.aniolstroz"
     },
     "android": {
