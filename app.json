@@ -35,7 +35,15 @@
         {
           "contactsPermission": "Aplikacja potrzebuje dostępu do kontaktów, aby dodać osoby do Siatki wsparcia."
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "./plugins/withAndroidAudioManifestCleanup"
     ],
     "extra": {
       "router": {},

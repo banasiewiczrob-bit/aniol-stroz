@@ -41,6 +41,10 @@ app-example
 /ios
 /android
 
+# local store screenshots and export artifacts
+/exports/
+/scripts/export-app-store-screenshots.sh
+
 # Local backups (never commit)
 backups/*.tar.gz
 backups/*.bundle
