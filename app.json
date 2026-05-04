@@ -9,16 +9,45 @@
     "newArchEnabled": true,
     "scheme": "aniol-stroz",
     "ios": {
+      "associatedDomains": [
+        "applinks:aniolstroz.com.pl"
+      ],
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
+        "CFBundleDevelopmentRegion": "pl"
+      },
       "supportsTablet": false,
       "bundleIdentifier": "com.robert.aniolstroz"
     },
     "android": {
       "package": "com.robert.aniolstroz",
-      "blockedPermissions": ["android.permission.WRITE_CONTACTS"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "aniolstroz.com.pl",
+              "pathPrefix": "/app"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "blockedPermissions": [
+        "android.permission.WRITE_CONTACTS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/aniol_stroz_app_icon-iOS-Default-1024x1024.png",
         "backgroundColor": "#071826"
       }
+    },
+    "locales": {
+      "pl": "./locales/pl.json"
     },
     "plugins": [
       "expo-router",
@@ -43,7 +72,20 @@
           "recordAudioAndroid": false
         }
       ],
-      "./plugins/withAndroidAudioManifestCleanup"
+      "./plugins/withAndroidAudioManifestCleanup",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "pl"
+            ],
+            "android": [
+              "pl"
+            ]
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},
