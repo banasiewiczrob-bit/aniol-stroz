@@ -1,4 +1,5 @@
 import { BackButton } from "@/components/BackButton";
+import { APP_DISPLAY_NAME } from "@/constants/app";
 import { DismissKeyboardView } from "@/components/DismissKeyboardView";
 import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings } from "@/hooks/useAppSettings";
 import { useScrollAnchors } from "@/hooks/useScrollAnchors";
@@ -1280,7 +1281,7 @@ export default function MojeDoswiadczenieScreen() {
                     }}
                     resizeMode="contain"
                   />
-                  <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.66)" }}>Anioł Stróż</Text>
+                  <Text style={{ ...TYPE.caption, color: "rgba(255,255,255,0.66)" }}>{APP_DISPLAY_NAME}</Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 14 }}>
                     {selectedBadgeImage ? (
                       <View

@@ -1,4 +1,5 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { APP_DISPLAY_NAME } from '@/constants/app';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -19,7 +20,7 @@ export default function PolitykaPrywatnosciScreen() {
     <BackgroundWrapper>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Polityka prywatności</Text>
-        <Text style={styles.meta}>Anioł Stróż</Text>
+        <Text style={styles.meta}>{APP_DISPLAY_NAME}</Text>
         <Text style={styles.meta}>Data wejścia w życie: 17 marca 2026</Text>
 
         <Section title="1. Zakres danych">

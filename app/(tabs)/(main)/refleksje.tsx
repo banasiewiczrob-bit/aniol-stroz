@@ -1,4 +1,5 @@
 import { BackButton } from '@/components/BackButton';
+import { APP_DISPLAY_NAME } from '@/constants/app';
 import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import {
   DailyReflection,
@@ -41,8 +42,8 @@ const TEXT_SECTION_SCROLL_OFFSET = 18;
 const TEXT_AUTO_SCROLL_MULTIPLIER = 1.2;
 const SMALL_STEP_ENDING_LINE = 'I niech to będzie Twój mały krok na dziś.';
 const CAPTURE_TIMEOUT_MS = 12000;
-const APP_NAME = 'Anioł Stróż';
-const APP_SHARE_SERIES_NAME = 'Dzień po dniu. Anioł Stróż';
+const APP_NAME = APP_DISPLAY_NAME;
+const APP_SHARE_SERIES_NAME = APP_DISPLAY_NAME;
 const Watermark = require('../../../assets/images/maly_aniol.png');
 
 function formatTime(value: number) {

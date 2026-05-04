@@ -1,7 +1,9 @@
 import { getFirstStepsState, markIntroSeen, resolveFirstStepsStep } from '@/hooks/useFirstSteps';
 import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
+import { APP_DISPLAY_NAME } from '@/constants/app';
+import Constants from 'expo-constants';
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -12,6 +14,10 @@ const Watermark = require("./assets/images/maly_aniol.png");
 export default function Intro() {
   const { height, fontScale } = useWindowDimensions();
   const compact = height <= 860 || fontScale > 1.05;
+  const appVersion = useMemo(
+    () => Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.0',
+    []
+  );
   const [showFirstStepsRoadmap, setShowFirstStepsRoadmap] = useState(false);
   const [busy, setBusy] = useState(false);
   const logoAnim = useRef(new Animated.Value(0)).current;
@@ -122,7 +128,7 @@ export default function Intro() {
             <Pressable onPress={() => void goNext()} style={styles.skipButton} disabled={busy}>
               <Text style={styles.skipButtonText}>Pomiń intro</Text>
             </Pressable>
-            <Text style={styles.footer}>Anioł Stróż. Dzień po dniu. 1.0.0</Text>
+            <Text style={styles.footer}>{APP_DISPLAY_NAME} {appVersion}</Text>
           </Animated.View>
         </View>
       </ScrollView>

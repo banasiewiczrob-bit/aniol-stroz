@@ -1,5 +1,6 @@
 import { BackButton, useSwipeHintInset } from '@/components/BackButton';
 import { DISCORD_INVITE_URL } from '@/constants/community';
+import { APP_DISPLAY_NAME } from '@/constants/app';
 import React, { useMemo } from 'react';
 import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -58,7 +59,7 @@ export default function WsparcieSpolecznoscDiscordScreen() {
       >
         <Text style={styles.title}>Społeczność</Text>
         <Text style={styles.subtitle}>
-          Społeczność Anioł Stróż działa na Discordzie. 
+          Społeczność {APP_DISPLAY_NAME} działa na Discordzie. 
           Możesz do niej dołączyć i brać udział w rozmowach, wsparciu i otrzymywać najnowsze informacje o aktualizacjach. Dołączając, zakceptuj zasady społeczności, które znajdziesz na serwerze. Zapraszam serdecznie!
         </Text>
         <View style={styles.card}>

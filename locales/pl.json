@@ -1,10 +1,10 @@
 {
   "ios": {
-    "CFBundleDisplayName": "Anioł Stróż",
-    "CFBundleName": "Anioł Stróż",
+    "CFBundleDisplayName": "Dzień po dniu. Anioł Stróż",
+    "CFBundleName": "Dzień po dniu. Anioł Stróż",
     "NSContactsUsageDescription": "Aplikacja potrzebuje dostępu do kontaktów, aby dodać osoby do Siatki wsparcia."
   },
   "android": {
-    "app_name": "Anioł Stróż"
+    "app_name": "Dzień po dniu. Anioł Stróż"
   }
 }

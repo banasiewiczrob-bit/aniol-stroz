@@ -1,5 +1,6 @@
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
 import { FirstStepsRoadmap } from '@/components/FirstStepsRoadmap';
+import { APP_DISPLAY_NAME } from '@/constants/app';
 import {
   ANNIVERSARY_SEEN_STORAGE_KEY,
   APP_RESET_STORAGE_KEYS,
@@ -771,7 +772,7 @@ export default function UstawieniaScreen() {
           });
         } else {
           await Share.share({
-            title: 'Kopia danych Anioł Stróż',
+            title: `Kopia danych ${APP_DISPLAY_NAME}`,
             message: serialized,
           });
         }

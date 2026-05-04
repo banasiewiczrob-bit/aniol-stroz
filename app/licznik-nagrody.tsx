@@ -1,5 +1,6 @@
 import { AnimatedAngel } from '@/components/AnimatedAngel';
 import { BackgroundWrapper } from '@/components/BackgroundWrapper';
+import { APP_DISPLAY_NAME } from '@/constants/app';
 import { markAnniversarySeen } from '@/hooks/useFirstSteps';
 import { TYPE } from '@/styles/typography';
 import { getPolishDayUnit, getPolishMonthUnit, getPolishYearUnit } from '@/utils/polishDuration';
@@ -135,7 +136,7 @@ export default function LicznikNagrody() {
     const startDateLabel = startDate ? startDate.toLocaleDateString('pl-PL') : '—';
     const ymdLabel = formatYmdLabel(ymd);
     const badgeLabel = yearsPassed < 1 ? 'Właśnie dzisiaj' : formatRomanYearsLabel(yearsPassed);
-    const message = `Moje rocznice - Anioł Stróż\n${badgeLabel}\n${ymdLabel}\nPierwszy dzień nowego życia: ${startDateLabel}`;
+    const message = `Moje rocznice - ${APP_DISPLAY_NAME}\n${badgeLabel}\n${ymdLabel}\nPierwszy dzień nowego życia: ${startDateLabel}`;
 
     try {
       if (shareCardRef.current) {
@@ -192,7 +193,7 @@ export default function LicznikNagrody() {
           <View style={[styles.shareArea, compact && styles.shareAreaCompact]}>
             <Image source={APP_LOGO} style={[styles.shareLogo, compact && styles.shareLogoCompact]} />
             <Text style={[styles.shareTitle, compact && styles.shareTitleCompact]}>Moje rocznice</Text>
-            <Text style={[styles.shareSubtitle, compact && styles.shareSubtitleCompact]}>Anioł Stróż</Text>
+            <Text style={[styles.shareSubtitle, compact && styles.shareSubtitleCompact]}>{APP_DISPLAY_NAME}</Text>
             {yearsPassed < 1 ? (
               <View style={[styles.shareAngel, compact && styles.shareAngelCompact]}>
                 <AnimatedAngel color="#FFFFFF" size={compact ? 96 : 120} />
