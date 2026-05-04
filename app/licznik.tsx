@@ -153,19 +153,24 @@ export default function LicznikScreen() {
   };
 
   const persistStartDate = async (selectedDate: Date) => {
-    const stepBeforeSave = firstStepsStep;
-    setDate(selectedDate);
-    syncManualInputs(selectedDate);
-    calculateStats(selectedDate);
-    await AsyncStorage.setItem('startDate', selectedDate.toISOString());
-    await markCounterDone();
+    try {
+      const stepBeforeSave = firstStepsStep;
+      setDate(selectedDate);
+      syncManualInputs(selectedDate);
+      calculateStats(selectedDate);
+      await AsyncStorage.setItem('startDate', selectedDate.toISOString());
+      await markCounterDone();
 
-    const state = await getFirstStepsState();
-    const nextStep = state.introSeen ? resolveFirstStepsStep(state) : 'intro';
-    setFirstStepsStep(nextStep);
+      const state = await getFirstStepsState();
+      const nextStep = state.introSeen ? resolveFirstStepsStep(state) : 'intro';
+      setFirstStepsStep(nextStep);
 
-    if (stepBeforeSave === 'counter' && nextStep === 'consents') {
-      router.replace('/ustawienia');
+      if (stepBeforeSave === 'counter' && nextStep === 'consents') {
+        router.replace('/ustawienia');
+      }
+    } catch (error) {
+      console.error('Błąd zapisu daty startu:', error);
+      Alert.alert('Nie udało się zapisać daty', 'Spróbuj ponownie. Jeśli problem wróci, trzeba sprawdzić logi builda na iPhonie.');
     }
   };
 

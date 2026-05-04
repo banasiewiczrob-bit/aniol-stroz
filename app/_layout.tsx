@@ -11,8 +11,8 @@ void SplashScreen.preventAutoHideAsync().catch(() => {
   // If the splash is already controlled by the native layer, we can continue quietly.
 });
 
-export const Array = {
-  // To wymusza na routerze zachowanie statyczne, co często naprawia ten błąd
+export const unstable_settings = {
+  // Expo Router oczekuje unstable_settings; bez tego initialRouteName jest ignorowane.
   initialRouteName: 'index',
 };
 
@@ -60,7 +60,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!migrationsReady || startupRedirectDone) return;
     setStartupRedirectDone(true);
-    if (pathname !== '/intro') {
+    if (pathname === '/') {
       router.replace('/intro');
     }
   }, [migrationsReady, pathname, startupRedirectDone]);

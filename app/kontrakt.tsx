@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Watermark = require('../assets/images/maly_aniol.png');
@@ -54,6 +54,7 @@ export default function KontraktScreen() {
       router.replace('/licznik');
     } catch (e) {
       console.error('Błąd zapisu podpisu kontraktu:', e);
+      Alert.alert('Nie udało się zapisać kontraktu', 'Spróbuj ponownie. Jeśli problem wróci, trzeba sprawdzić logi builda na iPhonie.');
     }
   };
 
