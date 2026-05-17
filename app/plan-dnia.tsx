@@ -10,6 +10,7 @@ import {
   parseDailyTextsStore,
   type DailyTextsStore,
 } from '@/constants/daily-texts';
+import { getPolishHoliday } from '@/constants/polish-holidays';
 import { DEFAULT_APP_SETTINGS, loadAppSettings } from '@/hooks/useAppSettings';
 import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import { notifyDataChanged, subscribeSync } from '@/hooks/recoverySyncEvents';
@@ -453,6 +454,7 @@ export default function PlanScreen() {
     if (!selectedDateKey) return null;
     return planStore[selectedDateKey] ?? emptyPlan(selectedDateKey);
   }, [planStore, selectedDateKey]);
+  const selectedHoliday = useMemo(() => getPolishHoliday(selectedDateKey), [selectedDateKey]);
 
   const selectedArchiveEntry = useMemo(() => {
     if (!selectedDateKey) return undefined;
@@ -893,13 +895,21 @@ export default function PlanScreen() {
                 const isToday = dateKey === todayKey;
                 const isSelected = dateKey === selectedDateKey;
                 const markerColor = getMarkerColor(dateKey);
+                const holiday = getPolishHoliday(date);
                 return (
                   <Pressable
                     key={dateKey}
-                    style={[styles.weekDayCell, isToday && styles.dayCellToday, isSelected && styles.dayCellSelected]}
+                    style={[
+                      styles.weekDayCell,
+                      holiday && styles.dayCellHoliday,
+                      isToday && styles.dayCellToday,
+                      isSelected && styles.dayCellSelected,
+                    ]}
                     hitSlop={4}
                     onPress={() => openDay(dateKey)}
+                    accessibilityLabel={holiday ? `${dateKey}, ${holiday.name}` : dateKey}
                   >
+                    {holiday ? <View style={styles.holidayBadge} /> : null}
                     <Text style={styles.weekDayName}>{dayShort(date)}</Text>
                     <Text style={styles.weekDayNumber}>{date.getDate()}</Text>
                     <View style={[styles.dayMarker, { backgroundColor: markerColor }]} />
@@ -920,6 +930,10 @@ export default function PlanScreen() {
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: '#FF8B8B' }]} />
                 <Text style={styles.legendText}>do poprawy</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, styles.holidayLegendDot]} />
+                <Text style={styles.legendText}>święto</Text>
               </View>
             </View>
           </View>
@@ -950,19 +964,23 @@ export default function PlanScreen() {
                 const isToday = dateKey === todayKey;
                 const isSelected = dateKey === selectedDateKey;
                 const markerColor = getMarkerColor(dateKey);
+                const holiday = getPolishHoliday(date);
 
                 return (
                   <Pressable
                     key={dateKey}
                     style={[
                       styles.dayCell,
+                      holiday && styles.dayCellHoliday,
                       !inCurrentMonth && styles.dayCellMuted,
                       isToday && styles.dayCellToday,
                       isSelected && styles.dayCellSelected,
                     ]}
                     hitSlop={4}
                     onPress={() => openDay(dateKey)}
+                    accessibilityLabel={holiday ? `${dateKey}, ${holiday.name}` : dateKey}
                   >
+                    {holiday ? <View style={styles.holidayBadge} /> : null}
                     <Text style={[styles.dayCellText, !inCurrentMonth && styles.dayCellTextMuted]}>{date.getDate()}</Text>
                     <View style={[styles.dayMarker, { backgroundColor: markerColor }]} />
                   </Pressable>
@@ -983,6 +1001,10 @@ export default function PlanScreen() {
                 <View style={[styles.legendDot, { backgroundColor: '#FF8B8B' }]} />
                 <Text style={styles.legendText}>do poprawy</Text>
               </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, styles.holidayLegendDot]} />
+                <Text style={styles.legendText}>święto</Text>
+              </View>
             </View>
           </View>
         )}
@@ -990,7 +1012,15 @@ export default function PlanScreen() {
         {selectedDateKey && selectedPlan && (
           <View style={styles.dayViewCard} onLayout={setAnchor('day-view')}>
             <View style={styles.dayViewHeader}>
-              <Text style={styles.dayViewTitle}>Dzień: {selectedDateKey}</Text>
+              <View style={styles.dayViewHeaderText}>
+                <Text style={styles.dayViewTitle}>Dzień: {selectedDateKey}</Text>
+                {selectedHoliday ? (
+                  <View style={styles.dayHolidayRow}>
+                    <View style={styles.holidayDot} />
+                    <Text style={styles.dayHolidayText}>{selectedHoliday.name}</Text>
+                  </View>
+                ) : null}
+              </View>
               <Pressable onPress={closeDayView} style={styles.dayCloseBtn}>
                 <Text style={styles.dayCloseText}>Zamknij</Text>
               </Pressable>
@@ -1371,6 +1401,18 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingVertical: 8,
   },
+  dayCellHoliday: {
+    borderColor: 'rgba(248,199,93,0.45)',
+  },
+  holidayBadge: {
+    position: 'absolute',
+    top: 7,
+    right: 7,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F8C75D',
+  },
   weekDayName: { color: 'rgba(255,255,255,0.76)', fontSize: 11, fontWeight: '700', marginBottom: 5 },
   weekDayNumber: { color: 'white', fontSize: 22, fontWeight: '800' },
   weekdayRow: {
@@ -1436,6 +1478,9 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
+  holidayLegendDot: {
+    backgroundColor: '#F8C75D',
+  },
   legendText: { color: 'rgba(255,255,255,0.74)', fontSize: 12, fontWeight: '600' },
 
   dayViewCard: {
@@ -1453,7 +1498,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 10,
   },
-  dayViewTitle: { color: 'white', fontSize: 18, fontWeight: '800', flex: 1 },
+  dayViewHeaderText: {
+    flex: 1,
+  },
+  dayViewTitle: { color: 'white', fontSize: 18, fontWeight: '800' },
+  dayHolidayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginTop: 5,
+  },
+  holidayDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F8C75D',
+  },
+  dayHolidayText: {
+    color: 'rgba(248,199,93,0.96)',
+    fontSize: 13,
+    fontWeight: '700',
+  },
   dayCloseBtn: {
     paddingHorizontal: 10,
     paddingVertical: 7,

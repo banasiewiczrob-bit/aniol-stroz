@@ -1,0 +1,504 @@
+:root {
+  --as-bg: #061A2C;
+  --as-bg-deep: #071826;
+  --as-surface: rgba(12, 38, 62, 0.78);
+  --as-surface-soft: rgba(255, 255, 255, 0.05);
+  --as-border: rgba(159, 216, 255, 0.32);
+  --as-border-soft: rgba(120, 200, 255, 0.20);
+  --as-text: #FFFFFF;
+  --as-text-soft: rgba(232, 245, 255, 0.86);
+  --as-text-muted: rgba(232, 245, 255, 0.66);
+  --as-text-faint: rgba(255, 255, 255, 0.35);
+  --as-accent-blue: #7ED9FF;
+  --as-accent-sky: #9AC7FF;
+  --as-accent-mint: #9EF3C7;
+  --as-accent-amber: #FFD18A;
+  --as-accent-rose: #FFC7D9;
+  --as-accent-lavender: #C6B9FF;
+  --as-badge: #4F7DA5;
+  --as-glow-blue: rgba(126, 217, 255, 0.22);
+  --as-glow-sky: rgba(154, 199, 255, 0.22);
+  --as-glow-mint: rgba(158, 243, 199, 0.22);
+  --as-glow-amber: rgba(255, 209, 138, 0.20);
+  --as-glow-rose: rgba(255, 199, 217, 0.20);
+  --as-glow-lavender: rgba(198, 185, 255, 0.22);
+  --as-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  --as-radius: 18px;
+  --as-radius-lg: 24px;
+  --as-content: 1200px;
+  --as-watermark-url: none;
+
+  --global-palette1: var(--as-accent-blue);
+  --global-palette2: var(--as-accent-sky);
+  --global-palette3: var(--as-text);
+  --global-palette4: var(--as-text-soft);
+  --global-palette5: var(--as-bg-deep);
+  --global-palette6: var(--as-bg);
+  --global-palette7: #0C263E;
+  --global-palette8: var(--as-accent-mint);
+  --global-palette9: var(--as-accent-amber);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at top right, rgba(118, 214, 255, 0.12), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(255, 208, 149, 0.08), transparent 28%),
+    linear-gradient(180deg, var(--as-bg-deep) 0%, var(--as-bg) 100%);
+  color: var(--as-text-soft);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body,
+.site,
+.site-container,
+.content-wrap,
+.content-area,
+.site-main {
+  background-color: transparent;
+}
+
+body,
+body p,
+body li,
+body span,
+body label,
+body blockquote,
+.entry-content p,
+.entry-content li {
+  color: var(--as-text-soft);
+}
+
+body a {
+  color: var(--as-accent-blue);
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+body a:hover,
+body a:focus {
+  color: var(--as-accent-mint);
+}
+
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6,
+.entry-title,
+.elementor-heading-title {
+  color: var(--as-text);
+  letter-spacing: 0.01em;
+}
+
+.site-header,
+.site-main-header-wrap,
+.site-bottom-header-wrap,
+.site-footer,
+.site-bottom-footer-wrap,
+.site-top-footer-wrap {
+  background: rgba(6, 26, 44, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+.site-header {
+  border-bottom: 1px solid rgba(120, 200, 255, 0.16);
+}
+
+.site-footer,
+.site-bottom-footer-wrap,
+.site-top-footer-wrap {
+  border-top: 1px solid rgba(120, 200, 255, 0.16);
+}
+
+.site-header a,
+.site-footer a,
+.main-navigation a,
+.footer-navigation a {
+  color: var(--as-text-soft);
+}
+
+.site-header a:hover,
+.site-footer a:hover,
+.main-navigation a:hover,
+.footer-navigation a:hover {
+  color: var(--as-text);
+}
+
+.entry-hero-container-inner,
+.content-bg,
+.site-content-wrap {
+  background: transparent;
+}
+
+.elementor-button,
+.wp-block-button__link,
+.button,
+button,
+input[type="submit"] {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(120, 200, 255, 0.35);
+  color: var(--as-text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.elementor-button:hover,
+.wp-block-button__link:hover,
+.button:hover,
+button:hover,
+input[type="submit"]:hover {
+  transform: translateY(-1px);
+  background: rgba(120, 200, 255, 0.18);
+  border-color: rgba(120, 200, 255, 0.52);
+  color: var(--as-text);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="search"],
+input[type="tel"],
+textarea,
+select {
+  border-radius: 14px;
+  background: rgba(7, 24, 38, 0.72);
+  border: 1px solid rgba(120, 200, 255, 0.18);
+  color: var(--as-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+img,
+.wp-post-image {
+  border-radius: 18px;
+}
+
+.as-shell,
+.as-card,
+.as-post-card,
+.single-post article.post,
+.blog article.post,
+.archive article,
+.search article {
+  position: relative;
+  overflow: hidden;
+  background: var(--as-surface);
+  border: 1px solid var(--as-border);
+  box-shadow: var(--as-shadow);
+}
+
+.as-shell,
+.single-post article.post {
+  border-radius: var(--as-radius-lg);
+}
+
+.as-card,
+.as-post-card,
+.blog article.post,
+.archive article,
+.search article {
+  border-radius: var(--as-radius);
+}
+
+.as-shell {
+  padding: clamp(24px, 4vw, 48px);
+}
+
+.as-hero {
+  min-height: min(70vh, 720px);
+  display: flex;
+  align-items: center;
+}
+
+.as-watermark::after,
+.as-card::after,
+.as-post-card::after {
+  content: "";
+  position: absolute;
+  right: -48px;
+  bottom: -48px;
+  width: 180px;
+  height: 180px;
+  background-image: var(--as-watermark-url);
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.07;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+
+.as-shell::before,
+.as-card::before,
+.as-post-card::before,
+.blog article.post::before,
+.archive article::before,
+.search article::before {
+  content: "";
+  position: absolute;
+  top: -36px;
+  right: -36px;
+  width: 140px;
+  height: 140px;
+  border-radius: 999px;
+  background: var(--as-card-glow, var(--as-glow-blue));
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.as-shell > *,
+.as-card > *,
+.as-post-card > *,
+.single-post article.post > * {
+  position: relative;
+  z-index: 1;
+}
+
+.as-card {
+  padding: 20px;
+}
+
+.as-card--blue {
+  --as-card-glow: var(--as-glow-blue);
+  border-color: rgba(126, 217, 255, 0.56);
+}
+
+.as-card--sky {
+  --as-card-glow: var(--as-glow-sky);
+  border-color: rgba(154, 199, 255, 0.56);
+}
+
+.as-card--mint {
+  --as-card-glow: var(--as-glow-mint);
+  border-color: rgba(158, 243, 199, 0.56);
+}
+
+.as-card--amber {
+  --as-card-glow: var(--as-glow-amber);
+  border-color: rgba(255, 209, 138, 0.56);
+}
+
+.as-card--rose {
+  --as-card-glow: var(--as-glow-rose);
+  border-color: rgba(255, 199, 217, 0.56);
+}
+
+.as-card--lavender {
+  --as-card-glow: var(--as-glow-lavender);
+  border-color: rgba(198, 185, 255, 0.56);
+}
+
+.as-card__accent {
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  background: var(--as-accent-blue);
+}
+
+.as-card__accent--blue {
+  background: var(--as-accent-blue);
+}
+
+.as-card__accent--sky {
+  background: var(--as-accent-sky);
+}
+
+.as-card__accent--mint {
+  background: var(--as-accent-mint);
+}
+
+.as-card__accent--amber {
+  background: var(--as-accent-amber);
+}
+
+.as-card__accent--rose {
+  background: var(--as-accent-rose);
+}
+
+.as-card__accent--lavender {
+  background: var(--as-accent-lavender);
+}
+
+.as-eyebrow {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(222, 240, 255, 0.92);
+}
+
+.as-section-title,
+.as-hero h1,
+.as-hero .elementor-heading-title {
+  color: var(--as-text);
+  font-size: clamp(2.4rem, 5vw, 4.6rem);
+  line-height: 1.02;
+  font-weight: 800;
+  margin: 0 0 16px;
+}
+
+.as-lead,
+.as-hero p,
+.as-hero .elementor-widget-text-editor p {
+  max-width: 44rem;
+  color: var(--as-text-soft);
+  font-size: clamp(1.02rem, 1.4vw, 1.18rem);
+  line-height: 1.7;
+}
+
+.as-meta {
+  color: var(--as-text-faint);
+  font-size: 12px;
+  line-height: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.as-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.as-grid > * {
+  grid-column: span 4;
+}
+
+.as-grid--2 > * {
+  grid-column: span 6;
+}
+
+.as-grid--4 > * {
+  grid-column: span 3;
+}
+
+.as-pill,
+.post-categories a,
+.tagcloud a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--as-text-soft);
+  text-decoration: none;
+}
+
+.post-categories a:hover,
+.tagcloud a:hover {
+  background: rgba(120, 200, 255, 0.16);
+  border-color: rgba(120, 200, 255, 0.36);
+}
+
+.single-post article.post,
+.page .entry-content > .wp-block-group,
+.page .entry-content > .elementor {
+  max-width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.single-post article.post {
+  padding: clamp(28px, 4vw, 52px);
+}
+
+.single-post .entry-content,
+.single-post .entry-content p,
+.single-post .entry-content li {
+  max-width: 74ch;
+  line-height: 1.85;
+}
+
+.single-post .entry-content > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.single-post .entry-content h2,
+.single-post .entry-content h3,
+.single-post .entry-content h4 {
+  margin-top: 2.4rem;
+}
+
+.blog article.post,
+.archive article,
+.search article {
+  padding: 20px;
+}
+
+.blog article.post .entry-title,
+.archive article .entry-title,
+.search article .entry-title {
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  line-height: 1.25;
+}
+
+.widget,
+.sidebar .widget,
+.kt-sidebar-area .widget {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(120, 200, 255, 0.18);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.widget-title {
+  color: var(--as-text);
+}
+
+.wp-block-separator,
+.elementor-divider-separator {
+  border-color: rgba(120, 200, 255, 0.18);
+}
+
+.screen-reader-text:focus {
+  background: var(--as-bg);
+  color: var(--as-text);
+}
+
+@media (max-width: 1024px) {
+  .as-grid > *,
+  .as-grid--2 > *,
+  .as-grid--4 > * {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 767px) {
+  .as-shell {
+    padding: 20px;
+  }
+
+  .as-card {
+    padding: 18px;
+  }
+
+  .as-grid > *,
+  .as-grid--2 > *,
+  .as-grid--4 > * {
+    grid-column: span 12;
+  }
+
+  .as-section-title,
+  .as-hero h1,
+  .as-hero .elementor-heading-title {
+    font-size: clamp(2rem, 10vw, 2.6rem);
+  }
+}

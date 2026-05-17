@@ -1,4 +1,5 @@
 import { getJournalDateKey, parseJournalDateKey } from '@/constants/journals';
+import { getPolishHoliday } from '@/constants/polish-holidays';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -27,6 +28,7 @@ type WeekCalendarProps = {
 export function WeekCalendar({ selectedDateKey, onChangeDateKey, title = 'Bieżący tydzień' }: WeekCalendarProps) {
   const selectedDate = parseJournalDateKey(selectedDateKey) ?? new Date();
   const [weekAnchor, setWeekAnchor] = useState<Date>(startOfWeek(selectedDate));
+  const selectedHoliday = useMemo(() => getPolishHoliday(selectedDateKey), [selectedDateKey]);
 
   useEffect(() => {
     setWeekAnchor(startOfWeek(selectedDate));
@@ -55,16 +57,26 @@ export function WeekCalendar({ selectedDateKey, onChangeDateKey, title = 'Bież�
         </Pressable>
       </View>
 
+      {selectedHoliday ? (
+        <View style={styles.holidayInfo}>
+          <View style={styles.holidayDot} />
+          <Text style={styles.holidayInfoText}>{selectedHoliday.name}</Text>
+        </View>
+      ) : null}
+
       <View style={styles.daysRow}>
         {weekDates.map((date, index) => {
           const dateKey = getJournalDateKey(date);
           const active = dateKey === selectedDateKey;
+          const holiday = getPolishHoliday(date);
           return (
             <Pressable
               key={dateKey}
-              style={[styles.dayBtn, active && styles.dayBtnActive]}
+              style={[styles.dayBtn, holiday && styles.dayBtnHoliday, active && styles.dayBtnActive]}
               onPress={() => onChangeDateKey(dateKey)}
+              accessibilityLabel={holiday ? `${dateKey}, ${holiday.name}` : dateKey}
             >
+              {holiday ? <View style={styles.dayHolidayBadge} /> : null}
               <Text style={[styles.dayLabel, active && styles.dayLabelActive]}>{WEEKDAY_LABELS[index]}</Text>
               <Text style={[styles.dayNum, active && styles.dayNumActive]}>{date.getDate()}</Text>
             </Pressable>
@@ -108,6 +120,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   navBtnText: { color: 'rgba(255,255,255,0.86)', fontSize: 12, fontWeight: '600' },
+  holidayInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginBottom: 10,
+    paddingHorizontal: 2,
+  },
+  holidayDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F8C75D',
+  },
+  holidayInfoText: {
+    color: 'rgba(248,199,93,0.96)',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   daysRow: { flexDirection: 'row', gap: 6 },
   dayBtn: {
     flex: 1,
@@ -117,14 +147,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
+    position: 'relative',
+  },
+  dayBtnHoliday: {
+    borderColor: 'rgba(248,199,93,0.4)',
   },
   dayBtnActive: {
     borderColor: 'rgba(120,200,255,0.6)',
     backgroundColor: 'rgba(120,200,255,0.2)',
+  },
+  dayHolidayBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#F8C75D',
   },
   dayLabel: { color: 'rgba(255,255,255,0.78)', fontSize: 11, fontWeight: '600' },
   dayLabelActive: { color: 'white' },
   dayNum: { color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: '700', marginTop: 2 },
   dayNumActive: { color: 'white' },
 });
-
