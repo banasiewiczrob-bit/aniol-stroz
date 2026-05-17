@@ -1,6 +1,6 @@
 # Aniol Stroz - kontekst do wszystkich czatow
 
-Status: aktualne na 2026-03-14
+Status: aktualne na 2026-05-17
 
 To jest wspolny punkt startowy do kazdej osobnej rozmowy o projekcie `aniol-stroz`.
 Najpierw czytaj ten plik, a dopiero potem dokladaj material specjalistyczny z wybranego obszaru.
@@ -43,6 +43,11 @@ Glowne moduly widoczne z ekranu `Dom`:
 - `Obserwatorium 365` - dzienniki i lista wyzwalaczy
 - `Wsparcie` - siatka wsparcia, spolecznosc, kontakt, lista sposobow ktore pomagaja
 
+Wazna uwaga namingowa:
+
+- nazwa techniczna projektu i slug to `aniol-stroz`
+- nazwa wyswietlana aplikacji to `Dzień po dniu. Anioł Stróż`
+
 ## Co dziala teraz
 
 - onboarding i mapa pierwszych krokow
@@ -54,41 +59,57 @@ Glowne moduly widoczne z ekranu `Dom`:
 - siatka wsparcia z importem kontaktow z telefonu
 - ekran spolecznosci Discord oraz lokalny prototyp pokoju glownego i grup tematycznych
 - ustawienia, zgody, reset danych i migracje lokalnych danych
+- codzienne refleksje z odtwarzaniem audio przez `expo-audio`, tekstem refleksji, ulubionymi i udostepnianiem
+- pobieranie manifestu refleksji z publicznego bucketu Supabase z cache lokalnym i fallbackiem
+- ekran ulubionych refleksji
+- lokalny eksport/import kopii danych aplikacji
+- opcjonalny szyfrowany backup w chmurze Supabase za flaga `EXPO_PUBLIC_ENABLE_CLOUD_BACKUP=true`
+- modul `Napisz, co Ci pomaga` / `moje-doswiadczenie` z anonimowym wkladem do wspolnej bazy doswiadczen, postepem i odznakami
+- ekran dobrowolnego wsparcia rozwoju aplikacji przez zewnetrzne linki platnosci
+- deep links / App Links dla `https://aniolstroz.com.pl/app/*`
 
 ## Co jest jeszcze w trakcie albo jako placeholder
 
-- `Codzienne refleksje` maja juz material redakcyjny i ekran w aplikacji, ale odtwarzanie audio jest jeszcze oznaczone jako `wkrotce`
-- archiwum 365 refleksji nie jest jeszcze podpiete do zdalnych manifestow
+- pelne archiwum 365 refleksji nie jest jeszcze podpiete jako kompletna biblioteka w aplikacji
 - biblioteka audio jest opisana produktowo w dokumentach, ale nie jest jeszcze podpieta w aplikacji
 - premium ma tryb testowy `tester_preview`; platnosci i finalny paywall nie sa jeszcze wdrozone
 - spolecznosc w aplikacji jest lokalnym prototypem opartym o `AsyncStorage`, a zewnetrzna spolecznosc dziala na Discordzie
+- backup w chmurze jest za flaga srodowiskowa i wymaga wdrozonych RPC w Supabase
 
 ## Architektura i technologia
 
 - Expo / React Native / TypeScript
-- `expo` `~54.0.33`
+- `expo` `~54.0.34`
 - `react` `19.1.0`
 - `react-native` `0.81.5`
 - routing: `expo-router`
 - dane sa trzymane glownie lokalnie w `AsyncStorage`
 - powiadomienia: `expo-notifications`
 - kontakty: `expo-contacts`
-- obecne migracje lokalnych danych maja target `v3`
+- audio: `expo-audio`
+- backup plikowy: `expo-file-system` + `expo-sharing`
 
-Dane aplikacji na 2026-03-14:
+Dane aplikacji na 2026-05-17:
 
-- wersja aplikacji: `1.0.0`
+- wersja aplikacji: `1.0.2`
 - iOS bundle id: `com.robert.aniolstroz`
 - Android package: `com.robert.aniolstroz`
 - Expo owner: `banasiewicz.rob`
 - EAS project id: `0675cfe9-9986-4706-b4a2-64b75c2c9f8e`
+- scheme: `aniol-stroz`
+- domena App Links / Universal Links: `aniolstroz.com.pl`, sciezki `/app/*`
 
 ## Zewnetrzne integracje i granice
 
 - Discord invite jest czytany z `EXPO_PUBLIC_DISCORD_INVITE_URL`
 - kontakty telefonu sa opcjonalne i wymagaja zgody systemowej
 - lokalne powiadomienia wymagaja zgody uzytkownika
-- plan dla audio/refleksji przewiduje zdalne pliki i manifesty, ale to jeszcze nie jest finalnie podpiete
+- codzienne refleksje sa pobierane z publicznego bucketu Supabase `daily-reflections`
+- manifest refleksji jest pod `daily-reflections/manifests/daily-reflections.json`
+- domyslny projekt Supabase w kodzie: `https://dqblnmimbqsmmzjzzrjr.supabase.co`
+- anonimowy wklad do bazy doswiadczen i postep autora korzystaja z RPC / tabel Supabase
+- opcjonalny backup w chmurze korzysta z RPC `zapisz_kopie_zapasowa_aplikacji` i `pobierz_kopie_zapasowa_aplikacji`
+- linki platnosci wsparcia sa czytane z `EXPO_PUBLIC_SUPPORT_PAYMENT_URL*`
 
 ## Najwazniejsze pliki referencyjne
 
@@ -115,6 +136,8 @@ Tresci codzienne i refleksje:
 
 - `app/teksty-codzienne.tsx`
 - `app/(tabs)/(main)/refleksje.tsx`
+- `app/ulubione-refleksje.tsx`
+- `services/dailyReflections.ts`
 - `docs/codzienne-refleksje-plan.md`
 - `docs/codzienne-refleksje-tytuly.md`
 - `docs/codzienne-refleksje/README.md`
@@ -130,12 +153,17 @@ Obserwatorium, wsparcie i spolecznosc:
 - `app/spolecznosc.tsx`
 - `hooks/useCommunityForum.ts`
 - `constants/community.ts`
+- `app/moje-doswiadczenie.tsx`
+- `services/experienceSubmissions.ts`
+- `services/experienceCommunity.ts`
 
 Prywatnosc i publikacja:
 
 - `docs/polityka-prywatnosci.html`
 - `app/polityka-prywatnosci.tsx`
 - `app.json`
+- `services/appBackup.ts`
+- `services/cloudBackup.ts`
 
 ## Jak korzystac z tego pliku w nowym czacie
 

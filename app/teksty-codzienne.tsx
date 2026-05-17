@@ -31,8 +31,8 @@ const ITEMS: TileItem[] = [
     glow: 'rgba(158,231,216,0.28)',
   },
   {
-    title: 'Właśnie dzisiaj',
-    subtitle: 'Krótki tekst, który pomaga złapać kierunek na najbliższe godziny.',
+    title: 'Na dziś',
+    subtitle: 'Autorski tekst, który pomaga złapać kierunek na najbliższe godziny.',
     to: '/wsparcie-24',
     accent: '#FFD18A',
     glow: 'rgba(255,209,138,0.28)',
@@ -52,8 +52,8 @@ const ITEMS: TileItem[] = [
     glow: 'rgba(143,175,211,0.28)',
   },
   {
-    title: 'Desiderata',
-    subtitle: 'Spokojny tekst do czytania wtedy, gdy potrzebujesz złapać oddech.',
+    title: 'To, co najważniejsze',
+    subtitle: 'Spokojny tekst o tym, co pomaga wrócić do kierunku i łagodności.',
     to: '/wsparcie-desiderata',
     accent: '#B8C6FF',
     glow: 'rgba(184,198,255,0.28)',

@@ -1,6 +1,6 @@
 # Aniol Stroz - startowe teksty do osobnych czatow
 
-Status: aktualne na 2026-03-14
+Status: aktualne na 2026-05-17
 
 Ponizej sa gotowe teksty startowe do wklejenia do nowego czatu.
 Kazdy z nich zaklada, ze wspolnym punktem odniesienia jest `docs/aniol-stroz-kontekst-do-czatow.md`.
@@ -38,10 +38,14 @@ Najpierw uwzglednij:
 - docs/codzienne-refleksje/README.md
 - docs/biblioteka-audio-plan.md
 - app/(tabs)/(main)/refleksje.tsx
+- app/ulubione-refleksje.tsx
+- services/dailyReflections.ts
 
 Wazne:
 - codzienne refleksje maja model 365 + bonus na 29.02
-- ekran refleksji jest juz w aplikacji, ale audio nie jest jeszcze podpiete
+- ekran refleksji jest juz w aplikacji, audio jest odtwarzane przez expo-audio
+- manifest refleksji jest pobierany z Supabase, z lokalnym cache i fallbackiem
+- ulubione refleksje i udostepnianie sa juz w aplikacji
 - chcemy trzymac ton bliski, prosty i bez patosu
 - nie wychodzimy poza temat refleksji, audio, manifestow, namingow plikow i podpiecia do aplikacji
 ```
@@ -80,6 +84,9 @@ Najpierw uwzglednij:
 - app/wsparcie-siatka.tsx
 - app/wsparcie-spolecznosc.tsx
 - app/spolecznosc.tsx
+- app/moje-doswiadczenie.tsx
+- services/experienceSubmissions.ts
+- services/experienceCommunity.ts
 - hooks/useCommunityForum.ts
 - constants/community.ts
 
@@ -87,6 +94,7 @@ Wazne:
 - siatka wsparcia korzysta z kontaktow telefonu po zgodzie usera
 - Discord jest zewnetrzna spolecznoscia
 - pokoj glowny i grupy w aplikacji sa lokalnym prototypem
+- `Napisz, co Ci pomaga` korzysta z Supabase do anonimowego wkladu, postepu i odznak
 - jezyk i funkcje maja dbac o bezpieczenstwo, prywatnosc i brak presji
 ```
 
@@ -101,12 +109,17 @@ Najpierw uwzglednij:
 - docs/polityka-prywatnosci.html
 - app/polityka-prywatnosci.tsx
 - app/(tabs)/(main)/ustawienia.tsx
+- services/appBackup.ts
+- services/cloudBackup.ts
 
 Wazne:
-- aplikacja ma wersje 1.0.0
+- aplikacja ma wersje 1.0.2
 - bundle id iOS i package Android to com.robert.aniolstroz
 - aplikacja przechowuje dane glownie lokalnie
 - ma lokalne powiadomienia i opcjonalny dostep do kontaktow
+- ma lokalny eksport/import kopii danych
+- opcjonalny szyfrowany backup w chmurze jest za flaga EXPO_PUBLIC_ENABLE_CLOUD_BACKUP=true
+- App Links / Universal Links sa ustawione dla https://aniolstroz.com.pl/app/*
 - odpowiedzi maja uwzgledniac realny stan produktu, a nie planowane funkcje jako gotowe
 ```
 

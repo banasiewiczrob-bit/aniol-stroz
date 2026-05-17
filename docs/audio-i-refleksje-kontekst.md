@@ -1,6 +1,6 @@
 # Audio i refleksje - kontekst do osobnego czatu
 
-Status: aktywny zestaw ustalen, zaktualizowany 2026-03-31
+Status: aktywny zestaw ustalen, zaktualizowany 2026-05-17
 
 Ten plik jest kontekstem specjalistycznym.
 Wspolny kontekst dla wszystkich rozmow o projekcie jest tutaj:
@@ -45,6 +45,9 @@ Obecny stan:
 
 - `Codzienne refleksje` maja juz aktywny ekran w aplikacji z tytulem, odtwarzaczem i sekcja `Tekst refleksji`
 - po kliknieciu `Odtworz` ekran przewija sie do tekstu, a tekst autoscrolluje lekko szybciej niz audio
+- odtwarzanie audio jest podpiete przez `expo-audio`
+- refleksje mozna dodawac do ulubionych i otwierac z ekranu ulubionych
+- ekran refleksji obsluguje udostepnianie tekstu i karty graficznej
 - user nie widzi, ze wybor jest losowaniem; w UI jest to po prostu `Refleksja na dzis`
 - wybor dziennej refleksji opiera sie na jednej stalej kolejce globalnej dla wszystkich userow, zeby wpisy nie lecialy blokami autorow i nurtow
 - publiczny bucket Supabase `daily-reflections` ma obecnie pliki audio `01-01.m4a` do `01-59.m4a`
@@ -118,6 +121,7 @@ Proponowane podfoldery w `single/`:
 - jedna refleksja ma miec jedna mysl, jedno pytanie i jeden maly krok
 - biblioteka audio nie ma byc podcastem "do tla", tylko pomoca do konkretnego stanu
 - nie opisujemy jeszcze funkcji jako wdrozonych, jesli w aplikacji sa na etapie `wkrotce`
+- codzienne refleksje z audio sa juz wdrozone; pelne archiwum 365 i osobna biblioteka audio pozostaja osobnymi etapami
 
 ## Co jest do zrobienia dalej
 
@@ -164,7 +168,8 @@ Ustalenia:
 - prywatny bucket Supabase: app-audio-private
 - daily-reflections ma foldery audio i manifests
 - app-audio-private ma foldery single, series i manifests
-- ekran refleksji w aplikacji juz istnieje, ale audio i archiwum sa jeszcze niepodpiete
+- ekran refleksji w aplikacji juz istnieje i odtwarza audio przez expo-audio
+- niepodpiete jako komplet pozostaja pelne archiwum 365 i osobna biblioteka audio
 
 W tym czacie zajmujemy sie tylko audio, refleksjami, manifestami, namingiem plikow, uploadem i podpieciem tego do aplikacji.
 ```
