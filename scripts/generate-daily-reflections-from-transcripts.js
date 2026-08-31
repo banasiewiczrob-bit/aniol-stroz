@@ -20,7 +20,7 @@ function readManifest() {
 
 function stripTranscriptHeader(text) {
   return text
-    .replace(/^\[[^\]]+\]\s*-\s*[^\n]+\n?/u, '')
+    .replace(/^\[[^\]]+\]\s*-\s*[^\n]+\n?/gmu, '')
     .replace(/\r\n/g, '\n')
     .replace(/\s+/g, ' ')
     .trim();
