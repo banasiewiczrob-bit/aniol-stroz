@@ -1,6 +1,8 @@
 import { BackButton, useSwipeHintInset } from '@/components/BackButton';
 import { DISCORD_INVITE_URL } from '@/constants/community';
 import { APP_DISPLAY_NAME } from '@/constants/app';
+import { SOFT_BADGE_BG, SOFT_BADGE_BORDER, SOFT_BADGE_TEXT } from '@/constants/ui';
+import { useDiscordActivityBadge } from '@/hooks/useDiscordActivityBadge';
 import React, { useMemo } from 'react';
 import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -24,6 +26,7 @@ function normalizeDiscordLink(raw: string) {
 export default function WsparcieSpolecznoscDiscordScreen() {
   const link = useMemo(() => normalizeDiscordLink(DISCORD_INVITE_URL), []);
   const { swipeHintInset } = useSwipeHintInset();
+  const { hasNewMessage, markSeen } = useDiscordActivityBadge();
 
   const openDiscord = async () => {
     if (!link) {
@@ -69,7 +72,13 @@ export default function WsparcieSpolecznoscDiscordScreen() {
           <Text style={styles.cardText}>• Kanały tematyczne: historie, feedback i codzienne wsparcie.</Text>
           <Text style={styles.cardText}>• Opcjonalny kanał głosowy, gdy chcesz pogadać na żywo.</Text>
         </View>
-        <Pressable style={styles.primaryBtn} onPress={() => void openDiscord()}>
+        {hasNewMessage ? (
+          <View style={styles.newMessageBadge}>
+            <View style={styles.newMessageDot} />
+            <Text style={styles.newMessageBadgeText}>Nowa wiadomość na #pogaduchy</Text>
+          </View>
+        ) : null}
+        <Pressable style={styles.primaryBtn} onPress={() => { void markSeen(); void openDiscord(); }}>
           <Text style={styles.primaryBtnText}>Otwórz Discord</Text>
         </Pressable>
       </ScrollView>
@@ -132,4 +141,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '700' },
+  newMessageBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 6,
+    backgroundColor: SOFT_BADGE_BG,
+    borderWidth: 1.5,
+    borderColor: SOFT_BADGE_BORDER,
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  newMessageDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: SOFT_BADGE_TEXT },
+  newMessageBadgeText: { color: SOFT_BADGE_TEXT, fontSize: 13, fontWeight: '700' },
 });

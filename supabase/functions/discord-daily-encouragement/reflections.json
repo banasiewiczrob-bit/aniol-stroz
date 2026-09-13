@@ -1,0 +1,417 @@
+[
+  {
+    "id": "01-01",
+    "title": "Przyjmuję życie takim, jakie do mnie przyszło.",
+    "smallStep": "Powiedz na głos Tak. A potem. Dziś moim małym krokiem w prawdzie będzie. I zrób to."
+  },
+  {
+    "id": "01-02",
+    "title": "Moi rodzice dali mi najważniejszy dar życie.",
+    "smallStep": "Powiedz jedno zdanie wdzięczności, nawet bardzo krótkie. Dziękuję za życie. I jedno zdanie sprawczości. Dziś zbuduję jeden mały element mojego życia. I zrób to."
+  },
+  {
+    "id": "01-03",
+    "title": "Kiedy przestaję walczyć z przeszłością, odzyskuję energię na przyszłość.",
+    "smallStep": "Zapisz lub powiedz Dziś nie będę walczył z. I tu napisz z czym, a pod spodem zrobię zamiast tego. I to będzie mój mały krok na dzisiaj."
+  },
+  {
+    "id": "01-04",
+    "title": "To, co było trudne w mojej rodzinie, nie musi decydować o tym, kim jestem dzisiaj.",
+    "smallStep": "Dokończ zdanie W mojej rodzinie powtarzało się, a potem ja dziś wybieram. I to będzie mój mały krok na dzisiaj."
+  },
+  {
+    "id": "01-05",
+    "title": "Szacunek dla tych, którzy byli przede mną, daje mi siłę iść dalej.",
+    "smallStep": "Powiedz jedno zdanie. Widzę, że było ci trudno. To do przodków rodziców, a potem powiedz Ja idę dalej inaczej"
+  },
+  {
+    "id": "01-06",
+    "title": "Nie wszystko co niosę należy do mnie.",
+    "smallStep": "Zapisz. To nie jest moje, To jest. I jedno zdanie oddaje to z szacunkiem."
+  },
+  {
+    "id": "01-07",
+    "title": "Gdy uznaje historię mojej rodziny, przestaję ją nieświadomie powtarzać.",
+    "smallStep": "Jedno pytanie co w mojej rodzinie robiło się zamiast rozmawiać? A potem ja dziś zrobię inaczej."
+  },
+  {
+    "id": "01-08",
+    "title": "Moje życie jest większe niż ból, który odziedziczyłem.",
+    "smallStep": "Połóż dłoń na klatce piersiowej i powiedz Tak, to boli. Jestem właściwy, a to znaczy więcej niż ten ból."
+  },
+  {
+    "id": "01-09",
+    "title": "Mogę iść własną drogą bez odrzucania tych, którzy dali mi początek.",
+    "smallStep": "Powiedz: Mamo, tato — wybieram inaczej, a później nadal pamiętam, skąd jestem."
+  },
+  {
+    "id": "01-10",
+    "title": "Spokój przychodzi, gdy uznaję rzeczywistość taką, jaka jest.",
+    "smallStep": "Powiedz w tej chwili jest tak, ale mój następny krok to"
+  },
+  {
+    "id": "01-11",
+    "title": "W każdej rodzinie jest coś, co boli i coś, co daje siłę.",
+    "smallStep": "Wypowiedz jedno zdanie o bólu i jedno zdanie o sile Twojej rodziny."
+  },
+  {
+    "id": "01-12",
+    "title": "To, co odrzucamy w sobie lub w rodzinie, często wraca, by zostać zobaczone.",
+    "smallStep": "Nazwij jedno uczucie lub temat, którego dziś postanawiasz nie odpychać i niech to będzie Twoim małym krokiem naprzód."
+  },
+  {
+    "id": "01-13",
+    "title": "Gdy uznaje wszystkich członków mojego systemu, moje serce się uspokaja.",
+    "smallStep": "Powiedz w myślach Uznaję, że należysz do tej historii, do tej, do której i ja należę."
+  },
+  {
+    "id": "01-14",
+    "title": "Nie muszę nosić losu innych ludzi, aby ich kochać.",
+    "smallStep": "Dziś zadam sobie pytanie czy to, co dziś niosę naprawdę jest moje?"
+  },
+  {
+    "id": "01-15",
+    "title": "Wdzięczność za życie otwiera drogę do zmiany.",
+    "smallStep": "Powiedz jedno konkretne dziękuję"
+  },
+  {
+    "id": "01-16",
+    "title": "Czasem wystarczająco dużym aktem miłości jest pozwolić każdemu nieść jego własny los.",
+    "smallStep": "Powiedz. To twoje życie. Ja wracam do swojego."
+  },
+  {
+    "id": "01-17",
+    "title": "Moje miejsce w życiu staje się jasne, gdy przestaję porównywać się z innymi.",
+    "smallStep": "Powiedz jedno zdanie, moja droga dziś wygląda tak."
+  },
+  {
+    "id": "01-18",
+    "title": "To, co trudne z przeszłości, może stać się źródłem mądrości.",
+    "smallStep": "Powiedz jedno zdanie, jedna rzecz, której nauczyło mnie to doświadczenie, to."
+  },
+  {
+    "id": "01-19",
+    "title": "W porządku bycia.",
+    "smallStep": "Powiedz w myślach Mam prawo tu być."
+  },
+  {
+    "id": "01-20",
+    "title": "Gdy uznaje moich rodziców takimi, jakimi byli, przestaje oczekiwać niemożliwego.",
+    "smallStep": "Powiedz Widzę, jak to było. Teraz zajmę się swoim życiem"
+  },
+  {
+    "id": "01-21",
+    "title": "Miłość rośnie, gdy jest w niej pokora wobec życia.",
+    "smallStep": "Powiedz nie muszę tego kontrolować. Mogę kochać"
+  },
+  {
+    "id": "01-22",
+    "title": "Zmiana zaczyna się od zobaczenia prawdy.",
+    "smallStep": "Powiedz prawda o mnie dzisiaj to."
+  },
+  {
+    "id": "01-23",
+    "title": "W rodzinie nic nie znika.",
+    "smallStep": "Dokończ zdanie W mojej rodzinie zamiast rozmowy było."
+  },
+  {
+    "id": "01-24",
+    "title": "Przyjęcie życia oznacza przyjęcie także jego trudnych części.",
+    "smallStep": "Weź dwa oddechy i powiedz: Robię miejsce na to, co trudne."
+  },
+  {
+    "id": "01-25",
+    "title": "Gdy przestaję osądzać swoją historię, mogę zacząć ją rozumieć.",
+    "smallStep": "Zamiast „Dlaczego ja?”, zapytaj: co wtedy było dla mnie najtrudniejsze?"
+  },
+  {
+    "id": "01-26",
+    "title": "Czasem pojednanie zaczyna się od jednego zdania.",
+    "smallStep": "Powiedz na głos To było trudne, ale było. A potem dokończ zdanie Dziś wybieram"
+  },
+  {
+    "id": "01-27",
+    "title": "Szacunek dla przeszłości pozwala mi budować przyszłość.",
+    "smallStep": "Powiedz dwa zdania. Uznaję, że tak było i dziś. Buduję inaczej."
+  },
+  {
+    "id": "01-28",
+    "title": "Nie muszę być doskonały, aby należeć do swojej rodziny i do świata.",
+    "smallStep": "Powiedz do siebie Jestem człowiekiem i to wystarczy."
+  },
+  {
+    "id": "01-29",
+    "title": "Miłość działa najspokojniej tam, gdzie jest zgoda na rzeczywistość.",
+    "smallStep": "Powiedz widzę jak jest i dodaj mój spokojny krok w miłości. To."
+  },
+  {
+    "id": "01-30",
+    "title": "Przyjmując życie od rodziców biorę odpowiedzialność za to, co z nim zrobię.",
+    "smallStep": "Powiedz zdanie Dziś zrobię jedną rzecz, która mi służy."
+  },
+  {
+    "id": "01-31",
+    "title": "To, co było przede mną stworzyło drogę, po której idę.",
+    "smallStep": "Powiedz jedno zdanie. Ta droga mnie tu przyprowadziła."
+  },
+  {
+    "id": "01-32",
+    "title": "Gdy pozwalam przeszłości być przeszłością, moje serce robi się lżejsze.",
+    "smallStep": "Powiedz teraz to już było. Teraz jestem tutaj"
+  },
+  {
+    "id": "01-33",
+    "title": "Dziś mogę powiedzieć biorę życie takim, jakie jest i idę dalej.",
+    "smallStep": "Dziś zrób jeden krok, nawet jeśli nie widzisz całej drogi."
+  },
+  {
+    "id": "01-34",
+    "title": "Jesteś wystarczający, dokładnie taki, jaki jesteś.",
+    "smallStep": "Powiedz do siebie Jestem wystarczająco dobry"
+  },
+  {
+    "id": "01-35",
+    "title": "Najważniejsza jest ta chwila, która właśnie trwa.",
+    "smallStep": "Zatrzymaj się na trzy spokojne oddechy."
+  },
+  {
+    "id": "01-36",
+    "title": "Pomiędzy wdechem i wydechem mieści się całe życie.",
+    "smallStep": "Jeden pełny wdech, jeden powolny wydech, i jeszcze jeden."
+  },
+  {
+    "id": "01-37",
+    "title": "Każdy dzień jest nową możliwością zmiany.",
+    "smallStep": "Zapytaj siebie co dziś mogę zrobić Trochę inaczej niż wczoraj."
+  },
+  {
+    "id": "01-38",
+    "title": "Zmiana nie musi być wielka, wystarczy jeden mały krok.",
+    "smallStep": "Nazwij jeden mały krok na dziś. Tylko jeden."
+  },
+  {
+    "id": "01-39",
+    "title": "Strach często stoi na straży nowego początku.",
+    "smallStep": "Zapytaj siebie czego dziś się boję i co pomimo to jest dla mnie ważne."
+  },
+  {
+    "id": "01-40",
+    "title": "To, czego szukam, często jest we mnie.",
+    "smallStep": "Zadaj sobie pytanie: co już wiem, choć rzadko sobie na to pozwalam?"
+  },
+  {
+    "id": "01-41",
+    "title": "Odpowiedź bywa prostsza niż myślisz.",
+    "smallStep": "Powiedz jedno zdanie. Najprostsza odpowiedź na dziś to"
+  },
+  {
+    "id": "01-42",
+    "title": "Gdy jedne drzwi się zamykają, inne zaczynają się uchylać.",
+    "smallStep": "Zadaj sobie pytanie: co teraz zaczyna się delikatnie uchylać?"
+  },
+  {
+    "id": "01-43",
+    "title": "Czasem trzeba zmienić drogę, nie cel.",
+    "smallStep": "Zapytaj siebie, czego naprawdę chcę? Oraz jaką inną drogą mogę spróbować to osiągnąć."
+  },
+  {
+    "id": "01-44",
+    "title": "Spokój zaczyna się tam, gdzie kończy się walka z rzeczywistością.",
+    "smallStep": "Powiedz jedno krótkie tak jest. I weź spokojny oddech."
+  },
+  {
+    "id": "01-45",
+    "title": "Twoja historia nie musi decydować o Twojej przyszłości.",
+    "smallStep": "Powiedz sobie dziś zrobię jedną rzecz inaczej niż zwykle"
+  },
+  {
+    "id": "01-46",
+    "title": "Każdy dzień daje szansę, żeby zacząć od nowa.",
+    "smallStep": "Zapytaj siebie co dziś mogę zacząć na nowo, Choćby odrobinę."
+  },
+  {
+    "id": "01-47",
+    "title": "Nie wszystko musisz rozumieć od razu.",
+    "smallStep": "Powiedz sobie na dziś nie muszę tego rozumieć."
+  },
+  {
+    "id": "01-48",
+    "title": "Czasem najlepszym ruchem jest zatrzymanie się.",
+    "smallStep": "Zrób sobie minutę ciszy Bez telefonu. Bez planu."
+  },
+  {
+    "id": "01-49",
+    "title": "Oddychaj.",
+    "smallStep": "Zrób trzy spokojne oddechy. Tylko to."
+  },
+  {
+    "id": "01-50",
+    "title": "To, co trudne, często prowadzi do wzrostu.",
+    "smallStep": "Zapytaj siebie czego to doświadczenie uczy mnie o mnie?"
+  },
+  {
+    "id": "02-01",
+    "title": "Małe decyzje tworzą wielkie zmiany.",
+    "smallStep": "Nazwij jedną małą decyzję, którą dziś podejmiesz na rzecz siebie."
+  },
+  {
+    "id": "02-02",
+    "title": "Wystarczy jeden moment odwagi.",
+    "smallStep": "Zrób dziś jedną rzecz, która wymaga odrobiny odwagi. Choćby najmniejszej."
+  },
+  {
+    "id": "02-03",
+    "title": "Życie dzieje się tylko tu i teraz.",
+    "smallStep": "Poczuj, że jesteś tu i teraz."
+  },
+  {
+    "id": "02-04",
+    "title": "Nie musisz być idealny, żeby iść dalej.",
+    "smallStep": "Powiedz do siebie Jestem wystarczający taki, jaki jestem dziś."
+  },
+  {
+    "id": "02-05",
+    "title": "Zmiana zaczyna się od świadomości.",
+    "smallStep": "Rozpoznaj dziś jeden automatyczny wzorzec w swoim zachowaniu. Tylko rozpoznaj to Wystarczy na początek."
+  },
+  {
+    "id": "02-06",
+    "title": "Najpierw przychodzi niepewność, potem droga.",
+    "smallStep": "Powiedz Nie muszę dziś wiedzieć wszystkiego. Wystarczy następny krok"
+  },
+  {
+    "id": "02-07",
+    "title": "Daj sobie czas na dojrzewanie do decyzji.",
+    "smallStep": "Jeśli stoisz przed decyzją, daj sobie dziś jeden dzień więcej. Pozwól jej dojrzeć."
+  },
+  {
+    "id": "02-08",
+    "title": "W ciszy często rodzą się najlepsze odpowiedzi.",
+    "smallStep": "Znajdź dziś pięć minut ciszy. Bez telefonu. Bez muzyki. Tylko Ty i oddech."
+  },
+  {
+    "id": "02-09",
+    "title": "Twoje tempo jest w porządku.",
+    "smallStep": "Powiedz moje tempo jest właściwe dla mnie. Idę swoją drogą"
+  },
+  {
+    "id": "02-10",
+    "title": "Bój się i rób.",
+    "smallStep": "Pomyśl o jednej rzeczy, którą się straszysz, i zrób ją dziś. Bój się i rób. To jest droga."
+  },
+  {
+    "id": "02-11",
+    "title": "Zacznij od nowa.",
+    "smallStep": "Dziś rano powiedz sobie: Zaczynam od nowa. I potraktuj ten dzień jako pierwszy dzień nowego życia."
+  },
+  {
+    "id": "02-12",
+    "title": "Posprzątaj palenisko.",
+    "smallStep": "Zastanów się, co dziś wymaga Twojej uwagi, co dziś domaga się posprzątania, i zrób to."
+  },
+  {
+    "id": "02-13",
+    "title": "Nie zatrzymuj się.",
+    "smallStep": "Zapytaj się, w czym dziś utknąłem. Co mnie trzyma w miejscu? I zrób jeden krok do przodu."
+  },
+  {
+    "id": "02-14",
+    "title": "Wypalam się, bo żyję.",
+    "smallStep": "Jeśli czujesz się wypalony, daj sobie dziś pozwolenie na odpoczynek bez poczucia winy. Wypalenie potrzebuje czasu."
+  },
+  {
+    "id": "02-15",
+    "title": "Płonę.",
+    "smallStep": "Poczuj to, co teraz czujesz. Nawet jeśli to trudne. Pozwól temu płonąć przez chwilę. Oddychaj tym."
+  },
+  {
+    "id": "02-16",
+    "title": "Napięcie bywa twórcze.",
+    "smallStep": "Gdy poczujesz napięcie w relacji, nie uciekaj. Zostań w nim. Oddychaj. Zobacz, co się z niego narodzi."
+  },
+  {
+    "id": "02-17",
+    "title": "Relacja w full kontakcie bywa trudna, ale działa.",
+    "smallStep": "Dziś w jednej rozmowie powiedz coś naprawdę szczerego o sobie — coś, czego normalnie byś nie powiedział. Zobacz, co się stanie."
+  },
+  {
+    "id": "02-18",
+    "title": "Grupa.",
+    "smallStep": "Jeśli masz grupę, idź. Jeśli nie masz, znajdź dziś. Zrób jeden krok w tę stronę."
+  },
+  {
+    "id": "02-19",
+    "title": "Potrzebuję siły większej niż ja sam.",
+    "smallStep": "Przypomnij sobie moment, gdy ktoś Ci pomógł. Poczuj, jak to jest przyjąć wsparcie. Pozwól sobie na to."
+  },
+  {
+    "id": "02-20",
+    "title": "Jeśli będę sam, będzie tak jak zwykle.",
+    "smallStep": "Zadzwoń dziś do kogoś. Nie musisz mówić o problemach. Wystarczy kontakt. Wystarczy, byś nie był sam."
+  },
+  {
+    "id": "02-21",
+    "title": "Najbardziej chodzi o to, żebym działał.",
+    "smallStep": "Dziś zamiast myśleć o zmianie, zrób jedną małą rzecz, która jest zmianą — jedną realną, konkretną."
+  },
+  {
+    "id": "02-22",
+    "title": "Działam tak, jakby.",
+    "smallStep": "Wybierz jedną rzecz, na którą nie czujesz się gotowy. Zrób pierwszy krok. Mały, symboliczny, tak jakbyś był gotowy."
+  },
+  {
+    "id": "02-23",
+    "title": "Cud.",
+    "smallStep": "Zrób teraz jedną rzecz, którą odwlekałeś, którą odkładałeś z dnia na dzień. Małą, jakąkolwiek. Ale zrób ją teraz."
+  },
+  {
+    "id": "02-24",
+    "title": "Najpierw trzeba się podnieść.",
+    "smallStep": "Jeśli teraz leżysz lub siedzisz, wstań, zrób trzy kroki. To jest początek."
+  },
+  {
+    "id": "02-25",
+    "title": "Bywam przydatny, gdy przychodzę do relacji pusty.",
+    "smallStep": "Dziś w jednej sytuacji nie staraj się pomóc. Po prostu bądź. Słuchaj. Zobacz, co się stanie."
+  },
+  {
+    "id": "02-26",
+    "title": "Zespół mylnego przekonania o zajebistości własnej osoby.",
+    "smallStep": "Przypomnij sobie moment, gdy byłeś pewny, że masz rację. Czego Cię to nauczyło?"
+  },
+  {
+    "id": "02-27",
+    "title": "Bym nie miał oczekiwań.",
+    "smallStep": "Pomyśl o jednym oczekiwaniu, które masz na dzisiejszy dzień. Puść je. Zobacz, co się stanie, gdy nie będziesz oczekiwał."
+  },
+  {
+    "id": "02-28",
+    "title": "Przychodzę pusty.",
+    "smallStep": "Przed kolejną rozmową zatrzymaj się. Opróżnij głowę z założeń, wejdź pusty, zobacz, co się pojawi."
+  },
+  {
+    "id": "02-29",
+    "title": "Metoda się tworzy.",
+    "smallStep": "Dziś w jednej rozmowie bądź w pełni obecny. Nie myśl, co powiesz. Słuchaj. Reaguj na to, co jest."
+  },
+  {
+    "id": "02-30",
+    "title": "Nie ma jedynie słusznej metody.",
+    "smallStep": "Pomyśl o jednym sposobie, który pomaga Ci być lepszym. To jest Twoja metoda zmiany. Używaj jej."
+  },
+  {
+    "id": "02-31",
+    "title": "Wszystko, co potrzebuję do zmiany, mam w sobie.",
+    "smallStep": "Połóż rękę na sercu. Powiedz: Mam w sobie wszystko, czego potrzebuję. Poczuj to."
+  },
+  {
+    "id": "02-32",
+    "title": "To wszystko mam w sobie.",
+    "smallStep": "Zadaj sobie jedno pytanie, które Cię nurtuje. Nie szukaj odpowiedzi w głowie. Posłuchaj ciszy. Czekaj."
+  },
+  {
+    "id": "02-33",
+    "title": "Czy mam widzenie człowieka?",
+    "smallStep": "Przypomnij sobie osobę, która Cię denerwuje. Spróbuj zobaczyć jej ból. Co mogłoby tam być?"
+  }
+]

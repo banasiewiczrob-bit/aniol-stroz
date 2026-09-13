@@ -1,7 +1,23 @@
 import { Stack, router, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { getFirstStepsState, subscribeFirstStepsChanges } from '@/hooks/useFirstSteps';
-import { markVisitedRoute } from '@/hooks/useVisitedTiles';
+import { markVisitedRoute, normalizeRoute } from '@/hooks/useVisitedTiles';
+import { logScreenOpen } from '@/services/usageAnalytics';
+
+const TRACKED_USAGE_ROUTES = new Set([
+  '/',
+  '/plan-dnia',
+  '/dziennik-uczucia',
+  '/lista-wyzwalaczy',
+  '/dziennik-wdziecznosci',
+  '/liczniki',
+  '/licznik',
+  '/licznik-strat',
+  '/wsparcie-spolecznosc',
+  '/refleksje',
+  '/codzienne-refleksje',
+  '/moje-doswiadczenie',
+]);
 
 export default function TabLayout() {
   const pathname = usePathname();
@@ -63,6 +79,13 @@ export default function TabLayout() {
 
   useEffect(() => {
     void markVisitedRoute(pathname);
+  }, [pathname]);
+
+  useEffect(() => {
+    const normalized = normalizeRoute(pathname);
+    if (normalized && TRACKED_USAGE_ROUTES.has(normalized)) {
+      void logScreenOpen(normalized);
+    }
   }, [pathname]);
 
   return (

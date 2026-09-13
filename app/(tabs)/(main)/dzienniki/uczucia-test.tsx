@@ -120,6 +120,8 @@ export default function DziennikUczucTestScreen() {
   const [openHours, setOpenHours] = useState<Record<string, boolean>>({});
   const [trendWindowDays, setTrendWindowDays] = useState<TrendWindowDays>(14);
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const [showCustomDetailInput, setShowCustomDetailInput] = useState(false);
+  const [customDetailText, setCustomDetailText] = useState('');
 
   React.useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -206,6 +208,15 @@ export default function DziennikUczucTestScreen() {
     setBaseEmotion(emotion);
     baseEmotionRef.current = emotion;
     setDetailEmotion(EMOTION_DETAILS_BY_BASE[emotion][0]);
+    setShowCustomDetailInput(false);
+    setCustomDetailText('');
+  };
+
+  const onAddCustomDetail = () => {
+    const trimmed = customDetailText.trim();
+    if (!trimmed) return;
+    addDraftFeeling(baseEmotionRef.current, trimmed);
+    setCustomDetailText('');
   };
 
   const onSave = async () => {
@@ -438,7 +449,29 @@ export default function DziennikUczucTestScreen() {
                 </Pressable>
               );
             })}
+            <Pressable
+              style={[styles.chip, showCustomDetailInput && styles.chipActive]}
+              onPress={() => setShowCustomDetailInput((prev) => !prev)}
+            >
+              <Text style={[styles.chipText, showCustomDetailInput && styles.chipTextActive]}>Inne — wpisz własne</Text>
+            </Pressable>
           </View>
+          {showCustomDetailInput ? (
+            <View style={styles.customInputRow}>
+              <TextInput
+                value={customDetailText}
+                onChangeText={setCustomDetailText}
+                placeholder="Wpisz własne określenie uczucia"
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                style={[styles.input, styles.customInput]}
+                onSubmitEditing={onAddCustomDetail}
+                returnKeyType="done"
+              />
+              <Pressable style={styles.customAddBtn} onPress={onAddCustomDetail}>
+                <Text style={styles.customAddBtnText}>Dodaj</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.card}>
@@ -693,6 +726,17 @@ const styles = StyleSheet.create({
   chipText: { color: 'rgba(255,255,255,0.86)', fontSize: 14, fontWeight: '600' },
   chipTextActive: { color: 'white' },
   helper: { color: SUB, fontSize: 13, lineHeight: 18, marginBottom: 8 },
+  customInputRow: { flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' },
+  customInput: { flex: 1, marginTop: 0 },
+  customAddBtn: {
+    borderWidth: 1,
+    borderColor: ACCENT_BORDER,
+    backgroundColor: ACCENT_BG,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  customAddBtnText: { color: 'white', fontSize: 13, fontWeight: '700' },
   selectedItemBox: {
     marginTop: 8,
     borderTopWidth: 1,

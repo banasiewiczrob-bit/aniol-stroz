@@ -40,7 +40,7 @@ function ensureRuntimeDate() {
   }
 }
 
-function normalizeRoute(route: string): string | null {
+export function normalizeRoute(route: string): string | null {
   if (!route || typeof route !== 'string') return null;
   const base = route.split('?')[0].trim();
   if (!base.startsWith('/')) return null;
