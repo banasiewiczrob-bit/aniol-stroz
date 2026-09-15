@@ -13,6 +13,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Cache-Control": "no-store",
 };
 
 Deno.serve(async (req) => {

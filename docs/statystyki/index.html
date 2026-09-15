@@ -233,8 +233,8 @@
     statusLine.textContent = "Wczytuję dane…";
     try {
       const res = await fetch(
-        FUNCTION_URL + "?token=" + encodeURIComponent(DASHBOARD_TOKEN),
-        { headers: { Authorization: "Bearer " + SUPABASE_ANON_KEY } }
+        FUNCTION_URL + "?token=" + encodeURIComponent(DASHBOARD_TOKEN) + "&_=" + Date.now(),
+        { headers: { Authorization: "Bearer " + SUPABASE_ANON_KEY }, cache: "no-store" }
       );
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
