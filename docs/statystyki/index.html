@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Statystyki Anioła</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #F4F7FB;
+    --surface: #FFFFFF;
+    --surface-raised: #FFFFFF;
+    --border: #DCE4F0;
+    --border-soft: #E8EEF6;
+    --text-primary: #16233A;
+    --text-secondary: #4C5E7A;
+    --text-muted: #7C8CA6;
+    --accent: #C98A2E;
+    --accent-ink: #7A5416;
+    --accent-soft: rgba(201,138,46,0.14);
+    --accent-track: #EFE3CC;
+    --shadow: 0 1px 2px rgba(22,35,58,0.06), 0 8px 24px -12px rgba(22,35,58,0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B1626;
+      --surface: #121F33;
+      --surface-raised: #16243B;
+      --border: #1E3049;
+      --border-soft: #192A42;
+      --text-primary: #EAF2FB;
+      --text-secondary: #9FB4CE;
+      --text-muted: #6B7F9B;
+      --accent: #DDAF52;
+      --accent-ink: #F6E2B4;
+      --accent-soft: rgba(190,136,47,0.22);
+      --accent-track: #23324A;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -16px rgba(0,0,0,0.55);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  body {
+    color: var(--text-primary);
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    padding-inline: max(20px, env(safe-area-inset-left));
+    padding-block: 28px 60px;
+  }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 900px; margin-inline: auto; display: flex; flex-direction: column; gap: 22px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(28px, 4.5vw, 38px);
+    margin: 4px 0 2px;
+    text-wrap: balance;
+  }
+  .subline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 13.5px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); font-size: 12.5px; }
+  button.refresh {
+    font: inherit; font-weight: 600; font-size: 13px; color: var(--accent-ink);
+    background: var(--accent-soft); border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer;
+  }
+  button.refresh:hover { filter: brightness(1.03); }
+  button.refresh:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.refresh[disabled] { opacity: 0.6; cursor: default; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 620px) { .stats-row { grid-template-columns: 1fr; } }
+  .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 30px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat-sub { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 20px 18px; box-shadow: var(--shadow); }
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .panel-title { font-weight: 700; font-size: 16px; }
+  .panel-hint { color: var(--text-muted); font-size: 12.5px; }
+  .rank-row { display: grid; grid-template-columns: 160px 1fr 52px; align-items: center; gap: 10px; padding-block: 6px; }
+  .rank-label { font-size: 13.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-track { position: relative; height: 14px; border-radius: 4px; background: var(--accent-track); overflow: hidden; }
+  .rank-fill { height: 100%; border-radius: 4px; background: var(--accent); min-width: 3px; transition: width 0.5s ease; }
+  .rank-value { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13.5px; text-align: right; }
+  .rank-row.is-empty .rank-label, .rank-row.is-empty .rank-value { color: var(--text-muted); }
+  .empty-state { text-align: center; padding: 30px 10px; color: var(--text-secondary); }
+  .empty-state .big { font-size: 26px; margin-bottom: 6px; }
+  .foot-note { color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 4px; }
+  .error-note { color: #C1503F; font-size: 12.5px; text-align: center; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Anioł Stróż · panel wewnętrzny</div>
+    <h1>Statystyki Anioła</h1>
+    <div class="subline">
+      <span id="statusLine">Ładowanie danych…</span>
+      <button class="refresh" id="refreshBtn" type="button">↻ Odśwież teraz</button>
+      <span class="pill">ostatnie 90 dni · auto co 5 min</span>
+    </div>
+  </header>
+
+  <section class="stats-row" id="statsRow" aria-live="polite">
+    <div class="stat-tile">
+      <div class="stat-label">Łącznie otwarć</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub">we wszystkich śledzonych ekranach</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Najpopularniejszy ekran</div>
+      <div class="stat-value" id="statTop" style="font-size:20px;">—</div>
+      <div class="stat-sub" id="statTopSub">&nbsp;</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Aktywne ekrany</div>
+      <div class="stat-value" id="statActive">—</div>
+      <div class="stat-sub">z 11 śledzonych</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Ranking ekranów</div>
+      <div class="panel-hint">liczba otwarć w ostatnich 90 dniach</div>
+    </div>
+    <div id="rankingWrap"></div>
+  </section>
+
+  <div class="foot-note" id="footNote">Dane anonimowe, bez identyfikatora urządzenia. Strona odświeża się sama — nie wymaga Claude ani otwartej rozmowy.</div>
+  <div class="error-note" id="errorNote" hidden></div>
+</div>
+
+<script>
+  // Ta strona łączy się z Supabase bezpośrednio z przeglądarki (bez Claude,
+  // bez piaskownicy Artefaktów) — działa samodzielnie, dopóki jest otwarta,
+  // i odświeża się sama co 5 minut.
+  const FUNCTION_URL = "https://dqblnmimbqsmmzjzzrjr.supabase.co/functions/v1/usage-analytics-summary";
+  const SUPABASE_ANON_KEY = "sb_publishable__gWdeZShGG4w6JwKEd74yw_ozTnv2Gm";
+  // Token panelu (osobny od klucza Supabase powyżej) — wklej wartość wygenerowaną
+  // poleceniem `supabase secrets set ANALYTICS_DASHBOARD_TOKEN=...`.
+  const DASHBOARD_TOKEN = "010f1719ea697a332b155263cb8ee640f4e4023936fbb9c9faf4fa7ce5ba86b5";
+  const REFRESH_MS = 5 * 60 * 1000;
+
+  const ROUTE_LABELS = {
+    "/": "Ekran główny",
+    "/plan-dnia": "Plan dnia",
+    "/dziennik-uczucia": "Dziennik Uczuć",
+    "/lista-wyzwalaczy": "Lista wyzwalaczy",
+    "/dziennik-wdziecznosci": "Dziennik Wdzięczności",
+    "/liczniki": "Liczniki (menu)",
+    "/licznik": "Licznik zdrowienia",
+    "/licznik-strat": "Odrabianie strat",
+    "/wsparcie-spolecznosc": "Wsparcie / Społeczność",
+    "/refleksje": "Refleksje",
+    "/moje-doswiadczenie": "Moje doświadczenie",
+  };
+  const ROUTE_ALIASES = { "/codzienne-refleksje": "/refleksje" };
+  const TRACKED_ORDER = Object.keys(ROUTE_LABELS);
+
+  function fmtInt(n) { return new Intl.NumberFormat("pl-PL").format(n); }
+  function fmtRelative(iso) {
+    const d = new Date(iso);
+    const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+    if (diffMin < 1) return "przed chwilą";
+    if (diffMin < 60) return diffMin + " min temu";
+    const diffH = Math.round(diffMin / 60);
+    if (diffH < 24) return diffH + " godz. temu";
+    return d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
+  }
+
+  function renderRanking(totals) {
+    const merged = new Map();
+    for (const route of TRACKED_ORDER) merged.set(route, 0);
+    for (const row of totals) {
+      const canon = ROUTE_ALIASES[row.event_name] || row.event_name;
+      if (!merged.has(canon)) continue;
+      merged.set(canon, (merged.get(canon) || 0) + row.count);
+    }
+    const rows = [...merged.entries()]
+      .map(([route, count]) => ({ route, label: ROUTE_LABELS[route], count }))
+      .sort((a, b) => b.count - a.count);
+
+    const max = Math.max(1, ...rows.map(r => r.count));
+    const wrap = document.getElementById("rankingWrap");
+    wrap.innerHTML = "";
+    rows.forEach(r => {
+      const row = document.createElement("div");
+      row.className = "rank-row" + (r.count === 0 ? " is-empty" : "");
+      row.innerHTML =
+        '<div class="rank-label">' + r.label + '</div>' +
+        '<div class="rank-track" role="img" aria-label="' + r.label + ': ' + r.count + ' otwarć">' +
+          '<div class="rank-fill" style="width:' + Math.max(1, (r.count / max) * 100) + '%"></div>' +
+        '</div>' +
+        '<div class="rank-value">' + fmtInt(r.count) + '</div>';
+      wrap.appendChild(row);
+    });
+    return rows;
+  }
+
+  function renderStats(rows, generatedAt) {
+    const total = rows.reduce((s, r) => s + r.count, 0);
+    const active = rows.filter(r => r.count > 0).length;
+    const top = rows[0];
+    document.getElementById("statTotal").textContent = fmtInt(total);
+    document.getElementById("statActive").textContent = active;
+    document.getElementById("statTop").textContent = top && top.count > 0 ? top.label : "—";
+    document.getElementById("statTopSub").textContent = top && top.count > 0 ? fmtInt(top.count) + " otwarć" : "brak danych";
+    document.getElementById("statusLine").textContent = "Zaktualizowano " + fmtRelative(generatedAt);
+  }
+
+  function renderFromData(data) {
+    if (!data || (!data.totals?.length && !data.daily?.length)) {
+      document.getElementById("rankingWrap").innerHTML =
+        '<div class="empty-state"><div class="big">✨</div>Jeszcze nic tu nie ma.</div>';
+      document.getElementById("statusLine").textContent = data ? "Zaktualizowano " + fmtRelative(data.generatedAt) : "Brak danych";
+      return;
+    }
+    const rows = renderRanking(data.totals || []);
+    renderStats(rows, data.generatedAt);
+  }
+
+  async function loadStats() {
+    const btn = document.getElementById("refreshBtn");
+    const statusLine = document.getElementById("statusLine");
+    const errorNote = document.getElementById("errorNote");
+    btn.disabled = true;
+    errorNote.hidden = true;
+    statusLine.textContent = "Wczytuję dane…";
+    try {
+      const res = await fetch(
+        FUNCTION_URL + "?token=" + encodeURIComponent(DASHBOARD_TOKEN),
+        { headers: { Authorization: "Bearer " + SUPABASE_ANON_KEY } }
+      );
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      renderFromData(data);
+    } catch (err) {
+      statusLine.textContent = "Nie udało się pobrać danych.";
+      errorNote.hidden = false;
+      errorNote.textContent = String((err && err.message) || err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", loadStats);
+  loadStats();
+  setInterval(loadStats, REFRESH_MS);
+</script>
+</body>
+</html>
