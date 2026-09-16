@@ -5,12 +5,10 @@ import { markVisitedRoute, normalizeRoute } from '@/hooks/useVisitedTiles';
 import { logScreenOpen } from '@/services/usageAnalytics';
 
 const TRACKED_USAGE_ROUTES = new Set([
-  '/',
   '/plan-dnia',
   '/dziennik-uczucia',
   '/lista-wyzwalaczy',
   '/dziennik-wdziecznosci',
-  '/liczniki',
   '/licznik',
   '/licznik-strat',
   '/wsparcie-spolecznosc',
