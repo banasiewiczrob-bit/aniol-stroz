@@ -34,24 +34,43 @@ Deno.serve(async (req) => {
 
   const since = new Date(Date.now() - RANGE_DAYS * 86400000).toISOString();
 
-  let res: Response;
-  try {
-    res = await fetch(
-      `${SUPABASE_URL}/rest/v1/app_usage_events?select=event_name,created_at&created_at=gte.${since}&limit=50000`,
-      { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
-    );
-  } catch (e) {
-    console.error("usage-analytics-summary: błąd sieci przy zapytaniu do bazy", e);
-    return new Response("Query failed", { status: 502, headers: CORS_HEADERS });
-  }
+  // Supabase/PostgREST domyślnie ucina KAŻDĄ odpowiedź do 1000 wierszy, niezależnie od
+  // parametru `limit` w URL (to twardy limit po stronie API, nie SQL-owy LIMIT) — więc
+  // przy większej liczbie zdarzeń trzeba stronicować przez nagłówek Range, inaczej dane
+  // są cicho ucinane do losowego (bo bez ORDER BY) wycinka pierwszych 1000 wierszy.
+  const PAGE_SIZE = 1000;
+  const rows: Array<{ event_name: string; created_at: string }> = [];
+  let offset = 0;
 
-  if (!res.ok) {
-    const errorBody = await res.text();
-    console.error(`usage-analytics-summary: zapytanie zwróciło ${res.status}: ${errorBody}`);
-    return new Response(`Query failed: ${errorBody}`, { status: 502, headers: CORS_HEADERS });
-  }
+  while (true) {
+    let res: Response;
+    try {
+      res = await fetch(
+        `${SUPABASE_URL}/rest/v1/app_usage_events?select=event_name,created_at&created_at=gte.${since}&order=id.asc`,
+        {
+          headers: {
+            apikey: SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+            Range: `${offset}-${offset + PAGE_SIZE - 1}`,
+          },
+        }
+      );
+    } catch (e) {
+      console.error("usage-analytics-summary: błąd sieci przy zapytaniu do bazy", e);
+      return new Response("Query failed", { status: 502, headers: CORS_HEADERS });
+    }
 
-  const rows = (await res.json()) as Array<{ event_name: string; created_at: string }>;
+    if (!res.ok && res.status !== 206) {
+      const errorBody = await res.text();
+      console.error(`usage-analytics-summary: zapytanie zwróciło ${res.status}: ${errorBody}`);
+      return new Response(`Query failed: ${errorBody}`, { status: 502, headers: CORS_HEADERS });
+    }
+
+    const page = (await res.json()) as Array<{ event_name: string; created_at: string }>;
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
 
   const totals = new Map<string, number>();
   const daily = new Map<string, number>(); // klucz: `${event_name}|${YYYY-MM-DD}`
