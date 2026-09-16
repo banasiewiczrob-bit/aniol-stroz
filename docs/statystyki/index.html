@@ -251,6 +251,14 @@
   document.getElementById("refreshBtn").addEventListener("click", loadStats);
   loadStats();
   setInterval(loadStats, REFRESH_MS);
+
+  // Przeglądarki usypiają setInterval w oknach w tle na dłuższy czas — dorzucamy
+  // dodatkowe odświeżenie za każdym razem gdy okno wraca na pierwszy plan, żeby
+  // dane nigdy nie "zawisły" na starej wartości mimo włączonego auto-odświeżania.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") loadStats();
+  });
+  window.addEventListener("focus", loadStats);
 </script>
 </body>
 </html>
