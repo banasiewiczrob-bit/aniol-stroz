@@ -7,6 +7,7 @@ import { logScreenOpen } from '@/services/usageAnalytics';
 const TRACKED_USAGE_ROUTES = new Set([
   '/plan-dnia',
   '/dziennik-uczucia',
+  '/dziennik-kryzysu',
   '/lista-wyzwalaczy',
   '/dziennik-wdziecznosci',
   '/licznik',
@@ -15,6 +16,7 @@ const TRACKED_USAGE_ROUTES = new Set([
   '/refleksje',
   '/codzienne-refleksje',
   '/moje-doswiadczenie',
+  '/teksty-codzienne',
 ]);
 
 export default function TabLayout() {
