@@ -11,9 +11,18 @@ import {
   type DailyTextsStore,
 } from '@/constants/daily-texts';
 import { getPolishHoliday } from '@/constants/polish-holidays';
+import type { CravingJournalEntry, EmotionJournalEntry, GratitudeJournalEntry } from '@/constants/journals';
 import { DEFAULT_APP_SETTINGS, loadAppSettings } from '@/hooks/useAppSettings';
+import { listJournalEntries } from '@/hooks/useJournals';
 import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import { notifyDataChanged, subscribeSync } from '@/hooks/recoverySyncEvents';
+import {
+  computeWellbeingByDate,
+  WELLBEING_COLOR,
+  WELLBEING_EMOJI,
+  WELLBEING_MESSAGE,
+  type WellbeingTier,
+} from '@/services/dayWellbeing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -416,6 +425,7 @@ export default function PlanScreen() {
   const [appSettings, setAppSettings] = useState(DEFAULT_APP_SETTINGS);
   const [planStore, setPlanStore] = useState<PlanStore>({});
   const [archive, setArchive] = useState<ArchiveEntry[]>([]);
+  const [wellbeingByDate, setWellbeingByDate] = useState<Map<DateKey, WellbeingTier>>(new Map());
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [chartOpen, setChartOpen] = useState(false);
   const [textsStore, setTextsStore] = useState<DailyTextsStore>(createEmptyDailyTextsStore());
@@ -461,6 +471,8 @@ export default function PlanScreen() {
     return archiveMap.get(selectedDateKey);
   }, [archiveMap, selectedDateKey]);
 
+  const selectedWellbeingTier = selectedDateKey ? wellbeingByDate.get(selectedDateKey) : undefined;
+
   const selectedHasPlan = useMemo(() => (selectedPlan ? hasPlanContent(selectedPlan) : false), [selectedPlan]);
   const selectedCanSummarize = useMemo(
     () => Boolean(selectedDateKey && selectedPlan && hasPlanContent(selectedPlan) && !selectedArchiveEntry),
@@ -489,20 +501,22 @@ export default function PlanScreen() {
     }
   };
 
-  const loadPlans = async () => {
+  const loadPlans = async (): Promise<PlanStore> => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (!raw) {
         setPlanStore({});
-        return;
+        return {};
       }
 
       const parsed: unknown = JSON.parse(raw);
       const clean = parsePlanStore(parsed, todayKey);
       setPlanStore(clean);
+      return clean;
     } catch (e) {
       console.error('Błąd odczytu planów dnia:', e);
       setPlanStore({});
+      return {};
     }
   };
 
@@ -533,12 +547,41 @@ export default function PlanScreen() {
     setCalendarDisplay(settings.planDefaultCalendarView);
   };
 
+  const loadWellbeing = async (currentPlanStore: PlanStore) => {
+    try {
+      const [emotionRaw, cravingRaw, gratitudeRaw] = await Promise.all([
+        listJournalEntries('emotion'),
+        listJournalEntries('craving'),
+        listJournalEntries('gratitude'),
+      ]);
+
+      const haltCountByDate = new Map<DateKey, number>();
+      for (const [dateKey, dayPlan] of Object.entries(currentPlanStore)) {
+        const count = Object.values(dayPlan.halt).filter(Boolean).length;
+        if (count > 0) haltCountByDate.set(dateKey as DateKey, count);
+      }
+
+      const next = computeWellbeingByDate(
+        emotionRaw as EmotionJournalEntry[],
+        cravingRaw as CravingJournalEntry[],
+        gratitudeRaw as GratitudeJournalEntry[],
+        haltCountByDate
+      );
+      setWellbeingByDate(next);
+    } catch (e) {
+      console.error('Błąd liczenia samopoczucia dnia:', e);
+      setWellbeingByDate(new Map());
+    }
+  };
+
   const loadAll = async () => {
-    await Promise.all([loadPlans(), loadArchive(), loadDailyTexts(), loadSettings()]);
+    const [nextPlanStore] = await Promise.all([loadPlans(), loadArchive(), loadDailyTexts(), loadSettings()]);
+    await loadWellbeing(nextPlanStore);
   };
 
   const refreshCoreData = async () => {
-    await Promise.all([loadPlans(), loadArchive(), loadDailyTexts()]);
+    const [nextPlanStore] = await Promise.all([loadPlans(), loadArchive(), loadDailyTexts()]);
+    await loadWellbeing(nextPlanStore);
   };
 
   useEffect(() => {
@@ -638,6 +681,17 @@ export default function PlanScreen() {
         (item, index) => index !== itemIndex && !(itemIndex < 0 && item.id === itemId)
       );
       const items = remaining.length > 0 ? remaining : [{ id: `${dateKey}_1`, text: '', done: false }];
+      return { ...current, items, planText: toPlanText(items) };
+    });
+  };
+
+  const movePlanItem = (dateKey: DateKey, itemIndex: number, direction: -1 | 1) => {
+    patchPlan(dateKey, (current) => {
+      const targetIndex = itemIndex + direction;
+      if (targetIndex < 0 || targetIndex >= current.items.length) return current;
+      const items = [...current.items];
+      const [moved] = items.splice(itemIndex, 1);
+      items.splice(targetIndex, 0, moved);
       return { ...current, items, planText: toPlanText(items) };
     });
   };
@@ -789,6 +843,29 @@ export default function PlanScreen() {
       <Text style={styles.fieldLabel}>Elementy planu dnia</Text>
       {params.plan.items.map((item, index) => (
         <View key={item.id} style={styles.planItemRow}>
+          <View style={styles.planItemReorderGroup}>
+            <Pressable
+              style={[styles.planItemReorderBtn, index === 0 && styles.planItemReorderBtnDisabled]}
+              onPress={() => movePlanItem(params.dateKey, index, -1)}
+              disabled={index === 0}
+              hitSlop={6}
+              accessibilityLabel="Przesuń wyżej"
+            >
+              <Text style={styles.planItemReorderText}>▲</Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.planItemReorderBtn,
+                index === params.plan.items.length - 1 && styles.planItemReorderBtnDisabled,
+              ]}
+              onPress={() => movePlanItem(params.dateKey, index, 1)}
+              disabled={index === params.plan.items.length - 1}
+              hitSlop={6}
+              accessibilityLabel="Przesuń niżej"
+            >
+              <Text style={styles.planItemReorderText}>▼</Text>
+            </Pressable>
+          </View>
           <TextInput
             style={[styles.input, styles.planItemInput]}
             value={item.text}
@@ -895,6 +972,7 @@ export default function PlanScreen() {
                 const isToday = dateKey === todayKey;
                 const isSelected = dateKey === selectedDateKey;
                 const markerColor = getMarkerColor(dateKey);
+                const wellbeingTier = wellbeingByDate.get(dateKey);
                 const holiday = getPolishHoliday(date);
                 return (
                   <Pressable
@@ -912,7 +990,11 @@ export default function PlanScreen() {
                     {holiday ? <View style={styles.holidayBadge} /> : null}
                     <Text style={styles.weekDayName}>{dayShort(date)}</Text>
                     <Text style={styles.weekDayNumber}>{date.getDate()}</Text>
-                    <View style={[styles.dayMarker, { backgroundColor: markerColor }]} />
+                    {wellbeingTier ? (
+                      <Text style={styles.dayMarkerEmoji}>{WELLBEING_EMOJI[wellbeingTier]}</Text>
+                    ) : (
+                      <View style={[styles.dayMarker, { backgroundColor: markerColor }]} />
+                    )}
                   </Pressable>
                 );
               })}
@@ -964,6 +1046,7 @@ export default function PlanScreen() {
                 const isToday = dateKey === todayKey;
                 const isSelected = dateKey === selectedDateKey;
                 const markerColor = getMarkerColor(dateKey);
+                const wellbeingTier = wellbeingByDate.get(dateKey);
                 const holiday = getPolishHoliday(date);
 
                 return (
@@ -982,7 +1065,11 @@ export default function PlanScreen() {
                   >
                     {holiday ? <View style={styles.holidayBadge} /> : null}
                     <Text style={[styles.dayCellText, !inCurrentMonth && styles.dayCellTextMuted]}>{date.getDate()}</Text>
-                    <View style={[styles.dayMarker, { backgroundColor: markerColor }]} />
+                    {wellbeingTier ? (
+                      <Text style={styles.dayMarkerEmoji}>{WELLBEING_EMOJI[wellbeingTier]}</Text>
+                    ) : (
+                      <View style={[styles.dayMarker, { backgroundColor: markerColor }]} />
+                    )}
                   </Pressable>
                 );
               })}
@@ -1025,6 +1112,13 @@ export default function PlanScreen() {
                 <Text style={styles.dayCloseText}>Zamknij</Text>
               </Pressable>
             </View>
+
+            {selectedWellbeingTier && (
+              <View style={[styles.wellbeingNote, { borderColor: WELLBEING_COLOR[selectedWellbeingTier] }]}>
+                <Text style={styles.wellbeingNoteEmoji}>{WELLBEING_EMOJI[selectedWellbeingTier]}</Text>
+                <Text style={styles.wellbeingNoteText}>{WELLBEING_MESSAGE[selectedWellbeingTier]}</Text>
+              </View>
+            )}
 
             <View style={styles.dayModeSwitch}>
               <Pressable
@@ -1462,6 +1556,12 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
+  dayMarkerEmoji: {
+    position: 'absolute',
+    bottom: 1,
+    fontSize: 11,
+    lineHeight: 13,
+  },
   legendRow: {
     marginTop: 10,
     flexDirection: 'row',
@@ -1528,6 +1628,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(120,200,255,0.16)',
   },
   dayCloseText: { color: '#AEE1FF', fontSize: 13, fontWeight: '700' },
+  wellbeingNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    borderLeftWidth: 2,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+  },
+  wellbeingNoteEmoji: {
+    fontSize: 16,
+  },
+  wellbeingNoteText: {
+    flex: 1,
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 13,
+    lineHeight: 18,
+  },
   dayModeSwitch: {
     flexDirection: 'row',
     gap: 8,
@@ -1599,6 +1719,28 @@ const styles = StyleSheet.create({
   },
   planItemInput: {
     flex: 1,
+  },
+  planItemReorderGroup: {
+    gap: 4,
+  },
+  planItemReorderBtn: {
+    width: 28,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(120,200,255,0.35)',
+    backgroundColor: 'rgba(120,200,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  planItemReorderBtnDisabled: {
+    opacity: 0.25,
+  },
+  planItemReorderText: {
+    color: '#D8F1FF',
+    fontSize: 11,
+    fontWeight: '800',
+    lineHeight: 12,
   },
   planItemDeleteBtn: {
     borderWidth: 1,
