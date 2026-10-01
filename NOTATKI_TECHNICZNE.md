@@ -8,6 +8,13 @@ Trzymamy tu:
 - krótkie notatki po zmianach.
 
 ## TODO (najbliższe)
+- [ ] Google Play — polityka uprawnienia READ_CONTACTS: deklaracja albo migracja do 27.01.2027 (termin egzekwowania).
+  - Kontekst: Google Play od 27.01.2027 egzekwuje wymóg deklaracji użycia `READ_CONTACTS` dla aplikacji celujących w Android 17+ (SDK 37+). Dziś appka celuje w znacznie niższy target SDK, więc przepis JEJ NIE DOTYCZY — ale trzeba to sprawdzić ponownie, jeśli target SDK zostanie podniesiony do 37+ przed tym terminem (np. przy aktualizacji Expo SDK).
+  - Stan w kodzie (sprawdzone 2026-10-01): `READ_CONTACTS` jest w `android/app/src/main/AndroidManifest.xml`, używane przez `expo-contacts` w dwóch miejscach:
+    - `app/wsparcie-kontakt.tsx` — już używa systemowego Contact Pickera (`presentContactPickerAsync`) — selektywny dostęp, zgodny z duchem polityki.
+    - `app/wsparcie-siatka.tsx` — pobiera **całą listę kontaktów** (`getContactsAsync`) do przeszukiwania/filtrowania w appce — to szerszy dostęp, dokładnie ten wzorzec który polityka chce ograniczyć.
+  - Rekomendowana długoterminowa naprawa: przerobić `wsparcie-siatka.tsx` żeby też korzystała z Contact Pickera (jak `wsparcie-kontakt.tsx`) i usunąć `READ_CONTACTS` z manifestu całkowicie — zero deklaracji do wypełniania. Kompromis UX: wybór kontaktu pojedynczo przez systemowy picker zamiast przeszukiwania pełnej listy w appce — do przedyskutowania przed wdrożeniem.
+  - Jeśli do migracji nie dojdzie przed terminem, a target SDK wtedy już będzie 37+: trzeba złożyć deklarację w Play Console (Monitoruj i ulepszaj → Zasady i programy → Zawartość aplikacji → Contacts Permission) albo poprosić o 30-dniowe przedłużenie.
 - [ ] Deep links / App Links / Universal Links: kolejność działań na 2026-05-04.
   - Zakres:
     - Android: zbudować nową wersję aplikacji z obsługą `https://aniolstroz.com.pl/app/*` i wrzucić ją do Google Play.
