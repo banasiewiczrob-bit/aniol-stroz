@@ -14,9 +14,9 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const PUSH_GAP_MS = 48 * HOUR_MS;
 
-type IntelligentSupportTopic = 'EMO' | 'WITHDRAW' | 'RISK';
+export type IntelligentSupportTopic = 'EMO' | 'WITHDRAW' | 'RISK';
 type IntelligentSupportLevel = 1 | 2 | 3;
-type IntelligentSupportSeverity = 'NONE' | 'LOW' | 'MED' | 'HIGH' | 'CRISIS';
+export type IntelligentSupportSeverity = 'NONE' | 'LOW' | 'MED' | 'HIGH' | 'CRISIS';
 
 export type IntelligentSupportSuggestion = {
   id: string;
@@ -58,7 +58,7 @@ const EMPTY_ENGINE_STATE: IntelligentSupportEngineState = {
   pendingSuggestion: null,
 };
 
-const DIFFICULT_EMOTIONS = new Set<BaseEmotion>(['Złość', 'Wstyd', 'Strach', 'Smutek', 'Poczucie winy', 'Samotność']);
+export const DIFFICULT_EMOTIONS = new Set<BaseEmotion>(['Złość', 'Wstyd', 'Strach', 'Smutek', 'Poczucie winy', 'Samotność']);
 
 function isExpoGoAndroidRuntime() {
   if (Platform.OS !== 'android') return false;
@@ -127,7 +127,7 @@ async function saveEngineState(state: IntelligentSupportEngineState) {
   await AsyncStorage.setItem(INTELLIGENT_SUPPORT_STATE_KEY, JSON.stringify(state));
 }
 
-function toCravingSeverity(symptomsCount: number): IntelligentSupportSeverity {
+export function toCravingSeverity(symptomsCount: number): IntelligentSupportSeverity {
   if (!Number.isFinite(symptomsCount) || symptomsCount <= 0) return 'NONE';
   if (symptomsCount <= 4) return 'LOW';
   if (symptomsCount <= 9) return 'MED';
