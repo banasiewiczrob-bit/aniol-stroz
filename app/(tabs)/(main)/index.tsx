@@ -297,9 +297,7 @@ export default function Dom() {
                       : item.to === '/teksty-codzienne'
                         ? pendingTasksBadge.missingDailyTextsCount
                         : item.to === '/wsparcie'
-                          ? pendingTasksBadge.missingSupportContact
-                            ? 1
-                            : 0
+                          ? [pendingTasksBadge.missingSupportContact, pendingTasksBadge.missingDiscordCheck].filter(Boolean).length
                           : 0
               }
             />

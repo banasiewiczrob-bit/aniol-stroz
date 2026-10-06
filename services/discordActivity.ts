@@ -1,4 +1,6 @@
 import { DISCORD_POGADUCHY_CHANNEL_ID } from '@/constants/community';
+import { DISCORD_POGADUCHY_SEEN_STORAGE_KEY } from '@/constants/storageKeys';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://dqblnmimbqsmmzjzzrjr.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY =
@@ -31,4 +33,22 @@ export async function pobierzAktywnoscKanaluDiscord(): Promise<AktywnoscKanaluDi
   if (!row?.channel_id || !row.last_message_id || !row.last_message_at) return null;
 
   return { channelId: row.channel_id, lastMessageId: row.last_message_id, lastMessageAt: row.last_message_at };
+}
+
+/**
+ * Współdzielona logika "czy jest nowa wiadomość na #pogaduchy" — używana zarówno przez
+ * ekran Wsparcie/Społeczność (badge przy przycisku), jak i przez ogólny system odznak
+ * (kafel "Wsparcie" na ekranie Dom, ikona zakładki, ikona aplikacji).
+ */
+export async function czyJestNowaWiadomoscPogaduchy(): Promise<boolean> {
+  const activity = await pobierzAktywnoscKanaluDiscord();
+  if (!activity) return false;
+
+  const seenId = await AsyncStorage.getItem(DISCORD_POGADUCHY_SEEN_STORAGE_KEY);
+  if (!seenId) {
+    // Brak punktu odniesienia: zapisz go, nie pokazuj badge dla wiadomości sprzed pierwszego sprawdzenia.
+    await AsyncStorage.setItem(DISCORD_POGADUCHY_SEEN_STORAGE_KEY, activity.lastMessageId);
+    return false;
+  }
+  return seenId !== activity.lastMessageId;
 }

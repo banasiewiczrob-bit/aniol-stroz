@@ -8,6 +8,7 @@ import {
 } from '@/constants/daily-texts';
 import { listJournalEntriesByDate } from '@/hooks/useJournals';
 import { subscribeSync } from '@/hooks/recoverySyncEvents';
+import { czyJestNowaWiadomoscPogaduchy } from '@/services/discordActivity';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
@@ -21,6 +22,7 @@ export type PendingTasksBadgeState = {
   missingEmotionEntry: boolean;
   missingDailyTextsCount: number;
   missingSupportContact: boolean;
+  missingDiscordCheck: boolean;
   total: number;
 };
 
@@ -30,6 +32,7 @@ const EMPTY_STATE: PendingTasksBadgeState = {
   missingEmotionEntry: false,
   missingDailyTextsCount: 0,
   missingSupportContact: false,
+  missingDiscordCheck: false,
   total: 0,
 };
 
@@ -77,11 +80,12 @@ async function computePendingTasksBadgeState(): Promise<PendingTasksBadgeState> 
   const now = new Date();
   const after20 = now.getHours() >= 20;
 
-  const [todayPlan, emotionEntries, dailyTextsRaw, supportContactsRaw] = await Promise.all([
+  const [todayPlan, emotionEntries, dailyTextsRaw, supportContactsRaw, missingDiscordCheck] = await Promise.all([
     readPlanForDate(dateKey),
     listJournalEntriesByDate('emotion', dateKey),
     AsyncStorage.getItem(DAILY_TEXTS_STORAGE_KEY),
     AsyncStorage.getItem(SUPPORT_CONTACTS_STORAGE_KEY),
+    czyJestNowaWiadomoscPogaduchy().catch(() => false),
   ]);
 
   const planExists = hasPlanContent(todayPlan);
@@ -120,6 +124,7 @@ async function computePendingTasksBadgeState(): Promise<PendingTasksBadgeState> 
     missingSummary,
     missingEmotionEntry,
     missingSupportContact,
+    missingDiscordCheck,
     ...Array.from({ length: missingDailyTextsCount }, () => true),
   ].filter(Boolean).length;
 
@@ -129,6 +134,7 @@ async function computePendingTasksBadgeState(): Promise<PendingTasksBadgeState> 
     missingEmotionEntry,
     missingDailyTextsCount,
     missingSupportContact,
+    missingDiscordCheck,
     total,
   };
 }
